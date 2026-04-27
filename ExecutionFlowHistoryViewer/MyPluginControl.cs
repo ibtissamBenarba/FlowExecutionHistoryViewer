@@ -20,6 +20,9 @@ namespace ExecutionFlowHistoryViewer
     public partial class MyPluginControl : PluginControlBase
     {
         private Settings mySettings;
+        // Cached MSAL client and connection state
+        private IPublicClientApplication _pca;
+        private bool _isPowerAutomateConnected = false;
 
         public MyPluginControl()
         {
@@ -60,6 +63,9 @@ namespace ExecutionFlowHistoryViewer
             {
                 LogInfo("Settings found and loaded");
             }
+
+            // Fetch History is disabled until PA is connected
+            btnFetchHistory.Enabled = false;
         }
 
         private void tsbClose_Click(object sender, EventArgs e)
@@ -101,6 +107,111 @@ namespace ExecutionFlowHistoryViewer
             });
         }
 
+        private void btnConnectPA_Click(object sender, EventArgs e)
+        {
+            if (Service == null)
+            {
+                MessageBox.Show("Please connect to Dataverse first!", "Not Connected",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            ExecuteMethod(ConnectToPowerAutomate);
+        }
+
+        private void ConnectToPowerAutomate()
+        {
+            WorkAsync(new WorkAsyncInfo
+            {
+                Message = "Connecting to Power Automate...",
+                Work = (worker, args) =>
+                {
+                    // This triggers the first login (interactive only if needed)
+                    var client = CreateFlowClient();
+                    args.Result = client;
+                },
+                PostWorkCallBack = (args) =>
+                {
+                    if (args.Error != null)
+                    {
+                        MessageBox.Show($"Failed to connect to Power Automate:\n\n{args.Error.Message}",
+                            "Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                        _isPowerAutomateConnected = false;
+                        btnFetchHistory.Enabled = false;
+                        return;
+                    }
+
+                    _isPowerAutomateConnected = true;
+                    btnFetchHistory.Enabled = true;
+
+                    MessageBox.Show("Successfully connected to Power Automate!\n\nYou can now fetch history without logging in again.",
+                        "Connected", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            });
+        }
+
+        // ==================== BUTTON: Fetch History ====================
+        private void btnFetchHistory_Click(object sender, EventArgs e)
+        {
+            if (cmbFlows.SelectedItem == null)
+            {
+                MessageBox.Show("Please select a flow from the list first!");
+                return;
+            }
+
+            if (!_isPowerAutomateConnected)
+            {
+                MessageBox.Show("Please click 'Connect to Power Automate' first!",
+                    "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var selectedFlow = (Flow)cmbFlows.SelectedItem;
+
+            WorkAsync(new WorkAsyncInfo
+            {
+                Message = "Fetching history...",
+                Work = (worker, args) =>
+                {
+                    // Reuses cached _pca — token is acquired silently, no popup
+                    var client = CreateFlowClient();
+                    args.Result = client.GetFlowRuns(selectedFlow.Id);
+                },
+                PostWorkCallBack = (args) =>
+                {
+                    if (args.Error != null)
+                    {
+                        MessageBox.Show(args.Error.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                        // If token expired or was revoked, force reconnect
+                        if (args.Error.Message.Contains("401") || args.Error.Message.Contains("Unauthorized"))
+                        {
+                            _isPowerAutomateConnected = false;
+                            btnFetchHistory.Enabled = false;
+                            MessageBox.Show("Your Power Automate session expired. Please connect again.",
+                                "Session Expired", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+                        return;
+                    }
+
+                    dataGridView1.DataSource = (List<FlowRun>)args.Result;
+                }
+            });
+        }
+
+        // ==================== AUTHENTICATION ====================
+        private void EnsurePcaInitialized()
+        {
+            if (_pca == null)
+            {
+                _pca = PublicClientApplicationBuilder.Create("51f81489-12ee-4a9e-aaae-a2591f45987d")
+                    .WithAuthority($"https://login.microsoftonline.com/{ConnectionDetail.TenantId}")
+                    .WithRedirectUri("app://58145B91-0C36-4500-8554-080854F2AC97")
+                    .Build();
+            }
+        }
+
         private FlowClient CreateFlowClient()
         {
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
@@ -108,23 +219,44 @@ namespace ExecutionFlowHistoryViewer
             var envId = ConnectionDetail.EnvironmentId.ToString();
             var scopes = new[] { "https://service.flow.microsoft.com/.default" };
 
-            // MSAL Configuration
-            var pca = PublicClientApplicationBuilder.Create("51f81489-12ee-4a9e-aaae-a2591f45987d")
-                .WithAuthority($"https://login.microsoftonline.com/{ConnectionDetail.TenantId}")
-                .WithRedirectUri("app://58145B91-0C36-4500-8554-080854F2AC97")
-                .Build();
+            EnsurePcaInitialized();
+            string token = GetAccessToken(_pca, scopes);
 
-            string token = GetAccessToken(pca, scopes);
-
-            // You can make this dynamic based on the region, but France is hardcoded here as per your request
             string regionalUrl = "https://france.api.flow.microsoft.com";
-
             return new FlowClient(envId, token, regionalUrl);
         }
 
+        private string GetAccessToken(IPublicClientApplication pca, string[] scopes)
+        {
+            try
+            {
+                var accounts = pca.GetAccountsAsync().GetAwaiter().GetResult();
+                var account = accounts.FirstOrDefault(a => a.Username.Equals(ConnectionDetail.UserName, StringComparison.OrdinalIgnoreCase));
+
+                if (account != null)
+                {
+                    return pca.AcquireTokenSilent(scopes, account)
+                        .ExecuteAsync().GetAwaiter().GetResult().AccessToken;
+                }
+            }
+            catch (MsalUiRequiredException) { /* Fallback to interactive */ }
+
+            string interactiveToken = null;
+            var task = Task.Run(async () =>
+            {
+                var result = await pca.AcquireTokenInteractive(scopes)
+                    .WithLoginHint(ConnectionDetail.UserName)
+                    .ExecuteAsync();
+                interactiveToken = result.AccessToken;
+            });
+
+            task.Wait();
+            return interactiveToken;
+        }
+
+        // ==================== LOAD FLOWS (Dataverse) ====================
         private void btnLoadFlows_Click(object sender, EventArgs e)
         {
-            // 1. Verify we are connected to Dataverse
             if (Service == null) return;
 
             WorkAsync(new WorkAsyncInfo
@@ -132,17 +264,16 @@ namespace ExecutionFlowHistoryViewer
                 Message = "Loading Flows from Dataverse...",
                 Work = (worker, args) =>
                 {
-                    // 2. Query Dataverse for Cloud Flows (category 5)
                     var query = new QueryExpression("workflow")
                     {
                         ColumnSet = new ColumnSet("workflowid", "name"),
                         Criteria = new FilterExpression
                         {
                             Conditions =
-                    {
-                        new ConditionExpression("category", ConditionOperator.Equal, 5), // 5 = Cloud Flow
-                        new ConditionExpression("type", ConditionOperator.Equal, 1)      // 1 = Definition
-                    }
+                            {
+                                new ConditionExpression("category", ConditionOperator.Equal, 5),
+                                new ConditionExpression("type", ConditionOperator.Equal, 1)
+                            }
                         }
                     };
 
@@ -156,7 +287,6 @@ namespace ExecutionFlowHistoryViewer
                         return;
                     }
 
-                    // 3. Fill the ComboBox with the results
                     var results = (EntityCollection)args.Result;
                     cmbFlows.Items.Clear();
 
@@ -172,81 +302,6 @@ namespace ExecutionFlowHistoryViewer
             });
         }
 
-        private void btnFetchHistory_Click(object sender, EventArgs e)
-        {
-            // Check if the user actually picked a flow first
-            if (cmbFlows.SelectedItem == null)
-            {
-                MessageBox.Show("Please select a flow from the list first!");
-                return;
-            }
-
-            // Get the selected Flow object
-            var selectedFlow = (Flow)cmbFlows.SelectedItem;
-
-            WorkAsync(new WorkAsyncInfo
-            {
-                Message = "Fetching history...",
-                Work = (worker, args) =>
-                {
-                    // Use the same authentication logic you already have
-                    var client = CreateFlowClient();
-
-                    // HERE IS THE CHANGE: Use selectedFlow.Id instead of "304d85b8-..."
-                    args.Result = client.GetFlowRuns(selectedFlow.Id);
-                },
-                PostWorkCallBack = (args) =>
-                {
-                    if (args.Error == null)
-                    {
-                        dataGridView1.DataSource = (List<FlowRun>)args.Result;
-                    }
-                }
-            });
-        }
-
-        private string GetAccessToken(IPublicClientApplication pca, string[] scopes)
-        {
-            try
-            {
-                var accounts = pca.GetAccountsAsync().GetAwaiter().GetResult();
-                var account = accounts.FirstOrDefault(a => a.Username.Equals(ConnectionDetail.UserName, StringComparison.OrdinalIgnoreCase));
-
-                if (account != null)
-                {
-                    return pca.AcquireTokenSilent(scopes, account).ExecuteAsync().GetAwaiter().GetResult().AccessToken;
-                }
-            }
-            catch (MsalUiRequiredException) { /* On continue vers l'interactif */ }
-
-            // Pour l'interactif, on utilise une petite astuce pour ne pas bloquer le thread UI
-            string interactiveToken = null;
-            var task = Task.Run(async () =>
-            {
-                var result = await pca.AcquireTokenInteractive(scopes)
-                    .WithLoginHint(ConnectionDetail.UserName)
-                    .ExecuteAsync();
-                interactiveToken = result.AccessToken;
-            });
-
-            task.Wait(); // On attend la fin de la tâche asynchrone
-            return interactiveToken;
-        }
-
-        // Méthode d'aide pour gérer l'affichage de la fenêtre sur le bon thread
-        private string ShowLoginWindow(IPublicClientApplication pca, string[] scopes)
-        {
-            string token = null;
-            this.Invoke(new MethodInvoker(delegate
-            {
-                var result = pca.AcquireTokenInteractive(scopes)
-                    .WithLoginHint(ConnectionDetail.UserName)
-                    .WithParentActivityOrWindow(this.Handle)
-                    .ExecuteAsync().GetAwaiter().GetResult();
-                token = result.AccessToken;
-            }));
-            return token;
-        }
 
         /// <summary>
         /// This event occurs when the plugin is closed
@@ -266,26 +321,26 @@ namespace ExecutionFlowHistoryViewer
         {
             base.UpdateConnection(newService, detail, actionName, parameter);
 
+            // Reset cached auth when switching organizations
+            _pca = null;
+
             if (mySettings != null && detail != null)
             {
                 mySettings.LastUsedOrganizationWebappUrl = detail.WebApplicationUrl;
                 LogInfo("Connection has changed to: {0}", detail.WebApplicationUrl);
             }
+            
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            btnFetchHistory_Click(sender, e);
-        }
+        
 
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
 
         }
 
-        private void button2_Click(object sender, EventArgs e)
-        {
-            btnLoadFlows_Click(sender, e);
-        }
+        
+
+        
     }
 }
