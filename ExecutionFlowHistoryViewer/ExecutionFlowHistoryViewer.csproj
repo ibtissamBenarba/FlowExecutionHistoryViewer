@@ -263,6 +263,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="RunSonar.bat" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MyPluginControl.resx">
