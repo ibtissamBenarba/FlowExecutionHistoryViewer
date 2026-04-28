@@ -222,8 +222,8 @@ namespace ExecutionFlowHistoryViewer
             EnsurePcaInitialized();
             string token = GetAccessToken(_pca, scopes);
 
-            string regionalUrl = "https://france.api.flow.microsoft.com";
-            return new FlowClient(envId, token, regionalUrl);
+            string url = "https://api.flow.microsoft.com";
+            return new FlowClient(envId, token, url);
         }
 
         private string GetAccessToken(IPublicClientApplication pca, string[] scopes)
