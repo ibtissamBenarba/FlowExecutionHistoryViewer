@@ -6,11 +6,8 @@ using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using XrmToolBox.Extensibility;
@@ -20,9 +17,20 @@ namespace ExecutionFlowHistoryViewer
     public partial class MyPluginControl : PluginControlBase
     {
         private Settings mySettings;
-        // Cached MSAL client and connection state
         private IPublicClientApplication _pca;
         private bool _isPowerAutomateConnected = false;
+
+        // In-memory list of flows for the current solution
+        private List<Flow> _currentFlows = new List<Flow>();
+        // Tracks checked flow IDs independently of the visible list
+        private readonly HashSet<string> _checkedFlowIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        private class SolutionItem
+        {
+            public Guid Id { get; set; }
+            public string Name { get; set; }
+            public override string ToString() => Name;
+        }
 
         public MyPluginControl()
         {
@@ -37,9 +45,7 @@ namespace ExecutionFlowHistoryViewer
             {
                 string pluginPath = System.IO.Path.GetDirectoryName(
                     System.Reflection.Assembly.GetExecutingAssembly().Location);
-
                 string assemblyPath = System.IO.Path.Combine(pluginPath, "System.Diagnostics.DiagnosticSource.dll");
-
                 if (System.IO.File.Exists(assemblyPath))
                 {
                     return System.Reflection.Assembly.LoadFrom(assemblyPath);
@@ -50,13 +56,13 @@ namespace ExecutionFlowHistoryViewer
 
         private void MyPluginControl_Load(object sender, EventArgs e)
         {
-            ShowInfoNotification("This is a notification that can lead to XrmToolBox repository", new Uri("https://github.com/MscrmTools/XrmToolBox"));
+            clbFlows.CheckOnClick = true;
+            ShowInfoNotification("This is a notification that can lead to XrmToolBox repository",
+                new Uri("https://github.com/MscrmTools/XrmToolBox"));
 
-            // Loads or creates the settings for the plugin
             if (!SettingsManager.Instance.TryLoad(GetType(), out mySettings))
             {
                 mySettings = new Settings();
-
                 LogWarning("Settings not found => a new settings file has been created!");
             }
             else
@@ -64,8 +70,17 @@ namespace ExecutionFlowHistoryViewer
                 LogInfo("Settings found and loaded");
             }
 
-            // Fetch History is disabled until PA is connected
+            // ---- INIT STATUS FILTER ----
+            cmbStatus.Items.Clear();
+            cmbStatus.Items.AddRange(new object[] { "All", "Succeeded", "Failed", "Cancelled", "Running" });
+            cmbStatus.SelectedIndex = 0;
+
             btnFetchHistory.Enabled = false;
+
+            if (Service != null)
+            {
+                LoadSolutions();
+            }
         }
 
         private void tsbClose_Click(object sender, EventArgs e)
@@ -73,41 +88,7 @@ namespace ExecutionFlowHistoryViewer
             CloseTool();
         }
 
-        private void tsbSample_Click(object sender, EventArgs e)
-        {
-            // The ExecuteMethod method handles connecting to an
-            // organization if XrmToolBox is not yet connected
-            ExecuteMethod(GetAccounts);
-        }
-
-        private void GetAccounts()
-        {
-            WorkAsync(new WorkAsyncInfo
-            {
-                Message = "Getting accounts",
-                Work = (worker, args) =>
-                {
-                    args.Result = Service.RetrieveMultiple(new QueryExpression("account")
-                    {
-                        TopCount = 50
-                    });
-                },
-                PostWorkCallBack = (args) =>
-                {
-                    if (args.Error != null)
-                    {
-                        MessageBox.Show(args.Error.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    var result = args.Result as EntityCollection;
-                    if (result != null)
-                    {
-                        MessageBox.Show($"Found {result.Entities.Count} accounts");
-                    }
-                }
-            });
-        }
-
-        private void btnConnectPA_Click(object sender, EventArgs e)
+        private void tsmConnectToPA_ItemClicked(object sender, EventArgs e)
         {
             if (Service == null)
             {
@@ -126,7 +107,6 @@ namespace ExecutionFlowHistoryViewer
                 Message = "Connecting to Power Automate...",
                 Work = (worker, args) =>
                 {
-                    // This triggers the first login (interactive only if needed)
                     var client = CreateFlowClient();
                     args.Result = client;
                 },
@@ -151,12 +131,16 @@ namespace ExecutionFlowHistoryViewer
             });
         }
 
-        // ==================== BUTTON: Fetch History ====================
-        private void btnFetchHistory_Click(object sender, EventArgs e)
+        // ==================== BUTTON: Get Runs ====================
+        private void btnFetchHistory_Click_1(object sender, EventArgs e)
         {
-            if (cmbFlows.SelectedItem == null)
+            // Use _checkedFlowIds so we include flows hidden by the search filter
+            var selectedFlows = _currentFlows.Where(f => _checkedFlowIds.Contains(f.Id)).ToList();
+
+            if (selectedFlows.Count == 0)
             {
-                MessageBox.Show("Please select a flow from the list first!");
+                MessageBox.Show("Please check at least one flow from the list first!",
+                    "No Flows Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -167,16 +151,66 @@ namespace ExecutionFlowHistoryViewer
                 return;
             }
 
-            var selectedFlow = (Flow)cmbFlows.SelectedItem;
+            // ---- DATE FILTERING ----
+            DateTime fromDate = dtpDateFrom.Value;
+            DateTime toDate = dtpDateTo.Value;
+
+            if (toDate.TimeOfDay == TimeSpan.Zero)
+                toDate = toDate.Date.AddDays(1).AddTicks(-1);
+
+            if (fromDate > toDate)
+            {
+                MessageBox.Show("The 'From' date must be earlier than or equal to the 'To' date.",
+                    "Invalid Date Range", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // ---- STATUS FILTERING ----
+            string selectedStatus = cmbStatus.SelectedItem?.ToString() ?? "All";
 
             WorkAsync(new WorkAsyncInfo
             {
-                Message = "Fetching history...",
+                Message = $"Fetching history for {selectedFlows.Count} flow(s)...",
                 Work = (worker, args) =>
                 {
-                    // Reuses cached _pca — token is acquired silently, no popup
                     var client = CreateFlowClient();
-                    args.Result = client.GetFlowRuns(selectedFlow.Id);
+
+                    var combinedResults = new DataTable();
+                    combinedResults.Columns.Add("Flow Name", typeof(string));
+                    combinedResults.Columns.Add("Run ID", typeof(string));
+                    combinedResults.Columns.Add("Status", typeof(string));
+                    combinedResults.Columns.Add("Start Time", typeof(string));
+                    combinedResults.Columns.Add("End Time", typeof(string));
+
+                    foreach (var flow in selectedFlows)
+                    {
+                        var runs = client.GetFlowRuns(flow.Id);
+                        if (runs == null) continue;
+
+                        var filteredRuns = runs.Where(r => r.StartDate >= fromDate && r.StartDate <= toDate).ToList();
+
+                        if (!string.Equals(selectedStatus, "All", StringComparison.OrdinalIgnoreCase))
+                        {
+                            filteredRuns = filteredRuns
+                                .Where(r => string.Equals(r.Status, selectedStatus, StringComparison.OrdinalIgnoreCase))
+                                .ToList();
+                        }
+
+                        if (filteredRuns.Count == 0) continue;
+
+                        foreach (var run in filteredRuns)
+                        {
+                            var row = combinedResults.NewRow();
+                            row["Flow Name"] = flow.DisplayName;
+                            row["Run ID"] = run.Id?.ToString() ?? "N/A";
+                            row["Status"] = run.Status?.ToString() ?? "N/A";
+                            row["Start Time"] = run.StartDate != default ? run.StartDate.ToString() : "N/A";
+                            row["End Time"] = run.EndDate != default ? run.EndDate.ToString() : "N/A";
+                            combinedResults.Rows.Add(row);
+                        }
+                    }
+
+                    args.Result = combinedResults;
                 },
                 PostWorkCallBack = (args) =>
                 {
@@ -184,7 +218,6 @@ namespace ExecutionFlowHistoryViewer
                     {
                         MessageBox.Show(args.Error.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-                        // If token expired or was revoked, force reconnect
                         if (args.Error.Message.Contains("401") || args.Error.Message.Contains("Unauthorized"))
                         {
                             _isPowerAutomateConnected = false;
@@ -195,12 +228,19 @@ namespace ExecutionFlowHistoryViewer
                         return;
                     }
 
-                    dataGridView1.DataSource = (List<FlowRun>)args.Result;
+                    var dt = (DataTable)args.Result;
+                    dataGridView1.DataSource = dt;
+                    dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
+
+                    if (dt.Rows.Count == 0)
+                    {
+                        MessageBox.Show("No flow runs found matching the selected filters.",
+                            "No Results", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
                 }
             });
         }
 
-        // ==================== AUTHENTICATION ====================
         private void EnsurePcaInitialized()
         {
             if (_pca == null)
@@ -239,7 +279,7 @@ namespace ExecutionFlowHistoryViewer
                         .ExecuteAsync().GetAwaiter().GetResult().AccessToken;
                 }
             }
-            catch (MsalUiRequiredException) { /* Fallback to interactive */ }
+            catch (MsalUiRequiredException) { }
 
             string interactiveToken = null;
             var task = Task.Run(async () =>
@@ -254,14 +294,68 @@ namespace ExecutionFlowHistoryViewer
             return interactiveToken;
         }
 
-        // ==================== LOAD FLOWS (Dataverse) ====================
-        private void btnLoadFlows_Click(object sender, EventArgs e)
+        private void LoadSolutions()
         {
             if (Service == null) return;
 
             WorkAsync(new WorkAsyncInfo
             {
-                Message = "Loading Flows from Dataverse...",
+                Message = "Loading Solutions...",
+                Work = (worker, args) =>
+                {
+                    var query = new QueryExpression("solution")
+                    {
+                        ColumnSet = new ColumnSet("solutionid", "friendlyname", "uniquename"),
+                        Criteria = new FilterExpression
+                        {
+                            Conditions =
+                            {
+                                new ConditionExpression("isvisible", ConditionOperator.Equal, true)
+                            }
+                        },
+                        Orders = { new OrderExpression("friendlyname", OrderType.Ascending) }
+                    };
+
+                    args.Result = Service.RetrieveMultiple(query);
+                },
+                PostWorkCallBack = (args) =>
+                {
+                    if (args.Error != null)
+                    {
+                        MessageBox.Show(args.Error.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    var results = (EntityCollection)args.Result;
+                    cbSolutions.Items.Clear();
+                    cbSolutions.Items.Add(new SolutionItem { Id = Guid.Empty, Name = "-- All Solutions --" });
+
+                    foreach (var entity in results.Entities)
+                    {
+                        cbSolutions.Items.Add(new SolutionItem
+                        {
+                            Id = entity.Id,
+                            Name = entity.GetAttributeValue<string>("friendlyname")
+                                    ?? entity.GetAttributeValue<string>("uniquename")
+                                    ?? entity.Id.ToString()
+                        });
+                    }
+
+                    if (cbSolutions.Items.Count > 0)
+                        cbSolutions.SelectedIndex = 0;
+                }
+            });
+        }
+
+        private void LoadFlows(Guid? solutionId = null)
+        {
+            if (Service == null) return;
+
+            WorkAsync(new WorkAsyncInfo
+            {
+                Message = solutionId.HasValue && solutionId.Value != Guid.Empty
+                    ? "Loading Flows for selected Solution..."
+                    : "Loading Flows from Dataverse...",
                 Work = (worker, args) =>
                 {
                     var query = new QueryExpression("workflow")
@@ -274,8 +368,25 @@ namespace ExecutionFlowHistoryViewer
                                 new ConditionExpression("category", ConditionOperator.Equal, 5),
                                 new ConditionExpression("type", ConditionOperator.Equal, 1)
                             }
-                        }
+                        },
+                        Orders = { new OrderExpression("name", OrderType.Ascending) }
                     };
+
+                    if (solutionId.HasValue && solutionId.Value != Guid.Empty)
+                    {
+                        query.LinkEntities.Add(
+                            new LinkEntity("workflow", "solutioncomponent", "workflowid", "objectid", JoinOperator.Inner)
+                            {
+                                LinkCriteria = new FilterExpression
+                                {
+                                    Conditions =
+                                    {
+                                        new ConditionExpression("solutionid", ConditionOperator.Equal, solutionId.Value),
+                                        new ConditionExpression("componenttype", ConditionOperator.Equal, 29)
+                                    }
+                                }
+                            });
+                    }
 
                     args.Result = Service.RetrieveMultiple(query);
                 },
@@ -283,45 +394,117 @@ namespace ExecutionFlowHistoryViewer
                 {
                     if (args.Error != null)
                     {
-                        MessageBox.Show(args.Error.Message);
+                        MessageBox.Show(args.Error.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
 
                     var results = (EntityCollection)args.Result;
-                    cmbFlows.Items.Clear();
 
-                    foreach (var entity in results.Entities)
-                    {
-                        cmbFlows.Items.Add(new Flow
+                    // Reset in-memory lists
+                    _currentFlows = results.Entities
+                        .Select(entity => new Flow
                         {
                             Id = entity.Id.ToString(),
                             DisplayName = entity.GetAttributeValue<string>("name")
-                        });
-                    }
+                        })
+                        .OrderBy(f => f.DisplayName)
+                        .ToList();
+
+                    _checkedFlowIds.Clear();
+
+                    // Reset Select All checkbox without triggering its event
+                    cbSelectAllFlows.CheckedChanged -= cbSelectAllFlows_CheckedChanged;
+                    cbSelectAllFlows.Checked = false;
+                    cbSelectAllFlows.CheckedChanged += cbSelectAllFlows_CheckedChanged;
+
+                    // Apply search filter (if any) and populate the list
+                    ApplyFlowFilter();
                 }
             });
         }
 
+        // ==================== SEARCH FILTER ====================
+        private void ApplyFlowFilter()
+        {
+            string search = tbSearch.Text?.Trim() ?? string.Empty;
 
-        /// <summary>
-        /// This event occurs when the plugin is closed
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+            var filtered = string.IsNullOrEmpty(search)
+                ? _currentFlows
+                : _currentFlows.Where(f =>
+                    f.DisplayName.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+
+            // Detach ItemCheck while repopulating to avoid double-tracking
+            clbFlows.ItemCheck -= clbFlows_ItemCheck;
+            clbFlows.Items.Clear();
+
+            foreach (var flow in filtered)
+            {
+                clbFlows.Items.Add(flow, _checkedFlowIds.Contains(flow.Id));
+            }
+
+            clbFlows.ItemCheck += clbFlows_ItemCheck;
+        }
+
+        // ==================== SELECT ALL CHECKBOX ====================
+        private void cbSelectAllFlows_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbSelectAllFlows.Checked)
+            {
+                foreach (var flow in _currentFlows)
+                    _checkedFlowIds.Add(flow.Id);
+            }
+            else
+            {
+                _checkedFlowIds.Clear();
+            }
+
+            ApplyFlowFilter();
+        }
+
+        // ==================== EVENTS ====================
+        private void cbSolutions_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (cbSolutions.SelectedItem == null) return;
+
+            var selectedSolution = (SolutionItem)cbSolutions.SelectedItem;
+
+            if (selectedSolution.Id == Guid.Empty)
+                LoadFlows();
+            else
+                LoadFlows(selectedSolution.Id);
+        }
+
+        private void clbFlows_SelectedIndexChanged(object sender, EventArgs e)
+        {
+        }
+
+        private void clbFlows_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            if (e.Index < 0 || e.Index >= clbFlows.Items.Count) return;
+
+            var flow = clbFlows.Items[e.Index] as Flow;
+            if (flow == null) return;
+
+            if (e.NewValue == CheckState.Checked)
+                _checkedFlowIds.Add(flow.Id);
+            else
+                _checkedFlowIds.Remove(flow.Id);
+        }
+
+        private void tbSearch_TextChanged(object sender, EventArgs e)
+        {
+            ApplyFlowFilter();
+        }
+
         private void MyPluginControl_OnCloseTool(object sender, EventArgs e)
         {
-            // Before leaving, save the settings
             SettingsManager.Instance.Save(GetType(), mySettings);
         }
 
-        /// <summary>
-        /// This event occurs when the connection has been updated in XrmToolBox
-        /// </summary>
         public override void UpdateConnection(IOrganizationService newService, ConnectionDetail detail, string actionName, object parameter)
         {
             base.UpdateConnection(newService, detail, actionName, parameter);
 
-            // Reset cached auth when switching organizations
             _pca = null;
 
             if (mySettings != null && detail != null)
@@ -329,18 +512,24 @@ namespace ExecutionFlowHistoryViewer
                 mySettings.LastUsedOrganizationWebappUrl = detail.WebApplicationUrl;
                 LogInfo("Connection has changed to: {0}", detail.WebApplicationUrl);
             }
-            
+
+            LoadSolutions();
         }
 
-        
-
-        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        private void dtpDateFrom_ValueChanged(object sender, EventArgs e)
         {
-
         }
 
-        
+        private void dtpDateTo_ValueChanged(object sender, EventArgs e)
+        {
+        }
 
-        
+        private void cmbStatus_SelectedIndexChanged(object sender, EventArgs e)
+        {
+        }
+
+        private void datagridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+        }
     }
 }
