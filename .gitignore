@@ -5,4 +5,7 @@ packages/
 **/bin/
 **/obj/
 
-ExecutionFlowHistoryViewer.csproj.user
+.suo
+.user
+.userosscache
+.sln.docstates
