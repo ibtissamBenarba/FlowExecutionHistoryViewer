@@ -9,6 +9,9 @@ namespace ExecutionFlowHistoryViewer.Models
 {
     public class FlowRun
     {
+        [DisplayName("Nom du Flux")]
+        public string FlowName { get; set; }
+
         [DisplayName("ID Exécution")]
         public string Id { get; set; }
 

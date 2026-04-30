@@ -7,7 +7,10 @@ using Microsoft.Xrm.Sdk.Query;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using XrmToolBox.Extensibility;
@@ -25,13 +28,7 @@ namespace ExecutionFlowHistoryViewer
         // Tracks checked flow IDs independently of the visible list
         private readonly HashSet<string> _checkedFlowIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        private class SolutionItem
-        {
-            public Guid Id { get; set; }
-            public string Name { get; set; }
-            public override string ToString() => Name;
-        }
-
+        
         public MyPluginControl()
         {
             InitializeComponent();
@@ -461,6 +458,65 @@ namespace ExecutionFlowHistoryViewer
             ApplyFlowFilter();
         }
 
+        private List<FlowRun> GetCurrentHistoryList()
+        {
+            var list = new List<FlowRun>();
+
+            // On vérifie si la grille contient des données
+            if (dataGridView1.DataSource is DataTable dt)
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    list.Add(new FlowRun
+                    {
+                        FlowName = row["Flow Name"]?.ToString(),
+                        Id = row["Run ID"]?.ToString(),
+                        Status = row["Status"]?.ToString(),
+                        // Conversion sécurisée des dates
+                        StartDate = DateTime.TryParse(
+                            row["Start Time"]?.ToString(),
+                            CultureInfo.InvariantCulture,
+                            DateTimeStyles.None,
+                            out DateTime start
+                        ) ? start : DateTime.MinValue,
+
+                                                EndDate = DateTime.TryParse(
+                            row["End Time"]?.ToString(),
+                            CultureInfo.InvariantCulture,
+                            DateTimeStyles.None,
+                            out DateTime end
+                        ) ? end : DateTime.MinValue
+                    });
+                }
+            }
+
+            return list;
+        }
+        private void btnExport_Click_1(object sender, EventArgs e)
+        {
+            // 1. Transformer la DataTable ou la liste en List<FlowRun>
+            // Ici, je suppose que vous avez une liste de vos objets
+            var history = GetCurrentHistoryList();
+
+            if (history == null || history.Count == 0) return;
+
+            using (SaveFileDialog sfd = new SaveFileDialog())
+            {
+                sfd.Filter = "Excel (*.xlsx)|*.xlsx|CSV (*.csv)|*.csv";
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    string ext = Path.GetExtension(sfd.FileName).ToLower();
+
+                    if (ext == ".xlsx")
+                        ExcelService.Export(history, sfd.FileName);
+                    else
+                        CsvService.Export(history, sfd.FileName);
+
+                    MessageBox.Show("Exportation réussie !");
+                }
+            }
+        }
+
         // ==================== EVENTS ====================
         private void cbSolutions_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -472,10 +528,6 @@ namespace ExecutionFlowHistoryViewer
                 LoadFlows();
             else
                 LoadFlows(selectedSolution.Id);
-        }
-
-        private void clbFlows_SelectedIndexChanged(object sender, EventArgs e)
-        {
         }
 
         private void clbFlows_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -516,20 +568,6 @@ namespace ExecutionFlowHistoryViewer
             LoadSolutions();
         }
 
-        private void dtpDateFrom_ValueChanged(object sender, EventArgs e)
-        {
-        }
-
-        private void dtpDateTo_ValueChanged(object sender, EventArgs e)
-        {
-        }
-
-        private void cmbStatus_SelectedIndexChanged(object sender, EventArgs e)
-        {
-        }
-
-        private void datagridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-        }
+        
     }
 }

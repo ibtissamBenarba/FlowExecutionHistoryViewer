@@ -33,6 +33,7 @@
             this.tssSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.tsbSample = new System.Windows.Forms.ToolStripButton();
             this.tsmConnectToPA = new System.Windows.Forms.ToolStripButton();
+            this.btnExport = new System.Windows.Forms.ToolStripButton();
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
             this.gbFlows = new System.Windows.Forms.GroupBox();
             this.clbFlows = new System.Windows.Forms.CheckedListBox();
@@ -46,13 +47,6 @@
             this.cbSolutions = new System.Windows.Forms.ComboBox();
             this.gbFlowRuns = new System.Windows.Forms.GroupBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.FlowRunFlow = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.FlowRunStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.FlowRunStartDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.FlowRunEndDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.FlowRunDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.FlowRunUrl = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.FlowRunError = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.gbRunFilters = new System.Windows.Forms.GroupBox();
             this.btnFetchHistory = new System.Windows.Forms.Button();
             this.cmbStatus = new System.Windows.Forms.ComboBox();
@@ -61,6 +55,11 @@
             this.lblDateTo = new System.Windows.Forms.Label();
             this.dtpDateFrom = new System.Windows.Forms.DateTimePicker();
             this.lblDateFrom = new System.Windows.Forms.Label();
+            this.FlowRunFlow = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.FlowRunStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.FlowRunDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.FlowRunUrl = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.FlowRunError = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tsmContainer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).BeginInit();
             this.splitContainerMain.Panel1.SuspendLayout();
@@ -81,10 +80,11 @@
             this.tsbClose,
             this.tssSeparator1,
             this.tsbSample,
-            this.tsmConnectToPA});
+            this.tsmConnectToPA,
+            this.btnExport});
             this.tsmContainer.Location = new System.Drawing.Point(0, 0);
             this.tsmContainer.Name = "tsmContainer";
-            this.tsmContainer.Size = new System.Drawing.Size(1346, 27);
+            this.tsmContainer.Size = new System.Drawing.Size(1346, 31);
             this.tsmContainer.TabIndex = 4;
             this.tsmContainer.Text = "toolStrip1";
             this.tsmContainer.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.tsmConnectToPA_ItemClicked);
@@ -114,10 +114,18 @@
             this.tsmConnectToPA.Size = new System.Drawing.Size(225, 24);
             this.tsmConnectToPA.Text = "Connect to Power Automate API";
             // 
+            // btnExport
+            // 
+            this.btnExport.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.btnExport.Name = "btnExport";
+            this.btnExport.Size = new System.Drawing.Size(134, 24);
+            this.btnExport.Text = "Export CSV / Excel";
+            this.btnExport.Click += new System.EventHandler(this.btnExport_Click_1);
+            // 
             // splitContainerMain
             // 
             this.splitContainerMain.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainerMain.Location = new System.Drawing.Point(0, 27);
+            this.splitContainerMain.Location = new System.Drawing.Point(0, 31);
             this.splitContainerMain.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.splitContainerMain.Name = "splitContainerMain";
             // 
@@ -131,7 +139,7 @@
             // 
             this.splitContainerMain.Panel2.Controls.Add(this.gbFlowRuns);
             this.splitContainerMain.Panel2.Controls.Add(this.gbRunFilters);
-            this.splitContainerMain.Size = new System.Drawing.Size(1346, 668);
+            this.splitContainerMain.Size = new System.Drawing.Size(1346, 664);
             this.splitContainerMain.SplitterDistance = 366;
             this.splitContainerMain.TabIndex = 5;
             // 
@@ -144,7 +152,7 @@
             this.gbFlows.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.gbFlows.Name = "gbFlows";
             this.gbFlows.Padding = new System.Windows.Forms.Padding(7, 6, 7, 6);
-            this.gbFlows.Size = new System.Drawing.Size(366, 540);
+            this.gbFlows.Size = new System.Drawing.Size(366, 536);
             this.gbFlows.TabIndex = 2;
             this.gbFlows.TabStop = false;
             this.gbFlows.Text = "Flows";
@@ -157,9 +165,8 @@
             this.clbFlows.Location = new System.Drawing.Point(7, 46);
             this.clbFlows.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.clbFlows.Name = "clbFlows";
-            this.clbFlows.Size = new System.Drawing.Size(352, 488);
+            this.clbFlows.Size = new System.Drawing.Size(352, 484);
             this.clbFlows.TabIndex = 1;
-            this.clbFlows.SelectedIndexChanged += new System.EventHandler(this.clbFlows_SelectedIndexChanged);
             // 
             // cbSelectAllFlows
             // 
@@ -265,7 +272,7 @@
             this.gbFlowRuns.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.gbFlowRuns.Name = "gbFlowRuns";
             this.gbFlowRuns.Padding = new System.Windows.Forms.Padding(7, 6, 7, 6);
-            this.gbFlowRuns.Size = new System.Drawing.Size(976, 612);
+            this.gbFlowRuns.Size = new System.Drawing.Size(976, 608);
             this.gbFlowRuns.TabIndex = 1;
             this.gbFlowRuns.TabStop = false;
             this.gbFlowRuns.Text = "Flow Runs";
@@ -280,8 +287,6 @@
             this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.FlowRunFlow,
             this.FlowRunStatus,
-            this.FlowRunStartDate,
-            this.FlowRunEndDate,
             this.FlowRunDuration,
             this.FlowRunUrl,
             this.FlowRunError});
@@ -293,70 +298,8 @@
             this.dataGridView1.RowHeadersVisible = false;
             this.dataGridView1.RowHeadersWidth = 51;
             this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView1.Size = new System.Drawing.Size(962, 585);
+            this.dataGridView1.Size = new System.Drawing.Size(962, 581);
             this.dataGridView1.TabIndex = 0;
-            // 
-            // FlowRunFlow
-            // 
-            this.FlowRunFlow.DataPropertyName = "Flow";
-            this.FlowRunFlow.FillWeight = 120F;
-            this.FlowRunFlow.HeaderText = "Flow";
-            this.FlowRunFlow.MinimumWidth = 6;
-            this.FlowRunFlow.Name = "FlowRunFlow";
-            this.FlowRunFlow.ReadOnly = true;
-            // 
-            // FlowRunStatus
-            // 
-            this.FlowRunStatus.DataPropertyName = "Status";
-            this.FlowRunStatus.FillWeight = 60F;
-            this.FlowRunStatus.HeaderText = "Status";
-            this.FlowRunStatus.MinimumWidth = 6;
-            this.FlowRunStatus.Name = "FlowRunStatus";
-            this.FlowRunStatus.ReadOnly = true;
-            // 
-            // FlowRunStartDate
-            // 
-            this.FlowRunStartDate.DataPropertyName = "StartDate";
-            this.FlowRunStartDate.HeaderText = "Start Date";
-            this.FlowRunStartDate.MinimumWidth = 6;
-            this.FlowRunStartDate.Name = "FlowRunStartDate";
-            this.FlowRunStartDate.ReadOnly = true;
-            // 
-            // FlowRunEndDate
-            // 
-            this.FlowRunEndDate.DataPropertyName = "EndDate";
-            this.FlowRunEndDate.HeaderText = "End Date";
-            this.FlowRunEndDate.MinimumWidth = 6;
-            this.FlowRunEndDate.Name = "FlowRunEndDate";
-            this.FlowRunEndDate.ReadOnly = true;
-            // 
-            // FlowRunDuration
-            // 
-            this.FlowRunDuration.DataPropertyName = "FormattedDuration";
-            this.FlowRunDuration.FillWeight = 70F;
-            this.FlowRunDuration.HeaderText = "Duration";
-            this.FlowRunDuration.MinimumWidth = 6;
-            this.FlowRunDuration.Name = "FlowRunDuration";
-            this.FlowRunDuration.ReadOnly = true;
-            // 
-            // FlowRunUrl
-            // 
-            this.FlowRunUrl.DataPropertyName = "Url";
-            this.FlowRunUrl.FillWeight = 50F;
-            this.FlowRunUrl.HeaderText = "Run URL";
-            this.FlowRunUrl.MinimumWidth = 6;
-            this.FlowRunUrl.Name = "FlowRunUrl";
-            this.FlowRunUrl.ReadOnly = true;
-            this.FlowRunUrl.Text = "Open";
-            this.FlowRunUrl.UseColumnTextForLinkValue = true;
-            // 
-            // FlowRunError
-            // 
-            this.FlowRunError.DataPropertyName = "ErrorDetails";
-            this.FlowRunError.HeaderText = "Error";
-            this.FlowRunError.MinimumWidth = 6;
-            this.FlowRunError.Name = "FlowRunError";
-            this.FlowRunError.ReadOnly = true;
             // 
             // gbRunFilters
             // 
@@ -403,7 +346,6 @@
             this.cmbStatus.Name = "cmbStatus";
             this.cmbStatus.Size = new System.Drawing.Size(107, 24);
             this.cmbStatus.TabIndex = 5;
-            this.cmbStatus.SelectedIndexChanged += new System.EventHandler(this.cmbStatus_SelectedIndexChanged);
             // 
             // lblStatus
             // 
@@ -423,7 +365,6 @@
             this.dtpDateTo.Name = "dtpDateTo";
             this.dtpDateTo.Size = new System.Drawing.Size(160, 22);
             this.dtpDateTo.TabIndex = 3;
-            this.dtpDateTo.ValueChanged += new System.EventHandler(this.dtpDateTo_ValueChanged);
             // 
             // lblDateTo
             // 
@@ -443,7 +384,6 @@
             this.dtpDateFrom.Name = "dtpDateFrom";
             this.dtpDateFrom.Size = new System.Drawing.Size(160, 22);
             this.dtpDateFrom.TabIndex = 1;
-            this.dtpDateFrom.ValueChanged += new System.EventHandler(this.dtpDateFrom_ValueChanged);
             // 
             // lblDateFrom
             // 
@@ -453,6 +393,52 @@
             this.lblDateFrom.Size = new System.Drawing.Size(41, 16);
             this.lblDateFrom.TabIndex = 0;
             this.lblDateFrom.Text = "From:";
+            // 
+            // FlowRunFlow
+            // 
+            this.FlowRunFlow.DataPropertyName = "Flow";
+            this.FlowRunFlow.FillWeight = 120F;
+            this.FlowRunFlow.HeaderText = "Flow";
+            this.FlowRunFlow.MinimumWidth = 6;
+            this.FlowRunFlow.Name = "FlowRunFlow";
+            this.FlowRunFlow.ReadOnly = true;
+            // 
+            // FlowRunStatus
+            // 
+            this.FlowRunStatus.DataPropertyName = "Status";
+            this.FlowRunStatus.FillWeight = 60F;
+            this.FlowRunStatus.HeaderText = "Status";
+            this.FlowRunStatus.MinimumWidth = 6;
+            this.FlowRunStatus.Name = "FlowRunStatus";
+            this.FlowRunStatus.ReadOnly = true;
+            // 
+            // FlowRunDuration
+            // 
+            this.FlowRunDuration.DataPropertyName = "FormattedDuration";
+            this.FlowRunDuration.FillWeight = 70F;
+            this.FlowRunDuration.HeaderText = "Duration";
+            this.FlowRunDuration.MinimumWidth = 6;
+            this.FlowRunDuration.Name = "FlowRunDuration";
+            this.FlowRunDuration.ReadOnly = true;
+            // 
+            // FlowRunUrl
+            // 
+            this.FlowRunUrl.DataPropertyName = "Url";
+            this.FlowRunUrl.FillWeight = 50F;
+            this.FlowRunUrl.HeaderText = "Run URL";
+            this.FlowRunUrl.MinimumWidth = 6;
+            this.FlowRunUrl.Name = "FlowRunUrl";
+            this.FlowRunUrl.ReadOnly = true;
+            this.FlowRunUrl.Text = "Open";
+            this.FlowRunUrl.UseColumnTextForLinkValue = true;
+            // 
+            // FlowRunError
+            // 
+            this.FlowRunError.DataPropertyName = "ErrorDetails";
+            this.FlowRunError.HeaderText = "Error";
+            this.FlowRunError.MinimumWidth = 6;
+            this.FlowRunError.Name = "FlowRunError";
+            this.FlowRunError.ReadOnly = true;
             // 
             // MyPluginControl
             // 
@@ -502,13 +488,6 @@
         private System.Windows.Forms.ComboBox cbSolutions;
         private System.Windows.Forms.GroupBox gbFlowRuns;
         private System.Windows.Forms.DataGridView dataGridView1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunFlow;
-        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunStatus;
-        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunStartDate;
-        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunEndDate;
-        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunDuration;
-        private System.Windows.Forms.DataGridViewLinkColumn FlowRunUrl;
-        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunError;
         private System.Windows.Forms.GroupBox gbRunFilters;
         private System.Windows.Forms.Button btnFetchHistory;
         private System.Windows.Forms.ComboBox cmbStatus;
@@ -518,5 +497,11 @@
         private System.Windows.Forms.DateTimePicker dtpDateFrom;
         private System.Windows.Forms.Label lblDateFrom;
         private System.Windows.Forms.ToolStripButton tsmConnectToPA;
+        private System.Windows.Forms.ToolStripButton btnExport;
+        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunFlow;
+        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunStatus;
+        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunDuration;
+        private System.Windows.Forms.DataGridViewLinkColumn FlowRunUrl;
+        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunError;
     }
 }
