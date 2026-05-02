@@ -1,0 +1,96 @@
+{
+  "scannerProperties": [
+    {
+      "key": "sonar.scanner.app",
+      "value": "ScannerMSBuild"
+    },
+    {
+      "key": "sonar.scanner.appVersion",
+      "value": "11.2.1"
+    },
+    {
+      "key": "sonar.scanner.bootstrapStartTime",
+      "value": "1777559366000"
+    },
+    {
+      "key": "sonar.projectKey",
+      "value": "ExecutionFlowHistoryViewer"
+    },
+    {
+      "key": "sonar.working.directory",
+      "value": "C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\.sonarqube\\out\\.sonar"
+    },
+    {
+      "key": "sonar.projectBaseDir",
+      "value": "C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer"
+    },
+    {
+      "key": "sonar.pullrequest.cache.basepath",
+      "value": "C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer"
+    },
+    {
+      "key": "sonar.sources",
+      "value": "C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\.vs\\ExecutionFlowHistoryViewer\\v17\\DocumentLayout.backup.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\.vs\\ExecutionFlowHistoryViewer\\v17\\DocumentLayout.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\packages\\Microsoft.NETCore.Platforms.7.0.4\\runtime.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\packages\\Microsoft.Rest.ClientRuntime.2.3.24\\lib\\net452\\Microsoft.Rest.ClientRuntime.runtimeconfig.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\packages\\Microsoft.Rest.ClientRuntime.2.3.24\\lib\\net461\\Microsoft.Rest.ClientRuntime.runtimeconfig.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\packages\\Microsoft.Rest.ClientRuntime.2.3.24\\lib\\netstandard1.4\\Microsoft.Rest.ClientRuntime.runtimeconfig.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\packages\\Microsoft.Rest.ClientRuntime.2.3.24\\lib\\netstandard2.0\\Microsoft.Rest.ClientRuntime.runtimeconfig.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\packages\\Microsoft.Web.WebView2.1.0.3351.48\\tools\\wv2winrt\\wv2winrt.exe.config"
+    },
+    {
+      "key": "sonar.tests",
+      "value": ""
+    },
+    {
+      "key": "sonar.modules",
+      "value": "3EFED534-6037-4DD6-9488-33BED5CD7644"
+    },
+    {
+      "key": "3EFED534-6037-4DD6-9488-33BED5CD7644.sonar.projectKey",
+      "value": "ExecutionFlowHistoryViewer:3EFED534-6037-4DD6-9488-33BED5CD7644"
+    },
+    {
+      "key": "3EFED534-6037-4DD6-9488-33BED5CD7644.sonar.projectName",
+      "value": "ExecutionFlowHistoryViewer"
+    },
+    {
+      "key": "3EFED534-6037-4DD6-9488-33BED5CD7644.sonar.projectBaseDir",
+      "value": "C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer"
+    },
+    {
+      "key": "3EFED534-6037-4DD6-9488-33BED5CD7644.sonar.working.directory",
+      "value": "C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\.sonarqube\\out\\.sonar\\mod0"
+    },
+    {
+      "key": "3EFED534-6037-4DD6-9488-33BED5CD7644.sonar.sourceEncoding",
+      "value": "utf-8"
+    },
+    {
+      "key": "3EFED534-6037-4DD6-9488-33BED5CD7644.sonar.tests",
+      "value": ""
+    },
+    {
+      "key": "3EFED534-6037-4DD6-9488-33BED5CD7644.sonar.sources",
+      "value": "C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\Models\\Flow.cs,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\Models\\FlowRun.cs,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\Models\\SolutionItem.cs,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\MyPlugin.cs,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\MyPluginControl.cs,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\MyPluginControl.designer.cs,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\Properties\\AssemblyInfo.cs,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\Services\\CsvService.cs,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\Services\\ExcelService.cs,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\Services\\FlowClient.cs,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\Settings.cs,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\MyPluginControl.resx,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\Properties\\Resources.resx,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\app.config,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\packages.config,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\RunSonar.bat,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\.vs\\ExecutionFlowHistoryViewer.csproj.dtbcache.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Debug\\ExecutionFlowHistoryViewer.dll.config,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Release\\ExecutionFlowHistoryViewer.dll.config,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Debug\\Plugins\\manifest.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Debug\\XrmToolBox.exe.WebView2\\EBWebView\\component_crx_cache\\metadata.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Debug\\XrmToolBox.exe.WebView2\\EBWebView\\extensions_crx_cache\\metadata.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Debug\\XrmToolBox.exe.WebView2\\EBWebView\\AutoLaunchProtocolsComponent\\1.0.0.10\\manifest.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Debug\\XrmToolBox.exe.WebView2\\EBWebView\\AutoLaunchProtocolsComponent\\1.0.0.10\\protocols.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Debug\\XrmToolBox.exe.WebView2\\EBWebView\\CertificateRevocation\\6498.2025.9.4\\manifest.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Debug\\XrmToolBox.exe.WebView2\\EBWebView\\hyphen-data\\120.0.6050.0\\manifest.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Debug\\XrmToolBox.exe.WebView2\\EBWebView\\hyphen-data\\120.0.6050.0\\_metadata\\verified_contents.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Debug\\XrmToolBox.exe.WebView2\\EBWebView\\OriginTrials\\0.0.1.7\\manifest.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Debug\\XrmToolBox.exe.WebView2\\EBWebView\\PKIMetadata\\45.0.0.0\\manifest.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Debug\\XrmToolBox.exe.WebView2\\EBWebView\\Speech Recognition\\1.15.0.1\\manifest.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Debug\\XrmToolBox.exe.WebView2\\EBWebView\\Subresource Filter\\Unindexed Rules\\10.34.0.84\\adblock_snippet.js,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Debug\\XrmToolBox.exe.WebView2\\EBWebView\\Subresource Filter\\Unindexed Rules\\10.34.0.84\\manifest.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Debug\\XrmToolBox.exe.WebView2\\EBWebView\\TrustTokenKeyCommitments\\2026.3.23.1\\keys.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Debug\\XrmToolBox.exe.WebView2\\EBWebView\\TrustTokenKeyCommitments\\2026.3.23.1\\manifest.json,C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\ExecutionFlowHistoryViewer\\bin\\Debug\\XrmToolBox.exe.WebView2\\EBWebView\\TrustTokenKeyCommitments\\2026.3.23.1\\_metadata\\verified_contents.json"
+    },
+    {
+      "key": "3EFED534-6037-4DD6-9488-33BED5CD7644.sonar.cs.analyzer.projectOutPaths",
+      "value": "C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\.sonarqube\\out\\0"
+    },
+    {
+      "key": "3EFED534-6037-4DD6-9488-33BED5CD7644.sonar.cs.roslyn.reportFilePaths",
+      "value": "C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\.sonarqube\\out\\0\\Issues.json"
+    },
+    {
+      "key": "3EFED534-6037-4DD6-9488-33BED5CD7644.sonar.cs.scanner.telemetry",
+      "value": "C:\\Users\\ibenarba\\source\\repos\\PFEprojectPlugin\\FlowExecutionHistoryViewer\\.sonarqube\\out\\0\\Telemetry.json"
+    },
+    {
+      "key": "sonar.token",
+      "value": "***"
+    },
+    {
+      "key": "sonar.host.url",
+      "value": "http://localhost:9000"
+    },
+    {
+      "key": "sonar.visualstudio.enable",
+      "value": "false"
+    }
+  ]
+}

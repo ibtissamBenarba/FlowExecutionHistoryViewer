@@ -10,7 +10,6 @@ using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using XrmToolBox.Extensibility;
@@ -28,7 +27,7 @@ namespace ExecutionFlowHistoryViewer
         // Tracks checked flow IDs independently of the visible list
         private readonly HashSet<string> _checkedFlowIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        
+
         public MyPluginControl()
         {
             InitializeComponent();
@@ -96,7 +95,7 @@ namespace ExecutionFlowHistoryViewer
 
             ExecuteMethod(ConnectToPowerAutomate);
         }
-
+        
         private void ConnectToPowerAutomate()
         {
             WorkAsync(new WorkAsyncInfo
@@ -480,7 +479,7 @@ namespace ExecutionFlowHistoryViewer
                             out DateTime start
                         ) ? start : DateTime.MinValue,
 
-                                                EndDate = DateTime.TryParse(
+                        EndDate = DateTime.TryParse(
                             row["End Time"]?.ToString(),
                             CultureInfo.InvariantCulture,
                             DateTimeStyles.None,
@@ -568,6 +567,6 @@ namespace ExecutionFlowHistoryViewer
             LoadSolutions();
         }
 
-        
+
     }
 }

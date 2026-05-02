@@ -87,7 +87,6 @@
             this.tsmContainer.Size = new System.Drawing.Size(1346, 31);
             this.tsmContainer.TabIndex = 4;
             this.tsmContainer.Text = "toolStrip1";
-            this.tsmContainer.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.tsmConnectToPA_ItemClicked);
             // 
             // tsbClose
             // 
@@ -113,6 +112,7 @@
             this.tsmConnectToPA.Name = "tsmConnectToPA";
             this.tsmConnectToPA.Size = new System.Drawing.Size(225, 24);
             this.tsmConnectToPA.Text = "Connect to Power Automate API";
+            this.tsmConnectToPA.Click += new System.EventHandler(this.tsmConnectToPA_ItemClicked);
             // 
             // btnExport
             // 

@@ -1,0 +1,14 @@
+Æ
+¢C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\ExecutionFlowHistoryViewer\obj\Release\.NETFramework,Version=v4.8.AssemblyAttributes.csutf-8Ö
+|C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\ExecutionFlowHistoryViewer\Services\CsvService.csutf-8á
+~C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\ExecutionFlowHistoryViewer\Services\ExcelService.csutf-8z
+qC:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\ExecutionFlowHistoryViewer\Settings.csutf-8Ö
+|C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\ExecutionFlowHistoryViewer\Services\FlowClient.csutf-8í
+ÜC:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\ExecutionFlowHistoryViewer\Properties\Resources.Designer.csutf-8ä
+ÄC:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\ExecutionFlowHistoryViewer\Properties\AssemblyInfo.csutf-8ç
+ÅC:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\ExecutionFlowHistoryViewer\MyPluginControl.designer.csutf-8Å
+xC:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\ExecutionFlowHistoryViewer\MyPluginControl.csutf-8z
+qC:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\ExecutionFlowHistoryViewer\MyPlugin.csutf-8Ö
+|C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\ExecutionFlowHistoryViewer\Models\SolutionItem.csutf-8Ä
+wC:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\ExecutionFlowHistoryViewer\Models\FlowRun.csutf-8}
+tC:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\ExecutionFlowHistoryViewer\Models\Flow.csutf-8
