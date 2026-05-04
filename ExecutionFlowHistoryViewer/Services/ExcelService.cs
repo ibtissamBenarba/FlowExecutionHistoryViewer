@@ -19,7 +19,7 @@ namespace ExecutionFlowHistoryViewer.Services
             {
                 var sheet = package.Workbook.Worksheets.Add("Flow History");
 
-                // En-têtes
+                // Headers
                 sheet.Cells[1, 1].Value = "Flow Name";
                 sheet.Cells[1, 2].Value = "Status";
                 sheet.Cells[1, 3].Value = "Start Date";

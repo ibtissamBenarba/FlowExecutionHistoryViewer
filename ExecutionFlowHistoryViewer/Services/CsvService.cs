@@ -10,7 +10,7 @@ namespace ExecutionFlowHistoryViewer.Services
         public static void Export(List<FlowRun> flowRuns, string filePath)
         {
             var sb = new StringBuilder();
-            // En-tête
+            // headers
             sb.AppendLine("Flow Name;Status;Start Date;End Date;Run ID");
 
             foreach (var run in flowRuns)

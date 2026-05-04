@@ -265,6 +265,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\FlowRunPageResult.cs" />
+    <Compile Include="Helpers\PageFetchResult.cs" />
     <Compile Include="Models\Flow.cs" />
     <Compile Include="Models\FlowRun.cs" />
     <Compile Include="Models\SolutionItem.cs" />
