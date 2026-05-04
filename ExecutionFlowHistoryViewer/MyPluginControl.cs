@@ -7,6 +7,9 @@ using Microsoft.Xrm.Sdk.Query;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -25,12 +28,6 @@ namespace ExecutionFlowHistoryViewer
         // Tracks checked flow IDs independently of the visible list
         private readonly HashSet<string> _checkedFlowIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        private class SolutionItem
-        {
-            public Guid Id { get; set; }
-            public string Name { get; set; }
-            public override string ToString() => Name;
-        }
 
         public MyPluginControl()
         {
@@ -99,7 +96,7 @@ namespace ExecutionFlowHistoryViewer
 
             ExecuteMethod(ConnectToPowerAutomate);
         }
-
+        
         private void ConnectToPowerAutomate()
         {
             WorkAsync(new WorkAsyncInfo
@@ -175,19 +172,16 @@ namespace ExecutionFlowHistoryViewer
                 {
                     var client = CreateFlowClient();
 
-                    var combinedResults = new DataTable();
-                    combinedResults.Columns.Add("Flow Name", typeof(string));
-                    combinedResults.Columns.Add("Run ID", typeof(string));
-                    combinedResults.Columns.Add("Status", typeof(string));
-                    combinedResults.Columns.Add("Start Time", typeof(string));
-                    combinedResults.Columns.Add("End Time", typeof(string));
+                    var allRuns = new List<FlowRun>();
 
                     foreach (var flow in selectedFlows)
                     {
                         var runs = client.GetFlowRuns(flow.Id);
                         if (runs == null) continue;
 
-                        var filteredRuns = runs.Where(r => r.StartDate >= fromDate && r.StartDate <= toDate).ToList();
+                        var filteredRuns = runs
+                            .Where(r => r.StartDate >= fromDate && r.StartDate <= toDate)
+                            .ToList();
 
                         if (!string.Equals(selectedStatus, "All", StringComparison.OrdinalIgnoreCase))
                         {
@@ -196,50 +190,88 @@ namespace ExecutionFlowHistoryViewer
                                 .ToList();
                         }
 
-                        if (filteredRuns.Count == 0) continue;
-
                         foreach (var run in filteredRuns)
                         {
-                            var row = combinedResults.NewRow();
-                            row["Flow Name"] = flow.DisplayName;
-                            row["Run ID"] = run.Id?.ToString() ?? "N/A";
-                            row["Status"] = run.Status?.ToString() ?? "N/A";
-                            row["Start Time"] = run.StartDate != default ? run.StartDate.ToString() : "N/A";
-                            row["End Time"] = run.EndDate != default ? run.EndDate.ToString() : "N/A";
-                            combinedResults.Rows.Add(row);
+                            allRuns.Add(new FlowRun
+                            {
+                                FlowName = flow.DisplayName,
+                                Id = run.Id,
+                                Status = run.Status,
+                                StartDate = run.StartDate,
+                                EndDate = run.EndDate,
+                                Url = run.Url   // 👈 IMPORTANT
+                            });
                         }
                     }
 
-                    args.Result = combinedResults;
+                    args.Result = allRuns;
                 },
                 PostWorkCallBack = (args) =>
                 {
                     if (args.Error != null)
                     {
                         MessageBox.Show(args.Error.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                        if (args.Error.Message.Contains("401") || args.Error.Message.Contains("Unauthorized"))
-                        {
-                            _isPowerAutomateConnected = false;
-                            btnFetchHistory.Enabled = false;
-                            MessageBox.Show("Your Power Automate session expired. Please connect again.",
-                                "Session Expired", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        }
                         return;
                     }
 
-                    var dt = (DataTable)args.Result;
-                    dataGridView1.DataSource = dt;
-                    dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
+                    var list = (List<FlowRun>)args.Result;
 
-                    if (dt.Rows.Count == 0)
+                    dataGridView1.DataSource = list;
+
+                    dataGridView1.AutoGenerateColumns = false;
+                    dataGridView1.Columns.Clear();
+
+                    // Add normal columns
+                    dataGridView1.Columns.Add(new DataGridViewTextBoxColumn
                     {
-                        MessageBox.Show("No flow runs found matching the selected filters.",
+                        DataPropertyName = "FlowName",
+                        HeaderText = "Flow Name"
+                    });
+
+                    dataGridView1.Columns.Add(new DataGridViewTextBoxColumn
+                    {
+                        DataPropertyName = "Id",
+                        HeaderText = "Run ID"
+                    });
+
+                    dataGridView1.Columns.Add(new DataGridViewTextBoxColumn
+                    {
+                        DataPropertyName = "Status",
+                        HeaderText = "Status"
+                    });
+
+                    dataGridView1.Columns.Add(new DataGridViewTextBoxColumn
+                    {
+                        DataPropertyName = "StartDate",
+                        HeaderText = "Start Time"
+                    });
+
+                    dataGridView1.Columns.Add(new DataGridViewTextBoxColumn
+                    {
+                        DataPropertyName = "EndDate",
+                        HeaderText = "End Time"
+                    });
+
+                    // ⭐ THIS IS THE LINK COLUMN
+                    var linkColumn = new DataGridViewLinkColumn
+                    {
+                        HeaderText = "Action",
+                        Text = "View Run",
+                        UseColumnTextForLinkValue = true,
+                        Name = "ViewRun"
+                    };
+
+                    dataGridView1.Columns.Add(linkColumn);
+
+                    if (list.Count == 0)
+                    {
+                        MessageBox.Show("No flow runs found.",
                             "No Results", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
             });
         }
+
 
         private void EnsurePcaInitialized()
         {
@@ -266,6 +298,24 @@ namespace ExecutionFlowHistoryViewer
             return new FlowClient(envId, token, url);
         }
 
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            if (dataGridView1.Columns[e.ColumnIndex].Name == "ViewRun")
+            {
+                var run = (FlowRun)dataGridView1.Rows[e.RowIndex].DataBoundItem;
+
+                if (!string.IsNullOrEmpty(run.Url))
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = run.Url,
+                        UseShellExecute = true
+                    });
+                }
+            }
+        }
         private string GetAccessToken(IPublicClientApplication pca, string[] scopes)
         {
             try
@@ -461,6 +511,43 @@ namespace ExecutionFlowHistoryViewer
             ApplyFlowFilter();
         }
 
+        private List<FlowRun> GetCurrentHistoryList()
+        {
+            // Since we assigned a List<FlowRun> to the DataSource, 
+            // we can just cast it back.
+            if (dataGridView1.DataSource is List<FlowRun> list)
+            {
+                return list;
+            }
+
+            // Fallback if the list is null
+            return new List<FlowRun>();
+        }
+        private void btnExport_Click_1(object sender, EventArgs e)
+        {
+            // 1. Transformer la DataTable ou la liste en List<FlowRun>
+            // Ici, je suppose que vous avez une liste de vos objets
+            var history = GetCurrentHistoryList();
+
+            if (history == null || history.Count == 0) return;
+
+            using (SaveFileDialog sfd = new SaveFileDialog())
+            {
+                sfd.Filter = "Excel (*.xlsx)|*.xlsx|CSV (*.csv)|*.csv";
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    string ext = Path.GetExtension(sfd.FileName).ToLower();
+
+                    if (ext == ".xlsx")
+                        ExcelService.Export(history, sfd.FileName);
+                    else
+                        CsvService.Export(history, sfd.FileName);
+
+                    MessageBox.Show("Exportation réussie !");
+                }
+            }
+        }
+
         // ==================== EVENTS ====================
         private void cbSolutions_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -472,10 +559,6 @@ namespace ExecutionFlowHistoryViewer
                 LoadFlows();
             else
                 LoadFlows(selectedSolution.Id);
-        }
-
-        private void clbFlows_SelectedIndexChanged(object sender, EventArgs e)
-        {
         }
 
         private void clbFlows_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -516,20 +599,6 @@ namespace ExecutionFlowHistoryViewer
             LoadSolutions();
         }
 
-        private void dtpDateFrom_ValueChanged(object sender, EventArgs e)
-        {
-        }
 
-        private void dtpDateTo_ValueChanged(object sender, EventArgs e)
-        {
-        }
-
-        private void cmbStatus_SelectedIndexChanged(object sender, EventArgs e)
-        {
-        }
-
-        private void datagridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-        }
     }
 }

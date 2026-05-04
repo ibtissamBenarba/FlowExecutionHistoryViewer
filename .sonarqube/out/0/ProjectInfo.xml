@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ProjectInfo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.sonarsource.com/msbuild/integration/2015/1">
+  <ProjectName>ExecutionFlowHistoryViewer</ProjectName>
+  <ProjectLanguage>C#</ProjectLanguage>
+  <ProjectType>Product</ProjectType>
+  <ProjectGuid>3efed534-6037-4dd6-9488-33bed5cd7644</ProjectGuid>
+  <FullPath>C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\ExecutionFlowHistoryViewer\ExecutionFlowHistoryViewer.csproj</FullPath>
+  <IsExcluded>false</IsExcluded>
+  <AnalysisResultFiles>
+    <AnalysisResultFile Id="FilesToAnalyze" Location="C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\.sonarqube\conf\0\FilesToAnalyze.txt" />
+  </AnalysisResultFiles>
+  <AnalysisSettings>
+    <Property Name="sonar.cs.roslyn.reportFilePaths">C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\.sonarqube\out\0\Issues.json</Property>
+    <Property Name="sonar.cs.analyzer.projectOutPaths">C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\.sonarqube\out\0</Property>
+    <Property Name="sonar.cs.scanner.telemetry">C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\.sonarqube\out\0\Telemetry.json</Property>
+  </AnalysisSettings>
+  <Configuration>Release</Configuration>
+  <Platform>AnyCPU</Platform>
+</ProjectInfo>

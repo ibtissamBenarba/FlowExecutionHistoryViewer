@@ -35,7 +35,6 @@ namespace ExecutionFlowHistoryViewer
         {
             // If you have external assemblies that you need to load, uncomment the following to 
             // hook into the event that will fire when an Assembly fails to resolve
-            // AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(AssemblyResolveEventHandler);
         }
 
         /// <summary>

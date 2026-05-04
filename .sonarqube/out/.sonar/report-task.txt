@@ -1,0 +1,6 @@
+projectKey=ExecutionFlowHistoryViewer
+serverUrl=http://localhost:9000
+serverVersion=26.4.0.121862
+dashboardUrl=http://localhost:9000/dashboard?id=ExecutionFlowHistoryViewer
+ceTaskId=a44420a4-f51a-4529-9587-c6e8d88bd58a
+ceTaskUrl=http://localhost:9000/api/ce/task?id=a44420a4-f51a-4529-9587-c6e8d88bd58a

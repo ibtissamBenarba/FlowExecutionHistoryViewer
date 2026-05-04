@@ -1,0 +1,514 @@
+{
+  "$schema": "http://json.schemastore.org/sarif-1.0.0",
+  "version": "1.0.0",
+  "runs": [
+    {
+      "tool": {
+        "name": "Compilateur Microsoft (R) Visual C#",
+        "version": "4.14.0.0",
+        "fileVersion": "4.14.0-3.25412.6 (c167adef)",
+        "semanticVersion": "4.14.0",
+        "language": "fr-FR"
+      },
+      "results": [
+        {
+          "ruleId": "S125",
+          "level": "warning",
+          "message": "Remove this commented out code.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPlugin.cs",
+                "region": {
+                  "startLine": 38,
+                  "startColumn": 13,
+                  "endLine": 38,
+                  "endColumn": 112
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S2971",
+          "level": "warning",
+          "message": "Drop 'Where' and move the condition into the 'FirstOrDefault'.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPlugin.cs",
+                "region": {
+                  "startLine": 59,
+                  "startColumn": 45,
+                  "endLine": 59,
+                  "endColumn": 50
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S3776",
+          "level": "warning",
+          "message": "Refactor this method to reduce its Cognitive Complexity from 35 to the 15 allowed.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 132,
+                  "startColumn": 22,
+                  "endLine": 132,
+                  "endColumn": 45
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 137,
+                  "startColumn": 13,
+                  "endLine": 137,
+                  "endColumn": 15
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 144,
+                  "startColumn": 13,
+                  "endLine": 144,
+                  "endColumn": 15
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 155,
+                  "startColumn": 13,
+                  "endLine": 155,
+                  "endColumn": 15
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 158,
+                  "startColumn": 13,
+                  "endLine": 158,
+                  "endColumn": 15
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 182,
+                  "startColumn": 21,
+                  "endLine": 182,
+                  "endColumn": 28
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 185,
+                  "startColumn": 25,
+                  "endLine": 185,
+                  "endColumn": 27
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 187,
+                  "startColumn": 84,
+                  "endLine": 187,
+                  "endColumn": 86
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 189,
+                  "startColumn": 25,
+                  "endLine": 189,
+                  "endColumn": 27
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 196,
+                  "startColumn": 25,
+                  "endLine": 196,
+                  "endColumn": 27
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 198,
+                  "startColumn": 25,
+                  "endLine": 198,
+                  "endColumn": 32
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 204,
+                  "startColumn": 74,
+                  "endLine": 204,
+                  "endColumn": 75
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 205,
+                  "startColumn": 70,
+                  "endLine": 205,
+                  "endColumn": 71
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 214,
+                  "startColumn": 21,
+                  "endLine": 214,
+                  "endColumn": 23
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 218,
+                  "startColumn": 25,
+                  "endLine": 218,
+                  "endColumn": 27
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 218,
+                  "startColumn": 64,
+                  "endLine": 218,
+                  "endColumn": 66
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 232,
+                  "startColumn": 21,
+                  "endLine": 232,
+                  "endColumn": 23
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "0": "+1",
+              "1": "+1",
+              "10": "+4 (incl 3 for nesting)",
+              "11": "+4 (incl 3 for nesting)",
+              "12": "+2 (incl 1 for nesting)",
+              "13": "+3 (incl 2 for nesting)",
+              "14": "+1",
+              "15": "+2 (incl 1 for nesting)",
+              "2": "+1",
+              "3": "+1",
+              "4": "+2 (incl 1 for nesting)",
+              "5": "+3 (incl 2 for nesting)",
+              "6": "+1",
+              "7": "+3 (incl 2 for nesting)",
+              "8": "+3 (incl 2 for nesting)",
+              "9": "+3 (incl 2 for nesting)"
+            }
+          }
+        },
+        {
+          "ruleId": "S1075",
+          "level": "warning",
+          "message": "Refactor your code not to use hardcoded absolute paths or URIs.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 262,
+                  "startColumn": 26,
+                  "endLine": 262,
+                  "endColumn": 58
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S1075",
+          "level": "warning",
+          "message": "Refactor your code not to use hardcoded absolute paths or URIs.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 247,
+                  "startColumn": 38,
+                  "endLine": 247,
+                  "endColumn": 82
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S1075",
+          "level": "warning",
+          "message": "Refactor your code not to use hardcoded absolute paths or URIs.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 58,
+                  "startColumn": 25,
+                  "endLine": 58,
+                  "endColumn": 67
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S108",
+          "level": "warning",
+          "message": "Either remove or fill this block of code.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPluginControl.cs",
+                "region": {
+                  "startLine": 279,
+                  "startColumn": 45,
+                  "endLine": 279,
+                  "endColumn": 48
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S2325",
+          "level": "warning",
+          "message": "Make 'AssemblyResolveEventHandler' a static method.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/MyPlugin.cs",
+                "region": {
+                  "startLine": 49,
+                  "startColumn": 26,
+                  "endLine": 49,
+                  "endColumn": 53
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S112",
+          "level": "warning",
+          "message": "'System.Exception' should not be thrown by user code.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ibenarba/source/repos/PFEprojectPlugin/FlowExecutionHistoryViewer/ExecutionFlowHistoryViewer/Services/FlowClient.cs",
+                "region": {
+                  "startLine": 61,
+                  "startColumn": 27,
+                  "endLine": 61,
+                  "endColumn": 104
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        }
+      ],
+      "rules": {
+        "S1075": {
+          "id": "S1075",
+          "shortDescription": "URIs should not be hardcoded",
+          "fullDescription": "Hard-coding a URI makes it difficult to test a program for a variety of reasons:",
+          "defaultLevel": "warning",
+          "properties": {
+            "category": "Minor Code Smell",
+            "isEnabledByDefault": true,
+            "tags": [
+              "C#",
+              "MainSourceScope",
+              "SonarWay"
+            ]
+          }
+        },
+        "S108": {
+          "id": "S108",
+          "shortDescription": "Nested blocks of code should not be left empty",
+          "fullDescription": "An empty code block is confusing. It will require some effort from maintainers to determine if it is intentional or indicates the implementation is incomplete.",
+          "defaultLevel": "warning",
+          "properties": {
+            "category": "Major Code Smell",
+            "isEnabledByDefault": true,
+            "tags": [
+              "C#",
+              "MainSourceScope",
+              "TestSourceScope",
+              "SonarWay"
+            ]
+          }
+        },
+        "S112": {
+          "id": "S112",
+          "shortDescription": "General or reserved exceptions should never be thrown",
+          "fullDescription": "This rule raises an issue when a general or reserved exception is thrown.",
+          "defaultLevel": "warning",
+          "properties": {
+            "category": "Major Code Smell",
+            "isEnabledByDefault": true,
+            "tags": [
+              "C#",
+              "MainSourceScope",
+              "SonarWay"
+            ]
+          }
+        },
+        "S125": {
+          "id": "S125",
+          "shortDescription": "Sections of code should not be commented out",
+          "fullDescription": "Commented-out code distracts the focus from the actual executed code. It creates a noise that increases maintenance code. And because it is never executed, it quickly becomes out of date and invalid.",
+          "defaultLevel": "warning",
+          "properties": {
+            "category": "Major Code Smell",
+            "isEnabledByDefault": true,
+            "tags": [
+              "C#",
+              "MainSourceScope",
+              "TestSourceScope",
+              "SonarWay"
+            ]
+          }
+        },
+        "S2325": {
+          "id": "S2325",
+          "shortDescription": "Methods and properties that don't access instance data should be static",
+          "fullDescription": "Methods and properties that don’t access instance data should be marked as static for the following reasons:",
+          "defaultLevel": "warning",
+          "properties": {
+            "category": "Minor Code Smell",
+            "isEnabledByDefault": true,
+            "tags": [
+              "C#",
+              "MainSourceScope",
+              "TestSourceScope",
+              "SonarWay"
+            ]
+          }
+        },
+        "S2971": {
+          "id": "S2971",
+          "shortDescription": "LINQ expressions should be simplified",
+          "fullDescription": "In the interests of readability, code that can be simplified should be simplified. To that end, there are several ways IEnumerable language integrated queries (LINQ) can be simplified. This not only improves readabilty but can also lead to improved performance.",
+          "defaultLevel": "warning",
+          "properties": {
+            "category": "Major Code Smell",
+            "isEnabledByDefault": true,
+            "tags": [
+              "C#",
+              "MainSourceScope",
+              "TestSourceScope",
+              "SonarWay"
+            ]
+          }
+        },
+        "S3776": {
+          "id": "S3776",
+          "shortDescription": "Cognitive Complexity of methods should not be too high",
+          "fullDescription": "This rule raises an issue when the code cognitive complexity of a function is above a certain threshold.",
+          "defaultLevel": "warning",
+          "properties": {
+            "category": "Critical Code Smell",
+            "isEnabledByDefault": false,
+            "tags": [
+              "C#",
+              "MainSourceScope",
+              "TestSourceScope",
+              "SonarWay"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
