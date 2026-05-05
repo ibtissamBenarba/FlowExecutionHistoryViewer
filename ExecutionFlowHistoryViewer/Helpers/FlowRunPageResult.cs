@@ -9,7 +9,7 @@ namespace ExecutionFlowHistoryViewer.Helpers
 {
     public class FlowRunPageResult
     {
-        public List<FlowRun> Runs { get; set; }
+        public List<FlowRun> Runs { get; set; } = new List<FlowRun>();
         public bool HasMore { get; set; }
         public string NextSkipToken { get; set; }
     }

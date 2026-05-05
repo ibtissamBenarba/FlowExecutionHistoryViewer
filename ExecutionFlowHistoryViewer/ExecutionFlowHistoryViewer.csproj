@@ -265,6 +265,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Contracts\IAuthenticationService.cs" />
+    <Compile Include="Contracts\IDataverseService.cs" />
+    <Compile Include="Contracts\IFlowClient.cs" />
+    <Compile Include="Contracts\IFlowClientFactory.cs" />
+    <Compile Include="Contracts\IFlowHistoryService.cs" />
+    <Compile Include="Contracts\IPaginationService.cs" />
+    <Compile Include="Helpers\DataGridBinder.cs" />
     <Compile Include="Helpers\FlowRunPageResult.cs" />
     <Compile Include="Helpers\PageFetchResult.cs" />
     <Compile Include="Models\Flow.cs" />
@@ -283,9 +290,14 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Services\AuthenticationService.cs" />
     <Compile Include="Services\CsvService.cs" />
+    <Compile Include="Services\DataverseService.cs" />
     <Compile Include="Services\ExcelService.cs" />
     <Compile Include="Services\FlowClient.cs" />
+    <Compile Include="Services\FlowClientFactory.cs" />
+    <Compile Include="Services\FlowHistoryService.cs" />
+    <Compile Include="Services\PaginationService.cs" />
     <Compile Include="Settings.cs" />
   </ItemGroup>
   <ItemGroup>

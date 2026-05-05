@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ExecutionFlowHistoryViewer.Models
 {
-    internal sealed class SolutionItem
+    public sealed class SolutionItem
     {
         public Guid Id { get; set; }
         public string Name { get; set; }

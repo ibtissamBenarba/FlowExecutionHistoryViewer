@@ -3,6 +3,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <StartArguments>/overridepath:.</StartArguments>
     <StartAction>Program</StartAction>
-    <StartProgram>C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\ExecutionFlowHistoryViewer\bin\Debug\XrmToolBox.exe</StartProgram>
+    <StartProgram>C:\Users\ibenarba\source\repos\PFE\FlowExecutionHistoryViewer\ExecutionFlowHistoryViewer\bin\Debug\XrmToolBox.exe</StartProgram>
   </PropertyGroup>
 </Project>

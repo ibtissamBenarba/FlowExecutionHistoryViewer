@@ -61,7 +61,6 @@
             this.lblDateTo = new System.Windows.Forms.Label();
             this.dtpDateFrom = new System.Windows.Forms.DateTimePicker();
             this.lblDateFrom = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
             this.tsmContainer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).BeginInit();
             this.splitContainerMain.Panel1.SuspendLayout();
@@ -453,20 +452,10 @@
             this.lblDateFrom.TabIndex = 0;
             this.lblDateFrom.Text = "From:";
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(0, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(44, 16);
-            this.label1.TabIndex = 6;
-            this.label1.Text = "label1";
-            // 
             // MyPluginControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.label1);
             this.Controls.Add(this.splitContainerMain);
             this.Controls.Add(this.tsmContainer);
             this.Margin = new System.Windows.Forms.Padding(4);
@@ -525,7 +514,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunDuration;
         private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunError;
         private System.Windows.Forms.Label lblPageInfo;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnNext;
         private System.Windows.Forms.Button btnPrev;
     }
