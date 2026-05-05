@@ -1,8 +1,10 @@
 ﻿// Services/FlowClient.cs
-using ExecutionFlowHistoryViewer.Helpers;
 using ExecutionFlowHistoryViewer.Contracts;
+using ExecutionFlowHistoryViewer.DTO;
+using ExecutionFlowHistoryViewer.Helpers;
 using ExecutionFlowHistoryViewer.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Net.Http;
 
@@ -42,30 +44,37 @@ namespace ExecutionFlowHistoryViewer.Services
                 if (!response.IsSuccessStatusCode)
                     throw new Exception($"Power Automate Error: {response.StatusCode} - {json}");
 
-                dynamic data = JsonConvert.DeserializeObject(json);
+                // --- LECTURE DU NEXT LINK VIA JOBJECT (infaillible) ---
+                var jObject = JObject.Parse(json);
+                string nextLink = jObject["@odata.nextLink"]?.ToString()
+                               ?? jObject["nextLink"]?.ToString();
 
-                if (data.value != null)
-                {
-                    foreach (var item in data.value)
-                    {
-                        result.Runs.Add(new FlowRun
-                        {
-                            Id = item.name,
-                            Status = item.properties?.status ?? "Unknown",
-                            StartDate = item.properties?.startTime ?? DateTime.MinValue,
-                            EndDate = item.properties?.endTime ?? DateTime.MinValue,
-                            Url = $"https://make.powerautomate.com/environments/{_envId}/flows/{flowId}/runs/{item.name}"
-                        });
-                    }
-                }
-
-                string nextLink = data["@odata.nextLink"]?.ToString() ?? data.nextLink?.ToString();
                 if (!string.IsNullOrEmpty(nextLink))
                 {
                     result.HasMore = true;
                     var uri = new Uri(nextLink);
                     var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
                     result.NextSkipToken = queryParams["$skiptoken"];
+                }
+
+                // --- LECTURE DES RUNS VIA DTO (typé et propre) ---
+                var dto = jObject.ToObject<FlowRunsResponseDto>();
+
+                if (dto?.Value != null)
+                {
+                    foreach (var item in dto.Value)
+                    {
+                        if (item == null) continue;
+
+                        result.Runs.Add(new FlowRun
+                        {
+                            Id = item.Name,
+                            Status = item.Properties?.Status ?? "Unknown",
+                            StartDate = item.Properties?.StartTime ?? DateTime.MinValue,
+                            EndDate = item.Properties?.EndTime ?? DateTime.MinValue,
+                            Url = $"https://make.powerautomate.com/environments/{_envId}/flows/{flowId}/runs/{item.Name}"
+                        });
+                    }
                 }
             }
 

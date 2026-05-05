@@ -57,8 +57,19 @@ namespace ExecutionFlowHistoryViewer
 
         private void InitializePagination()
         {
-            if (btnPrev != null) { btnPrev.Enabled = false; btnPrev.Click += btnPrev_Click; }
-            if (btnNext != null) { btnNext.Enabled = false; btnNext.Click += btnNext_Click; }
+            // CORRECTION : -= avant += pour éviter les doubles attachements
+            if (btnPrev != null)
+            {
+                btnPrev.Enabled = false;
+                btnPrev.Click -= btnPrev_Click;
+                btnPrev.Click += btnPrev_Click;
+            }
+            if (btnNext != null)
+            {
+                btnNext.Enabled = false;
+                btnNext.Click -= btnNext_Click;
+                btnNext.Click += btnNext_Click;
+            }
             if (lblPageInfo != null) lblPageInfo.Text = "Ready";
         }
 
@@ -77,10 +88,20 @@ namespace ExecutionFlowHistoryViewer
 
         private void WireEvents()
         {
+            // CORRECTION : -= avant += pour éviter les doublons
+            dataGridView1.CellClick -= dataGridView1_CellClick;
             dataGridView1.CellClick += dataGridView1_CellClick;
+
+            cbSolutions.SelectedIndexChanged -= cbSolutions_SelectedIndexChanged;
             cbSolutions.SelectedIndexChanged += cbSolutions_SelectedIndexChanged;
+
+            clbFlows.ItemCheck -= clbFlows_ItemCheck;
             clbFlows.ItemCheck += clbFlows_ItemCheck;
+
+            tbSearch.TextChanged -= tbSearch_TextChanged;
             tbSearch.TextChanged += tbSearch_TextChanged;
+
+            cbSelectAllFlows.CheckedChanged -= cbSelectAllFlows_CheckedChanged;
             cbSelectAllFlows.CheckedChanged += cbSelectAllFlows_CheckedChanged;
         }
 
@@ -217,6 +238,12 @@ namespace ExecutionFlowHistoryViewer
                     _pagination.AppendRuns(result.Runs);
                     _pagination.HasMoreServerPages = result.HasMore;
 
+                    // CORRECTION : Si c'est un fetch "Next", on avance la page APRÈS avoir reçu les données
+                    if (isNextPage)
+                    {
+                        _pagination.CurrentPage++;
+                    }
+
                     ShowCurrentPage();
                     UpdatePaginationUI();
                 }
@@ -235,13 +262,15 @@ namespace ExecutionFlowHistoryViewer
         private void UpdatePaginationUI()
         {
             lblPageInfo.Text = _pagination.GetPageInfoText();
-            btnPrev.Enabled = _pagination.CanGoPrevious();
+            btnPrev.Enabled = _pagination.CanGoPrevious() && !_pagination.IsLoading;
             btnNext.Enabled = _pagination.CanGoNext() && !_pagination.IsLoading;
         }
 
         private void btnPrev_Click(object sender, EventArgs e)
         {
-            if (!_pagination.CanGoPrevious()) return;
+            // CORRECTION : Protection contre double-clic et chargement
+            if (!_pagination.CanGoPrevious() || _pagination.IsLoading) return;
+
             _pagination.CurrentPage--;
             ShowCurrentPage();
             UpdatePaginationUI();
@@ -249,15 +278,21 @@ namespace ExecutionFlowHistoryViewer
 
         private void btnNext_Click(object sender, EventArgs e)
         {
+            // CORRECTION : Protection contre chargement
+            if (_pagination.IsLoading) return;
+
+            // Case 1: Next page is already in cache
             if (_pagination.CurrentPage < _pagination.TotalCachedPages)
             {
                 _pagination.CurrentPage++;
                 ShowCurrentPage();
                 UpdatePaginationUI();
             }
-            else if (_pagination.HasMoreServerPages && !_pagination.IsLoading)
+            // Case 2: We're on the last cached page but server has more
+            else if (_pagination.HasMoreServerPages)
             {
-                _pagination.CurrentPage++;
+                // CORRECTION : On NE TOUCHE PAS à CurrentPage ici !
+                // Elle sera incrémentée dans le callback de FetchPage
                 var (fromDate, toDate, status) = GetFilterValues();
                 FetchPage(GetSelectedFlows(), fromDate, toDate, status, isNextPage: true);
             }

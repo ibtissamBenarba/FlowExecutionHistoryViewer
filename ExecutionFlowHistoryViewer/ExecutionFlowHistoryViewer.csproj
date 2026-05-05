@@ -271,6 +271,9 @@
     <Compile Include="Contracts\IFlowClientFactory.cs" />
     <Compile Include="Contracts\IFlowHistoryService.cs" />
     <Compile Include="Contracts\IPaginationService.cs" />
+    <Compile Include="DTO\FlowRunDto.cs" />
+    <Compile Include="DTO\FlowRunPropertiesDto.cs" />
+    <Compile Include="DTO\FlowRunsResponseDto.cs" />
     <Compile Include="Helpers\DataGridBinder.cs" />
     <Compile Include="Helpers\FlowRunPageResult.cs" />
     <Compile Include="Helpers\PageFetchResult.cs" />
