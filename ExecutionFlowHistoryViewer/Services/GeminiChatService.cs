@@ -27,7 +27,7 @@ namespace ExecutionFlowHistoryViewer.Services
                 return "Error: Gemini API Key is not set in Settings.";
             }
 
-            var requestUri = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={_apiKey}";
+            var requestUri = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={_apiKey}";
 
             // Prepare history contents for Gemini API format
             var contents = new List<object>();
