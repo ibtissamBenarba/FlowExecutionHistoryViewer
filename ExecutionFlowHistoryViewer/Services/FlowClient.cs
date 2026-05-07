@@ -80,5 +80,90 @@ namespace ExecutionFlowHistoryViewer.Services
 
             return result;
         }
+        public FlowRunDetailDto GetRunDetails(string flowId, string runId)
+        {
+            string url = $"{_baseUrl}/providers/Microsoft.ProcessSimple/environments/{_envId}/flows/{flowId}/runs/{runId}?api-version=2016-11-01";
+
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _token);
+
+                var response = client.GetAsync(url).GetAwaiter().GetResult();
+                var json = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception($"Power Automate Error: {response.StatusCode} - {json}");
+
+                var jObject = Newtonsoft.Json.Linq.JObject.Parse(json);
+                var dto = jObject.ToObject<FlowRunDetailDto>();
+
+                // Correlation n'est pas toujours mappé automatiquement
+                var correlation = jObject["properties"]?["correlation"];
+                if (correlation != null && dto?.Properties != null)
+                {
+                    dto.Properties.CorrelationClientTrackingId = correlation["clientTrackingId"]?.ToString();
+                }
+
+                return dto;
+            }
+        }
+
+        public FlowActionsResponseDto GetRunActions(string flowId, string runId)
+        {
+            string url = $"{_baseUrl}/providers/Microsoft.ProcessSimple/environments/{_envId}/flows/{flowId}/runs/{runId}/actions?api-version=2016-11-01";
+
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _token);
+
+                var response = client.GetAsync(url).GetAwaiter().GetResult();
+                var json = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception($"Power Automate Error: {response.StatusCode} - {json}");
+
+                return JsonConvert.DeserializeObject<FlowActionsResponseDto>(json);
+            }
+        }
+
+        public string GetContentFromLink(string linkUri)
+        {
+            if (string.IsNullOrEmpty(linkUri))
+                return null;
+
+            using (var client = new HttpClient())
+            {
+                // Si l'URI contient déjà un token SAS (sig=), ne pas envoyer Bearer
+                bool hasSasToken = linkUri.Contains("sig=") || linkUri.Contains("sp=");
+
+                if (!hasSasToken)
+                {
+                    // Seulement si PAS de SAS dans l'URL
+                    client.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _token);
+                }
+
+                var response = client.GetAsync(linkUri).GetAwaiter().GetResult();
+                var content = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return $"Error: {response.StatusCode}\nURI: {linkUri}\nResponse: {content}";
+                }
+
+                // Formater le JSON
+                try
+                {
+                    var obj = JsonConvert.DeserializeObject(content);
+                    return JsonConvert.SerializeObject(obj, Formatting.Indented);
+                }
+                catch
+                {
+                    return content;
+                }
+            }
+        }
     }
 }

@@ -1,4 +1,6 @@
 ﻿// MyPluginControl.cs
+using ExecutionFlowHistoryViewer.DTO;
+using ExecutionFlowHistoryViewer.Forms;
 using ExecutionFlowHistoryViewer.Contracts;
 using ExecutionFlowHistoryViewer.Helpers;
 using ExecutionFlowHistoryViewer.Models;
@@ -57,7 +59,7 @@ namespace ExecutionFlowHistoryViewer
 
         private void InitializePagination()
         {
-            // CORRECTION : -= avant += pour éviter les doubles attachements
+            // -= avant += pour éviter les doublons
             if (btnPrev != null)
             {
                 btnPrev.Enabled = false;
@@ -88,7 +90,7 @@ namespace ExecutionFlowHistoryViewer
 
         private void WireEvents()
         {
-            // CORRECTION : -= avant += pour éviter les doublons
+            // -= avant += pour éviter les doublons
             dataGridView1.CellClick -= dataGridView1_CellClick;
             dataGridView1.CellClick += dataGridView1_CellClick;
 
@@ -353,23 +355,76 @@ namespace ExecutionFlowHistoryViewer
         private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0) return;
-            if (dataGridView1.Columns[e.ColumnIndex].Name != "ViewRun") return;
+            if (e.ColumnIndex < 0 || e.ColumnIndex >= dataGridView1.Columns.Count) return;
 
             var run = dataGridView1.Rows[e.RowIndex].DataBoundItem as FlowRun;
-            if (run == null || string.IsNullOrEmpty(run.Url))
+            if (run == null) return;
+
+            string colName = dataGridView1.Columns[e.ColumnIndex].Name;
+
+            if (colName == "ViewRun")
             {
-                MessageBox.Show("Could not open run URL.");
+                if (string.IsNullOrEmpty(run.Url))
+                {
+                    MessageBox.Show("URL is empty for this run.");
+                    return;
+                }
+                try
+                {
+                    Process.Start(new ProcessStartInfo { FileName = run.Url, UseShellExecute = true });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to open URL: {ex.Message}");
+                }
+            }
+            else if (colName == "ViewDetails")
+            {
+                ShowRunDetails(run);
+            }
+        }
+
+        private void ShowRunDetails(FlowRun run)
+        {
+            var flow = _currentFlows.FirstOrDefault(f => f.DisplayName == run.FlowName);
+            if (flow == null)
+            {
+                MessageBox.Show("Could not determine the flow for this run.", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            try
+            WorkAsync(new WorkAsyncInfo
             {
-                Process.Start(new ProcessStartInfo { FileName = run.Url, UseShellExecute = true });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Failed to open URL: {ex.Message}\n\nURL: {run.Url}");
-            }
+                Message = "Loading run details...",
+                Work = (worker, args) =>
+                {
+                    var client = _flowClientFactory.Create();
+                    var detail = client.GetRunDetails(flow.Id, run.Id);
+                    var actions = client.GetRunActions(flow.Id, run.Id);
+
+                    // ← Passer le client aussi
+                    args.Result = new Tuple<FlowRunDetailDto, FlowActionsResponseDto, IFlowClient>(detail, actions, client);
+                },
+                PostWorkCallBack = (args) =>
+                {
+                    if (args.Error != null)
+                    {
+                        ShowError(args.Error);
+                        return;
+                    }
+
+                    var tuple = (Tuple<FlowRunDetailDto, FlowActionsResponseDto, IFlowClient>)args.Result;
+                    var detail = tuple.Item1;
+                    var actions = tuple.Item2;
+                    var client = tuple.Item3;
+
+                    using (var form = new RunDetailForm(run, detail, actions, client))  // ← Passer client
+                    {
+                        form.ShowDialog(this);
+                    }
+                }
+            });
         }
 
         #endregion

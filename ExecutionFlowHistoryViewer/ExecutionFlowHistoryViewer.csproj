@@ -271,9 +271,17 @@
     <Compile Include="Contracts\IFlowClientFactory.cs" />
     <Compile Include="Contracts\IFlowHistoryService.cs" />
     <Compile Include="Contracts\IPaginationService.cs" />
+    <Compile Include="DTO\FlowActionsResponseDto.cs" />
+    <Compile Include="DTO\FlowRunDetailDto.cs" />
     <Compile Include="DTO\FlowRunDto.cs" />
     <Compile Include="DTO\FlowRunPropertiesDto.cs" />
     <Compile Include="DTO\FlowRunsResponseDto.cs" />
+    <Compile Include="Forms\RunDetailForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\RunDetailForm.Designer.cs">
+      <DependentUpon>RunDetailForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Helpers\DataGridBinder.cs" />
     <Compile Include="Helpers\FlowRunPageResult.cs" />
     <Compile Include="Helpers\PageFetchResult.cs" />
@@ -309,6 +317,9 @@
     <None Include="RunSonar.bat" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Forms\RunDetailForm.resx">
+      <DependentUpon>RunDetailForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MyPluginControl.resx">
       <DependentUpon>MyPluginControl.cs</DependentUpon>
     </EmbeddedResource>

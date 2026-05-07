@@ -69,6 +69,16 @@ namespace ExecutionFlowHistoryViewer.Helpers
                 Name = "ViewRun",
                 Width = 80
             });
+
+            var detailsColumn = new DataGridViewLinkColumn
+            {
+                HeaderText = "Details",
+                Text = "View Details",
+                UseColumnTextForLinkValue = true,
+                Name = "ViewDetails",
+                Width = 80
+            };
+            grid.Columns.Add(detailsColumn);
         }
     }
 }
