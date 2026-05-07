@@ -101,6 +101,13 @@ namespace ExecutionFlowHistoryViewer
             {
                 LogInfo("Settings found and loaded");
             }
+
+            // Set the provided Gemini API key if not already set
+            if (string.IsNullOrEmpty(_settings.GeminiApiKey))
+            {
+                _settings.GeminiApiKey = "AIzaSyBoYQKbcz_1-4b5hlfRmyOrDmXQlUqrId0";
+                SettingsManager.Instance.Save(GetType(), _settings);
+            }
         }
 
         private void InitializeFilters()
@@ -668,7 +675,8 @@ namespace ExecutionFlowHistoryViewer
                     }
 
                     var tuple = (Tuple<FlowRunDetailDto, FlowActionsResponseDto, IFlowClient>)args.Result;
-                    using (var form = new RunDetailForm(run, tuple.Item1, tuple.Item2, tuple.Item3))
+                    var chatService = new GeminiChatService(_settings.GeminiApiKey);
+                    using (var form = new RunDetailForm(run, tuple.Item1, tuple.Item2, tuple.Item3, chatService))
                     {
                         form.ShowDialog(this);
                     }

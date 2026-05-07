@@ -273,6 +273,7 @@
     <Compile Include="Contracts\IDataverseService.cs" />
     <Compile Include="Contracts\IFlowClient.cs" />
     <Compile Include="Contracts\IFlowClientFactory.cs" />
+    <Compile Include="Contracts\IChatService.cs" />
     <Compile Include="Contracts\IFlowHistoryService.cs" />
     <Compile Include="Contracts\IPaginationService.cs" />
     <Compile Include="DTO\FlowActionsResponseDto.cs" />
@@ -319,6 +320,7 @@
     <Compile Include="Services\FlowClient.cs" />
     <Compile Include="Services\FlowClientFactory.cs" />
     <Compile Include="Services\FlowHistoryService.cs" />
+    <Compile Include="Services\GeminiChatService.cs" />
     <Compile Include="Services\PaginationService.cs" />
     <Compile Include="Settings.cs" />
   </ItemGroup>
