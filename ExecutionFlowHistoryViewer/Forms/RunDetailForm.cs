@@ -4,6 +4,7 @@ using ExecutionFlowHistoryViewer.Models;
 using ExecutionFlowHistoryViewer.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using ExecutionFlowHistoryViewer.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -43,6 +44,7 @@ namespace ExecutionFlowHistoryViewer.Forms
             _actions = actions;
             _flowClient = flowClient;
             InitializeComponent();
+            ThemeManager.ApplyTheme(this);
             BuildUi();
             LoadData();
         }

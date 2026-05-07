@@ -49,6 +49,12 @@ namespace ExecutionFlowHistoryViewer
 
         private void MyPluginControl_Load(object sender, EventArgs e)
         {
+            ThemeManager.ApplyTheme(this);
+            if (btnClearDeepSearch != null)
+            {
+                ThemeManager.StyleSecondaryButton(btnClearDeepSearch);
+            }
+
             clbFlows.CheckOnClick = true;
             InitializeFilters();
             InitializePagination();
