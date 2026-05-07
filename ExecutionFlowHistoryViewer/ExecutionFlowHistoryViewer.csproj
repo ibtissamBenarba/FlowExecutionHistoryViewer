@@ -33,6 +33,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EPPlus, Version=8.5.4.0, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL">
+      <HintPath>..\packages\EPPlus.8.5.4\lib\net462\EPPlus.dll</HintPath>
+    </Reference>
+    <Reference Include="EPPlus.Interfaces, Version=8.4.0.0, Culture=neutral, PublicKeyToken=a694d7f3b0907a61, processorArchitecture=MSIL">
+      <HintPath>..\packages\EPPlus.Interfaces.8.4.0\lib\net462\EPPlus.Interfaces.dll</HintPath>
+    </Reference>
     <Reference Include="McTools.Xrm.Connection, Version=1.2025.7.63, Culture=neutral, PublicKeyToken=96037217801d9658, processorArchitecture=MSIL">
       <HintPath>..\packages\MscrmTools.Xrm.Connection.1.2025.7.63\lib\net48\McTools.Xrm.Connection.dll</HintPath>
     </Reference>
@@ -75,6 +81,9 @@
     <Reference Include="Microsoft.IdentityModel.Clients.ActiveDirectory, Version=5.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.IdentityModel.Clients.ActiveDirectory.5.3.0\lib\net45\Microsoft.IdentityModel.Clients.ActiveDirectory.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.IO.RecyclableMemoryStream, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.IO.RecyclableMemoryStream.3.0.1\lib\netstandard2.0\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Rest.ClientRuntime, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Rest.ClientRuntime.2.3.24\lib\net461\Microsoft.Rest.ClientRuntime.dll</HintPath>
     </Reference>
@@ -114,6 +123,7 @@
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
     <Reference Include="ScintillaNET, Version=3.6.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\jacobslusser.ScintillaNET.3.6.3\lib\net40\ScintillaNET.dll</HintPath>
     </Reference>
@@ -121,7 +131,11 @@
     <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll</HintPath>
     </Reference>
+    <Reference Include="System.ComponentModel.Annotations, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ComponentModel.Annotations.5.0.0\lib\net461\System.ComponentModel.Annotations.dll</HintPath>
+    </Reference>
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Diagnostics.DiagnosticSource, Version=9.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Diagnostics.DiagnosticSource.9.0.7\lib\net462\System.Diagnostics.DiagnosticSource.dll</HintPath>
@@ -178,6 +192,9 @@
       <HintPath>..\packages\System.Security.Cryptography.X509Certificates.4.3.2\lib\net461\System.Security.Cryptography.X509Certificates.dll</HintPath>
       <Private>True</Private>
       <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Xml, Version=8.0.0.3, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.Xml.8.0.3\lib\net462\System.Security.Cryptography.Xml.dll</HintPath>
     </Reference>
     <Reference Include="System.ServiceModel.Duplex, Version=8.1.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.ServiceModel.Primitives.8.1.2\lib\net462\System.ServiceModel.Duplex.dll</HintPath>
@@ -248,8 +265,29 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Contracts\IAuthenticationService.cs" />
+    <Compile Include="Contracts\IDataverseService.cs" />
+    <Compile Include="Contracts\IFlowClient.cs" />
+    <Compile Include="Contracts\IFlowClientFactory.cs" />
+    <Compile Include="Contracts\IFlowHistoryService.cs" />
+    <Compile Include="Contracts\IPaginationService.cs" />
+    <Compile Include="DTO\FlowActionsResponseDto.cs" />
+    <Compile Include="DTO\FlowRunDetailDto.cs" />
+    <Compile Include="DTO\FlowRunDto.cs" />
+    <Compile Include="DTO\FlowRunPropertiesDto.cs" />
+    <Compile Include="DTO\FlowRunsResponseDto.cs" />
+    <Compile Include="Forms\RunDetailForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\RunDetailForm.Designer.cs">
+      <DependentUpon>RunDetailForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Helpers\DataGridBinder.cs" />
+    <Compile Include="Helpers\FlowRunPageResult.cs" />
+    <Compile Include="Helpers\PageFetchResult.cs" />
     <Compile Include="Models\Flow.cs" />
     <Compile Include="Models\FlowRun.cs" />
+    <Compile Include="Models\SolutionItem.cs" />
     <Compile Include="MyPlugin.cs" />
     <Compile Include="MyPluginControl.cs">
       <SubType>UserControl</SubType>
@@ -263,14 +301,25 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Services\AuthenticationService.cs" />
+    <Compile Include="Services\CsvService.cs" />
+    <Compile Include="Services\DataverseService.cs" />
+    <Compile Include="Services\ExcelService.cs" />
     <Compile Include="Services\FlowClient.cs" />
+    <Compile Include="Services\FlowClientFactory.cs" />
+    <Compile Include="Services\FlowHistoryService.cs" />
+    <Compile Include="Services\PaginationService.cs" />
     <Compile Include="Settings.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
     <None Include="RunSonar.bat" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Forms\RunDetailForm.resx">
+      <DependentUpon>RunDetailForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MyPluginControl.resx">
       <DependentUpon>MyPluginControl.cs</DependentUpon>
     </EmbeddedResource>
