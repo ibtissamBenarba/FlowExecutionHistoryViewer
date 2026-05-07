@@ -945,7 +945,7 @@ namespace ExecutionFlowHistoryViewer
 
         private void tsbAiAssistant_Click(object sender, EventArgs e)
         {
-            var allRuns = _pagination.GetAllItems();
+            var allRuns = _pagination.AllRuns?.ToList();
             if (allRuns == null || allRuns.Count == 0)
             {
                 MessageBox.Show("Please fetch some flow runs first before asking the Global AI.", "No Data", MessageBoxButtons.OK, MessageBoxIcon.Information);
