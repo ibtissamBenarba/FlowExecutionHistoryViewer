@@ -115,7 +115,7 @@ namespace ExecutionFlowHistoryViewer.Forms
                     r.Id 
                 }).ToList();
 
-                var systemContext = JsonConvert.SerializeObject(summaryList, Formatting.None);
+                var systemContext = "NOTE: You are the Global AI Assistant. You only have access to the high-level summary of all runs. You DO NOT have the specific error messages or action details. If the user asks for the error message of a failed run or how to fix it, you MUST tell them: 'I only have the high-level summary here. To see the specific error message and get fix suggestions, please double-click the failed run in the grid to open its Details window, and ask the AI Assistant there.'\n\nRuns Data: " + JsonConvert.SerializeObject(summaryList, Formatting.None);
 
                 var answer = await _chatService.AskQuestionAsync(question, systemContext, _chatHistory);
                 
