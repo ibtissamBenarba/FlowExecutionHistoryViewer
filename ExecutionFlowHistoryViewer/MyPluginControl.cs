@@ -943,6 +943,22 @@ namespace ExecutionFlowHistoryViewer
 
         #region Export
 
+        private void tsbAiAssistant_Click(object sender, EventArgs e)
+        {
+            var allRuns = _pagination.GetAllItems();
+            if (allRuns == null || allRuns.Count == 0)
+            {
+                MessageBox.Show("Please fetch some flow runs first before asking the Global AI.", "No Data", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var chatService = new GeminiChatService(_settings.GeminiApiKey);
+            using (var form = new Forms.GlobalAiForm(allRuns, chatService))
+            {
+                form.ShowDialog(this);
+            }
+        }
+
         private void btnExport_Click_1(object sender, EventArgs e)
         {
             var currentPage = _pagination?.GetCurrentPage();

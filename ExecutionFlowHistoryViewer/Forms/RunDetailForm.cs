@@ -231,7 +231,7 @@ namespace ExecutionFlowHistoryViewer.Forms
                     FailedActions = _actions?.Value?.Where(a => a.Properties?.Status == "Failed").Select(a => new { a.Name, a.Properties.Error }).ToList(),
                     AllActions = _actions?.Value?.Select(a => new { a.Name, a.Properties.Status }).ToList()
                 };
-                var systemContext = JsonConvert.SerializeObject(contextObj, Formatting.None);
+                var systemContext = "NOTE: You are looking at the deep details of ONE SPECIFIC flow run. Do NOT confuse this with the global list of all runs. " + JsonConvert.SerializeObject(contextObj, Formatting.None);
 
                 var answer = await _chatService.AskQuestionAsync(question, systemContext, _chatHistory);
                 

@@ -34,6 +34,7 @@ namespace ExecutionFlowHistoryViewer
             this.tsbSample = new System.Windows.Forms.ToolStripButton();
             this.tsmConnectToPA = new System.Windows.Forms.ToolStripButton();
             this.btnExport = new System.Windows.Forms.ToolStripButton();
+            this.tsbAiAssistant = new System.Windows.Forms.ToolStripButton();
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
             this.gbFlows = new System.Windows.Forms.GroupBox();
             this.clbFlows = new System.Windows.Forms.CheckedListBox();
@@ -103,7 +104,8 @@ namespace ExecutionFlowHistoryViewer
             this.tssSeparator1,
             this.tsbSample,
             this.tsmConnectToPA,
-            this.btnExport});
+            this.btnExport,
+            this.tsbAiAssistant});
             this.tsmContainer.Location = new System.Drawing.Point(0, 0);
             this.tsmContainer.Name = "tsmContainer";
             this.tsmContainer.Size = new System.Drawing.Size(1347, 31);
@@ -143,6 +145,15 @@ namespace ExecutionFlowHistoryViewer
             this.btnExport.Size = new System.Drawing.Size(134, 24);
             this.btnExport.Text = "Export CSV / Excel";
             this.btnExport.Click += new System.EventHandler(this.btnExport_Click_1);
+            // 
+            // tsbAiAssistant
+            // 
+            this.tsbAiAssistant.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.tsbAiAssistant.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbAiAssistant.Name = "tsbAiAssistant";
+            this.tsbAiAssistant.Size = new System.Drawing.Size(120, 24);
+            this.tsbAiAssistant.Text = "✨ Global AI";
+            this.tsbAiAssistant.Click += new System.EventHandler(this.tsbAiAssistant_Click);
             // 
             // splitContainerMain
             // 
@@ -720,6 +731,7 @@ namespace ExecutionFlowHistoryViewer
         private System.Windows.Forms.Label lblDateFrom;
         private System.Windows.Forms.ToolStripButton tsmConnectToPA;
         private System.Windows.Forms.ToolStripButton btnExport;
+        private System.Windows.Forms.ToolStripButton tsbAiAssistant;
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.ToolStrip tsPagination;
         private System.Windows.Forms.DataGridViewTextBoxColumn FlowName;

@@ -287,6 +287,7 @@
     <Compile Include="Forms\ExportForm.Designer.cs">
       <DependentUpon>ExportForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\GlobalAiForm.cs" />
     <Compile Include="Forms\RunDetailForm.cs">
       <SubType>Form</SubType>
     </Compile>
