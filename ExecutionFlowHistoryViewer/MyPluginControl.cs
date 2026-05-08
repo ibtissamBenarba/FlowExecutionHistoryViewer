@@ -344,7 +344,9 @@ namespace ExecutionFlowHistoryViewer
                     _pagination.AppendRuns(result.Runs);
                     _pagination.HasMoreServerPages = result.HasMore;
 
-                    if (isNextPage) _pagination.CurrentPage++;
+                    // CORRECTION : n'incrémenter la page que si des données ont été reçues
+                    if (isNextPage && result.Runs.Count > 0)
+                        _pagination.CurrentPage++;
 
                     ShowCurrentPage();
                     UpdatePaginationUI();
@@ -379,12 +381,22 @@ namespace ExecutionFlowHistoryViewer
                     if (args.Error != null) { ShowError(args.Error); return; }
 
                     var results = (List<FlowRunPageResult>)args.Result;
+                    int pagesWithData = 0;
+
                     foreach (var res in results)
                     {
                         _pagination.AppendRuns(res.Runs);
                         _pagination.HasMoreServerPages = res.HasMore;
-                        _pagination.CurrentPage++;
+                        if (res.Runs.Count > 0)
+                            pagesWithData++;
                     }
+
+                    // CORRECTION : n'avancer que du nombre de pages qui ont réellement des données
+                    _pagination.CurrentPage += pagesWithData;
+
+                    // Si on est sur une page vide et qu'il n'y a plus de pages serveur, reculer
+                    if (_pagination.GetCurrentPage().Count == 0 && !_pagination.HasMoreServerPages && _pagination.CurrentPage > 1)
+                        _pagination.CurrentPage--;
 
                     ShowCurrentPage();
                     UpdatePaginationUI();
@@ -460,9 +472,14 @@ namespace ExecutionFlowHistoryViewer
                         ShowCurrentPage();
                         UpdatePaginationUI();
                     }
-                    else
+                    else if (_pagination.HasMoreServerPages)
                     {
                         MessageBox.Show("Please load intermediate pages using the 'Next' button first.", "Info");
+                        tstbPageNumber.Text = _pagination.CurrentPage.ToString();
+                    }
+                    else
+                    {
+                        // La page demandée dépasse les données disponibles et il n'y a plus rien sur le serveur
                         tstbPageNumber.Text = _pagination.CurrentPage.ToString();
                     }
                 }
@@ -610,20 +627,22 @@ namespace ExecutionFlowHistoryViewer
 
         private void btnExport_Click_1(object sender, EventArgs e)
         {
-            var history = dataGridView1.DataSource as List<FlowRun>;
-            if (history == null || history.Count == 0) return;
-
-            using (var sfd = new SaveFileDialog { Filter = "Excel (*.xlsx)|*.xlsx|CSV (*.csv)|*.csv" })
+            var currentPage = _pagination?.GetCurrentPage();
+            if (currentPage == null || currentPage.Count == 0)
             {
-                if (sfd.ShowDialog() != DialogResult.OK) return;
+                MessageBox.Show("No data to export. Please fetch history first.", "Export",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
 
-                string ext = Path.GetExtension(sfd.FileName).ToLower();
-                if (ext == ".xlsx")
-                    ExcelService.Export(history, sfd.FileName);
-                else
-                    CsvService.Export(history, sfd.FileName);
+            // Récupère TOUTES les runs en cache (toutes les pages chargées)
+            var allRuns = (_pagination != null && _pagination.AllRuns != null)
+                ? _pagination.AllRuns.ToList()
+                : currentPage;
 
-                MessageBox.Show("Export successful!");
+            using (var form = new ExportForm(currentPage, allRuns))
+            {
+                form.ShowDialog(this);
             }
         }
 

@@ -42,8 +42,15 @@ namespace ExecutionFlowHistoryViewer.Services
 
         public List<FlowRun> GetCurrentPage()
         {
+            if (_allRuns.Count == 0)
+                return new List<FlowRun>();
+
             int startIndex = (CurrentPage - 1) * PageSize;
-            if (startIndex >= _allRuns.Count) return new List<FlowRun>();
+
+            // Sécurité : si on dépasse les données en cache, retourner vide
+            if (startIndex >= _allRuns.Count)
+                return new List<FlowRun>();
+
             return _allRuns.Skip(startIndex).Take(PageSize).ToList();
         }
 
