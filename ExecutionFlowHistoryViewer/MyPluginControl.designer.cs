@@ -56,16 +56,16 @@
             this.Action = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Details = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tsPagination = new System.Windows.Forms.ToolStrip();
-            this.tsbSkipPrevious = new System.Windows.Forms.ToolStripButton();
-            this.tsbPrevious = new System.Windows.Forms.ToolStripButton();
-            this.toolStripTextBox1 = new System.Windows.Forms.ToolStripTextBox();
-            this.tslPageNumber = new System.Windows.Forms.ToolStripLabel();
-            this.tsbNext = new System.Windows.Forms.ToolStripButton();
+            this.tslItems = new System.Windows.Forms.ToolStripLabel();
+            this.tscNumberOfRuns = new System.Windows.Forms.ToolStripComboBox();
+            this.tslTotalItems = new System.Windows.Forms.ToolStripLabel();
             this.tsbSkipNext = new System.Windows.Forms.ToolStripButton();
+            this.tsbNext = new System.Windows.Forms.ToolStripButton();
+            this.tslPageNumber = new System.Windows.Forms.ToolStripLabel();
+            this.tstbPageNumber = new System.Windows.Forms.ToolStripTextBox();
+            this.tsbPrevious = new System.Windows.Forms.ToolStripButton();
+            this.tsbSkipPrevious = new System.Windows.Forms.ToolStripButton();
             this.gbRunFilters = new System.Windows.Forms.GroupBox();
-            this.btnNext = new System.Windows.Forms.Button();
-            this.btnPrev = new System.Windows.Forms.Button();
-            this.lblPageInfo = new System.Windows.Forms.Label();
             this.btnFetchHistory = new System.Windows.Forms.Button();
             this.cmbStatus = new System.Windows.Forms.ComboBox();
             this.lblStatus = new System.Windows.Forms.Label();
@@ -73,9 +73,6 @@
             this.lblDateTo = new System.Windows.Forms.Label();
             this.dtpDateFrom = new System.Windows.Forms.DateTimePicker();
             this.lblDateFrom = new System.Windows.Forms.Label();
-            this.tscNumberOfRuns = new System.Windows.Forms.ToolStripComboBox();
-            this.tslItems = new System.Windows.Forms.ToolStripLabel();
-            this.tslTotalItems = new System.Windows.Forms.ToolStripLabel();
             this.tsmContainer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).BeginInit();
             this.splitContainerMain.Panel1.SuspendLayout();
@@ -109,25 +106,25 @@
             // 
             this.tsbClose.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.tsbClose.Name = "tsbClose";
-            this.tsbClose.Size = new System.Drawing.Size(107, 28);
+            this.tsbClose.Size = new System.Drawing.Size(107, 24);
             this.tsbClose.Text = "Close this tool";
             this.tsbClose.Click += new System.EventHandler(this.tsbClose_Click);
             // 
             // tssSeparator1
             // 
             this.tssSeparator1.Name = "tssSeparator1";
-            this.tssSeparator1.Size = new System.Drawing.Size(6, 31);
+            this.tssSeparator1.Size = new System.Drawing.Size(6, 27);
             // 
             // tsbSample
             // 
             this.tsbSample.Name = "tsbSample";
-            this.tsbSample.Size = new System.Drawing.Size(29, 28);
+            this.tsbSample.Size = new System.Drawing.Size(29, 24);
             // 
             // tsmConnectToPA
             // 
             this.tsmConnectToPA.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.tsmConnectToPA.Name = "tsmConnectToPA";
-            this.tsmConnectToPA.Size = new System.Drawing.Size(225, 28);
+            this.tsmConnectToPA.Size = new System.Drawing.Size(225, 24);
             this.tsmConnectToPA.Text = "Connect to Power Automate API";
             this.tsmConnectToPA.Click += new System.EventHandler(this.tsmConnectToPA_ItemClicked);
             // 
@@ -135,7 +132,7 @@
             // 
             this.btnExport.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.btnExport.Name = "btnExport";
-            this.btnExport.Size = new System.Drawing.Size(134, 28);
+            this.btnExport.Size = new System.Drawing.Size(134, 24);
             this.btnExport.Text = "Export CSV / Excel";
             this.btnExport.Click += new System.EventHandler(this.btnExport_Click_1);
             // 
@@ -381,7 +378,7 @@
             this.tsbSkipNext,
             this.tsbNext,
             this.tslPageNumber,
-            this.toolStripTextBox1,
+            this.tstbPageNumber,
             this.tsbPrevious,
             this.tsbSkipPrevious});
             this.tsPagination.Location = new System.Drawing.Point(7, 561);
@@ -390,58 +387,32 @@
             this.tsPagination.TabIndex = 1;
             this.tsPagination.Text = "toolStrip1";
             // 
-            // tsbSkipPrevious
+            // tslItems
             // 
-            this.tsbSkipPrevious.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.tsbSkipPrevious.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.tsbSkipPrevious.Image = global::ExecutionFlowHistoryViewer.Properties.Resources.skip_previous;
-            this.tsbSkipPrevious.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbSkipPrevious.Margin = new System.Windows.Forms.Padding(10, 5, 10, 2);
-            this.tsbSkipPrevious.Name = "tsbSkipPrevious";
-            this.tsbSkipPrevious.Size = new System.Drawing.Size(29, 33);
-            this.tsbSkipPrevious.Text = "toolStripButton2";
+            this.tslItems.Margin = new System.Windows.Forms.Padding(10, 1, 5, 2);
+            this.tslItems.Name = "tslItems";
+            this.tslItems.Size = new System.Drawing.Size(109, 37);
+            this.tslItems.Text = "Items per page";
             // 
-            // tsbPrevious
+            // tscNumberOfRuns
             // 
-            this.tsbPrevious.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.tsbPrevious.Image = global::ExecutionFlowHistoryViewer.Properties.Resources.chevron_left;
-            this.tsbPrevious.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbPrevious.Margin = new System.Windows.Forms.Padding(10, 5, 10, 2);
-            this.tsbPrevious.Name = "tsbPrevious";
-            this.tsbPrevious.Size = new System.Drawing.Size(88, 33);
-            this.tsbPrevious.Text = "Previous";
+            this.tscNumberOfRuns.AutoCompleteCustomSource.AddRange(new string[] {
+            "25",
+            "50",
+            "100"});
+            this.tscNumberOfRuns.AutoSize = false;
+            this.tscNumberOfRuns.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+            this.tscNumberOfRuns.Name = "tscNumberOfRuns";
+            this.tscNumberOfRuns.Size = new System.Drawing.Size(55, 28);
+            this.tscNumberOfRuns.Text = "25";
             // 
-            // toolStripTextBox1
+            // tslTotalItems
             // 
-            this.toolStripTextBox1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.toolStripTextBox1.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.toolStripTextBox1.Margin = new System.Windows.Forms.Padding(10, 5, 4, 2);
-            this.toolStripTextBox1.Name = "toolStripTextBox1";
-            this.toolStripTextBox1.ShortcutsEnabled = false;
-            this.toolStripTextBox1.Size = new System.Drawing.Size(40, 33);
-            this.toolStripTextBox1.Text = "10";
-            this.toolStripTextBox1.TextBoxTextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
-            // tslPageNumber
-            // 
-            this.tslPageNumber.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.tslPageNumber.ForeColor = System.Drawing.SystemColors.WindowFrame;
-            this.tslPageNumber.Margin = new System.Windows.Forms.Padding(4, 5, 10, 2);
-            this.tslPageNumber.Name = "tslPageNumber";
-            this.tslPageNumber.Size = new System.Drawing.Size(43, 33);
-            this.tslPageNumber.Text = "of 20";
-            // 
-            // tsbNext
-            // 
-            this.tsbNext.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.tsbNext.Image = global::ExecutionFlowHistoryViewer.Properties.Resources.chevron_right;
-            this.tsbNext.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbNext.Margin = new System.Windows.Forms.Padding(10, 5, 10, 2);
-            this.tsbNext.Name = "tsbNext";
-            this.tsbNext.Size = new System.Drawing.Size(64, 33);
-            this.tsbNext.Text = "Next";
-            this.tsbNext.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
+            this.tslTotalItems.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.tslTotalItems.Margin = new System.Windows.Forms.Padding(5, 1, 0, 2);
+            this.tslTotalItems.Name = "tslTotalItems";
+            this.tslTotalItems.Size = new System.Drawing.Size(133, 37);
+            this.tslTotalItems.Text = "1 - 25 of 500 items";
             // 
             // tsbSkipNext
             // 
@@ -453,13 +424,67 @@
             this.tsbSkipNext.Name = "tsbSkipNext";
             this.tsbSkipNext.RightToLeftAutoMirrorImage = true;
             this.tsbSkipNext.Size = new System.Drawing.Size(29, 33);
-            this.tsbSkipNext.Text = "toolStripButton4";
+            this.tsbSkipNext.Text = "tsbSkipNext";
+            this.tsbSkipNext.Click += new System.EventHandler(this.tsbSkipNext_Click);
+            // 
+            // tsbNext
+            // 
+            this.tsbNext.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.tsbNext.Image = global::ExecutionFlowHistoryViewer.Properties.Resources.chevron_right;
+            this.tsbNext.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbNext.Margin = new System.Windows.Forms.Padding(10, 5, 10, 2);
+            this.tsbNext.Name = "tsbNext";
+            this.tsbNext.Size = new System.Drawing.Size(64, 33);
+            this.tsbNext.Text = "Next";
+            this.tsbNext.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
+            this.tsbNext.Click += new System.EventHandler(this.tsbNext_Click);
+            // 
+            // tslPageNumber
+            // 
+            this.tslPageNumber.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.tslPageNumber.ForeColor = System.Drawing.SystemColors.WindowFrame;
+            this.tslPageNumber.Margin = new System.Windows.Forms.Padding(4, 5, 10, 2);
+            this.tslPageNumber.Name = "tslPageNumber";
+            this.tslPageNumber.Size = new System.Drawing.Size(43, 33);
+            this.tslPageNumber.Text = "of 20";
+            // 
+            // tstbPageNumber
+            // 
+            this.tstbPageNumber.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.tstbPageNumber.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.tstbPageNumber.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.tstbPageNumber.Margin = new System.Windows.Forms.Padding(10, 5, 4, 2);
+            this.tstbPageNumber.Name = "tstbPageNumber";
+            this.tstbPageNumber.ShortcutsEnabled = false;
+            this.tstbPageNumber.Size = new System.Drawing.Size(40, 33);
+            this.tstbPageNumber.Text = "10";
+            this.tstbPageNumber.TextBoxTextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // tsbPrevious
+            // 
+            this.tsbPrevious.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.tsbPrevious.Image = global::ExecutionFlowHistoryViewer.Properties.Resources.chevron_left;
+            this.tsbPrevious.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbPrevious.Margin = new System.Windows.Forms.Padding(10, 5, 10, 2);
+            this.tsbPrevious.Name = "tsbPrevious";
+            this.tsbPrevious.Size = new System.Drawing.Size(88, 33);
+            this.tsbPrevious.Text = "Previous";
+            this.tsbPrevious.Click += new System.EventHandler(this.tsbPrevious_Click);
+            // 
+            // tsbSkipPrevious
+            // 
+            this.tsbSkipPrevious.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.tsbSkipPrevious.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.tsbSkipPrevious.Image = global::ExecutionFlowHistoryViewer.Properties.Resources.skip_previous;
+            this.tsbSkipPrevious.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbSkipPrevious.Margin = new System.Windows.Forms.Padding(10, 5, 10, 2);
+            this.tsbSkipPrevious.Name = "tsbSkipPrevious";
+            this.tsbSkipPrevious.Size = new System.Drawing.Size(29, 33);
+            this.tsbSkipPrevious.Text = "tsbSkipPrevious";
+            this.tsbSkipPrevious.Click += new System.EventHandler(this.tsbSkipPrevious_Click);
             // 
             // gbRunFilters
             // 
-            this.gbRunFilters.Controls.Add(this.btnNext);
-            this.gbRunFilters.Controls.Add(this.btnPrev);
-            this.gbRunFilters.Controls.Add(this.lblPageInfo);
             this.gbRunFilters.Controls.Add(this.btnFetchHistory);
             this.gbRunFilters.Controls.Add(this.cmbStatus);
             this.gbRunFilters.Controls.Add(this.lblStatus);
@@ -476,36 +501,6 @@
             this.gbRunFilters.TabIndex = 0;
             this.gbRunFilters.TabStop = false;
             this.gbRunFilters.Text = "Run Filters";
-            // 
-            // btnNext
-            // 
-            this.btnNext.Dock = System.Windows.Forms.DockStyle.Right;
-            this.btnNext.Location = new System.Drawing.Point(917, 21);
-            this.btnNext.Name = "btnNext";
-            this.btnNext.Size = new System.Drawing.Size(54, 30);
-            this.btnNext.TabIndex = 9;
-            this.btnNext.Text = ">";
-            this.btnNext.UseVisualStyleBackColor = true;
-            this.btnNext.Click += new System.EventHandler(this.btnNext_Click);
-            // 
-            // btnPrev
-            // 
-            this.btnPrev.Location = new System.Drawing.Point(777, 19);
-            this.btnPrev.Name = "btnPrev";
-            this.btnPrev.Size = new System.Drawing.Size(53, 29);
-            this.btnPrev.TabIndex = 8;
-            this.btnPrev.Text = "<";
-            this.btnPrev.UseVisualStyleBackColor = true;
-            this.btnPrev.Click += new System.EventHandler(this.btnPrev_Click);
-            // 
-            // lblPageInfo
-            // 
-            this.lblPageInfo.AutoSize = true;
-            this.lblPageInfo.Location = new System.Drawing.Point(836, 25);
-            this.lblPageInfo.Name = "lblPageInfo";
-            this.lblPageInfo.Size = new System.Drawing.Size(75, 16);
-            this.lblPageInfo.TabIndex = 7;
-            this.lblPageInfo.Text = "lblPageInfo";
             // 
             // btnFetchHistory
             // 
@@ -581,33 +576,6 @@
             this.lblDateFrom.TabIndex = 0;
             this.lblDateFrom.Text = "From:";
             // 
-            // tscNumberOfRuns
-            // 
-            this.tscNumberOfRuns.AutoCompleteCustomSource.AddRange(new string[] {
-            "25",
-            "50",
-            "100"});
-            this.tscNumberOfRuns.AutoSize = false;
-            this.tscNumberOfRuns.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
-            this.tscNumberOfRuns.Name = "tscNumberOfRuns";
-            this.tscNumberOfRuns.Size = new System.Drawing.Size(55, 31);
-            this.tscNumberOfRuns.Text = "25";
-            // 
-            // tslItems
-            // 
-            this.tslItems.Margin = new System.Windows.Forms.Padding(10, 1, 5, 2);
-            this.tslItems.Name = "tslItems";
-            this.tslItems.Size = new System.Drawing.Size(109, 37);
-            this.tslItems.Text = "Items per page";
-            // 
-            // tslTotalItems
-            // 
-            this.tslTotalItems.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.tslTotalItems.Margin = new System.Windows.Forms.Padding(5, 1, 0, 2);
-            this.tslTotalItems.Name = "tslTotalItems";
-            this.tslTotalItems.Size = new System.Drawing.Size(133, 37);
-            this.tslTotalItems.Text = "1 - 25 of 500 items";
-            // 
             // MyPluginControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -668,9 +636,6 @@
         private System.Windows.Forms.ToolStripButton tsmConnectToPA;
         private System.Windows.Forms.ToolStripButton btnExport;
         private System.Windows.Forms.DataGridView dataGridView1;
-        private System.Windows.Forms.Label lblPageInfo;
-        private System.Windows.Forms.Button btnNext;
-        private System.Windows.Forms.Button btnPrev;
         private System.Windows.Forms.ToolStrip tsPagination;
         private System.Windows.Forms.DataGridViewTextBoxColumn FlowName;
         private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunId;
@@ -685,7 +650,7 @@
         private System.Windows.Forms.ToolStripButton tsbNext;
         private System.Windows.Forms.ToolStripButton tsbSkipNext;
         private System.Windows.Forms.ToolStripLabel tslPageNumber;
-        private System.Windows.Forms.ToolStripTextBox toolStripTextBox1;
+        private System.Windows.Forms.ToolStripTextBox tstbPageNumber;
         private System.Windows.Forms.ToolStripComboBox tscNumberOfRuns;
         private System.Windows.Forms.ToolStripLabel tslItems;
         private System.Windows.Forms.ToolStripLabel tslTotalItems;

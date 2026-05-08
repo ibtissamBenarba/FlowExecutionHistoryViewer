@@ -19,6 +19,8 @@ namespace ExecutionFlowHistoryViewer
 {
     public partial class MyPluginControl : PluginControlBase
     {
+        #region Fields & Dependencies
+
         private Settings _settings;
         private IAuthenticationService _authService;
         private IDataverseService _dataverseService;
@@ -31,13 +33,15 @@ namespace ExecutionFlowHistoryViewer
         private readonly HashSet<string> _checkedFlowIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private Dictionary<string, string> _flowSkipTokens = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
+        #endregion
+
+        #region Constructor & Lifecycle
+
         public MyPluginControl()
         {
             InitializeComponent();
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
         }
-
-        #region Initialization
 
         private void MyPluginControl_Load(object sender, EventArgs e)
         {
@@ -50,29 +54,30 @@ namespace ExecutionFlowHistoryViewer
             if (Service != null) InitializeServices();
         }
 
-        private void InitializeFilters()
+        public override void UpdateConnection(IOrganizationService newService, ConnectionDetail detail, string actionName, object parameter)
         {
-            cmbStatus.Items.Clear();
-            cmbStatus.Items.AddRange(new object[] { "All", "Succeeded", "Failed", "Cancelled", "Running" });
-            cmbStatus.SelectedIndex = 0;
+            base.UpdateConnection(newService, detail, actionName, parameter);
+            _authService?.Reset();
+            InitializeServices();
+            LoadSolutions();
         }
 
-        private void InitializePagination()
+        private void MyPluginControl_OnCloseTool(object sender, EventArgs e) =>
+            SettingsManager.Instance.Save(GetType(), _settings);
+
+        private void tsbClose_Click(object sender, EventArgs e) => CloseTool();
+
+        #endregion
+
+        #region Initialization
+
+        private void InitializeServices()
         {
-            // -= avant += pour éviter les doublons
-            if (btnPrev != null)
-            {
-                btnPrev.Enabled = false;
-                btnPrev.Click -= btnPrev_Click;
-                btnPrev.Click += btnPrev_Click;
-            }
-            if (btnNext != null)
-            {
-                btnNext.Enabled = false;
-                btnNext.Click -= btnNext_Click;
-                btnNext.Click += btnNext_Click;
-            }
-            if (lblPageInfo != null) lblPageInfo.Text = "Ready";
+            _authService = new AuthenticationService(ConnectionDetail);
+            _dataverseService = new DataverseService(Service);
+            _flowClientFactory = new FlowClientFactory(_authService, ConnectionDetail.EnvironmentId.ToString());
+            _historyService = new FlowHistoryService(_flowClientFactory);
+            _pagination = new PaginationService();
         }
 
         private void InitializeSettings()
@@ -88,9 +93,47 @@ namespace ExecutionFlowHistoryViewer
             }
         }
 
+        private void InitializeFilters()
+        {
+            cmbStatus.Items.Clear();
+            cmbStatus.Items.AddRange(new object[] { "All", "Succeeded", "Failed", "Cancelled", "Running" });
+            cmbStatus.SelectedIndex = 0;
+        }
+
+        private void InitializePagination()
+        {
+            // Button wiring
+            WirePaginationButton(tsbPrevious, tsbPrevious_Click);
+            WirePaginationButton(tsbNext, tsbNext_Click);
+            WirePaginationButton(tsbSkipPrevious, tsbSkipPrevious_Click);
+            WirePaginationButton(tsbSkipNext, tsbSkipNext_Click);
+
+            // Default values
+            if (tstbPageNumber != null) tstbPageNumber.Text = "1";
+            if (tslPageNumber != null) tslPageNumber.Text = "of 1";
+            if (tslTotalItems != null) tslTotalItems.Text = "0 - 0 of 0 flow runs";
+
+            InitializePageSizeCombo();
+        }
+
+        private void InitializePageSizeCombo()
+        {
+            if (tscNumberOfRuns == null) return;
+
+            tscNumberOfRuns.Items.Clear();
+            tscNumberOfRuns.Items.AddRange(new object[] { "25", "50", "100" });
+            tscNumberOfRuns.DropDownStyle = ComboBoxStyle.DropDownList;
+            tscNumberOfRuns.SelectedItem = _pagination?.PageSize.ToString() ?? "50";
+
+            tscNumberOfRuns.SelectedIndexChanged -= TscNumberOfRuns_SelectedIndexChanged;
+            tscNumberOfRuns.SelectedIndexChanged += TscNumberOfRuns_SelectedIndexChanged;
+        }
+
         private void WireEvents()
         {
-            // -= avant += pour éviter les doublons
+            tstbPageNumber.KeyDown -= TstbPageNumber_KeyDown;
+            tstbPageNumber.KeyDown += TstbPageNumber_KeyDown;
+
             dataGridView1.CellClick -= dataGridView1_CellClick;
             dataGridView1.CellClick += dataGridView1_CellClick;
 
@@ -105,28 +148,25 @@ namespace ExecutionFlowHistoryViewer
 
             cbSelectAllFlows.CheckedChanged -= cbSelectAllFlows_CheckedChanged;
             cbSelectAllFlows.CheckedChanged += cbSelectAllFlows_CheckedChanged;
+
+            if (tscNumberOfRuns != null)
+            {
+                tscNumberOfRuns.SelectedIndexChanged -= TscNumberOfRuns_SelectedIndexChanged;
+                tscNumberOfRuns.SelectedIndexChanged += TscNumberOfRuns_SelectedIndexChanged;
+            }
         }
 
-        private void InitializeServices()
+        private void WirePaginationButton(ToolStripButton button, EventHandler handler)
         {
-            _authService = new AuthenticationService(ConnectionDetail);
-            _dataverseService = new DataverseService(Service);
-            _flowClientFactory = new FlowClientFactory(_authService, ConnectionDetail.EnvironmentId.ToString());
-            _historyService = new FlowHistoryService(_flowClientFactory);
-            _pagination = new PaginationService();
+            if (button == null) return;
+            button.Enabled = false;
+            button.Click -= handler;
+            button.Click += handler;
         }
 
         #endregion
 
-        #region Connection & Services
-
-        public override void UpdateConnection(IOrganizationService newService, ConnectionDetail detail, string actionName, object parameter)
-        {
-            base.UpdateConnection(newService, detail, actionName, parameter);
-            _authService?.Reset();
-            InitializeServices();
-            LoadSolutions();
-        }
+        #region Connection & Authentication
 
         private void tsmConnectToPA_ItemClicked(object sender, EventArgs e)
         {
@@ -209,99 +249,6 @@ namespace ExecutionFlowHistoryViewer
 
         #endregion
 
-        #region Fetch History
-
-        private void btnFetchHistory_Click_1(object sender, EventArgs e)
-        {
-            var selectedFlows = GetSelectedFlows();
-            if (!ValidateFetch(selectedFlows)) return;
-
-            var (fromDate, toDate, status) = GetFilterValues();
-            ResetPagination();
-            FetchPage(selectedFlows, fromDate, toDate, status, isNextPage: false);
-        }
-
-        private void FetchPage(List<Flow> flows, DateTime fromDate, DateTime toDate, string status, bool isNextPage)
-        {
-            if (_pagination.IsLoading) return;
-            _pagination.IsLoading = true;
-
-            WorkAsync(new WorkAsyncInfo
-            {
-                Message = isNextPage ? "Loading more results..." : $"Fetching history for {flows.Count} flow(s)...",
-                Work = (worker, args) => args.Result = _historyService.FetchRuns(
-                    flows, fromDate, toDate, status, isNextPage, _flowSkipTokens, _pagination.PageSize),
-                PostWorkCallBack = (args) =>
-                {
-                    _pagination.IsLoading = false;
-                    if (args.Error != null) { ShowError(args.Error); UpdatePaginationUI(); return; }
-
-                    var result = (FlowRunPageResult)args.Result;
-                    _pagination.AppendRuns(result.Runs);
-                    _pagination.HasMoreServerPages = result.HasMore;
-
-                    // CORRECTION : Si c'est un fetch "Next", on avance la page APRÈS avoir reçu les données
-                    if (isNextPage)
-                    {
-                        _pagination.CurrentPage++;
-                    }
-
-                    ShowCurrentPage();
-                    UpdatePaginationUI();
-                }
-            });
-        }
-
-        #endregion
-
-        #region Pagination UI
-
-        private void ShowCurrentPage()
-        {
-            DataGridBinder.BindFlowRuns(dataGridView1, _pagination.GetCurrentPage());
-        }
-
-        private void UpdatePaginationUI()
-        {
-            lblPageInfo.Text = _pagination.GetPageInfoText();
-            btnPrev.Enabled = _pagination.CanGoPrevious() && !_pagination.IsLoading;
-            btnNext.Enabled = _pagination.CanGoNext() && !_pagination.IsLoading;
-        }
-
-        private void btnPrev_Click(object sender, EventArgs e)
-        {
-            // CORRECTION : Protection contre double-clic et chargement
-            if (!_pagination.CanGoPrevious() || _pagination.IsLoading) return;
-
-            _pagination.CurrentPage--;
-            ShowCurrentPage();
-            UpdatePaginationUI();
-        }
-
-        private void btnNext_Click(object sender, EventArgs e)
-        {
-            // CORRECTION : Protection contre chargement
-            if (_pagination.IsLoading) return;
-
-            // Case 1: Next page is already in cache
-            if (_pagination.CurrentPage < _pagination.TotalCachedPages)
-            {
-                _pagination.CurrentPage++;
-                ShowCurrentPage();
-                UpdatePaginationUI();
-            }
-            // Case 2: We're on the last cached page but server has more
-            else if (_pagination.HasMoreServerPages)
-            {
-                // CORRECTION : On NE TOUCHE PAS à CurrentPage ici !
-                // Elle sera incrémentée dans le callback de FetchPage
-                var (fromDate, toDate, status) = GetFilterValues();
-                FetchPage(GetSelectedFlows(), fromDate, toDate, status, isNextPage: true);
-            }
-        }
-
-        #endregion
-
         #region Flow Selection & Filtering
 
         private List<Flow> GetSelectedFlows() =>
@@ -347,6 +294,242 @@ namespace ExecutionFlowHistoryViewer
         }
 
         private void tbSearch_TextChanged(object sender, EventArgs e) => ApplyFlowFilter();
+
+        #endregion
+
+        #region History Fetching
+
+        private void btnFetchHistory_Click_1(object sender, EventArgs e)
+        {
+            var selectedFlows = GetSelectedFlows();
+            if (!ValidateFetch(selectedFlows)) return;
+
+            var (fromDate, toDate, status) = GetFilterValues();
+            var flowIds = selectedFlows.Select(f => f.Id).ToList();
+
+            WorkAsync(new WorkAsyncInfo
+            {
+                Message = "Calculating total history...",
+                Work = (worker, args) =>
+                {
+                    int total = _dataverseService.GetTotalFlowRunsCount(flowIds, fromDate, toDate, status);
+                    args.Result = total;
+                },
+                PostWorkCallBack = (args) =>
+                {
+                    _pagination.Reset();
+                    _pagination.TotalServerCount = (int)args.Result;
+                    _flowSkipTokens.Clear();
+                    FetchPage(selectedFlows, fromDate, toDate, status, isNextPage: false);
+                }
+            });
+        }
+
+        private void FetchPage(List<Flow> flows, DateTime fromDate, DateTime toDate, string status, bool isNextPage)
+        {
+            if (_pagination.IsLoading) return;
+            _pagination.IsLoading = true;
+
+            WorkAsync(new WorkAsyncInfo
+            {
+                Message = isNextPage ? "Loading more results..." : $"Fetching history for {flows.Count} flow(s)...",
+                Work = (worker, args) => args.Result = _historyService.FetchRuns(
+                    flows, fromDate, toDate, status, isNextPage, _flowSkipTokens, _pagination.PageSize),
+                PostWorkCallBack = (args) =>
+                {
+                    _pagination.IsLoading = false;
+                    if (args.Error != null) { ShowError(args.Error); UpdatePaginationUI(); return; }
+
+                    var result = (FlowRunPageResult)args.Result;
+                    _pagination.AppendRuns(result.Runs);
+                    _pagination.HasMoreServerPages = result.HasMore;
+
+                    if (isNextPage) _pagination.CurrentPage++;
+
+                    ShowCurrentPage();
+                    UpdatePaginationUI();
+                }
+            });
+        }
+
+        private void FetchTwoPages()
+        {
+            var (fromDate, toDate, status) = GetFilterValues();
+            var flows = GetSelectedFlows();
+
+            WorkAsync(new WorkAsyncInfo
+            {
+                Message = "Loading next 2 pages...",
+                Work = (worker, args) =>
+                {
+                    var res1 = _historyService.FetchRuns(flows, fromDate, toDate, status, true, _flowSkipTokens, _pagination.PageSize);
+
+                    if (res1.HasMore)
+                    {
+                        var res2 = _historyService.FetchRuns(flows, fromDate, toDate, status, true, _flowSkipTokens, _pagination.PageSize);
+                        args.Result = new List<FlowRunPageResult> { res1, res2 };
+                    }
+                    else
+                    {
+                        args.Result = new List<FlowRunPageResult> { res1 };
+                    }
+                },
+                PostWorkCallBack = (args) =>
+                {
+                    if (args.Error != null) { ShowError(args.Error); return; }
+
+                    var results = (List<FlowRunPageResult>)args.Result;
+                    foreach (var res in results)
+                    {
+                        _pagination.AppendRuns(res.Runs);
+                        _pagination.HasMoreServerPages = res.HasMore;
+                        _pagination.CurrentPage++;
+                    }
+
+                    ShowCurrentPage();
+                    UpdatePaginationUI();
+                }
+            });
+        }
+
+        #endregion
+
+        #region Pagination UI & Navigation
+
+        private void ShowCurrentPage()
+        {
+            DataGridBinder.BindFlowRuns(dataGridView1, _pagination.GetCurrentPage());
+        }
+
+        private void UpdatePaginationUI()
+        {
+            if (_pagination == null) return;
+
+            // Sync page size combo
+            if (tscNumberOfRuns != null && !tscNumberOfRuns.Focused)
+            {
+                string currentSize = _pagination.PageSize.ToString();
+                if (tscNumberOfRuns.Items.Contains(currentSize) && tscNumberOfRuns.SelectedItem?.ToString() != currentSize)
+                    tscNumberOfRuns.SelectedItem = currentSize;
+            }
+
+            // Button states
+            if (tsbSkipPrevious != null)
+                tsbSkipPrevious.Enabled = _pagination.CurrentPage > 2 && !_pagination.IsLoading;
+
+            if (tsbSkipNext != null)
+                tsbSkipNext.Enabled = (_pagination.CurrentPage < _pagination.TotalPages) && !_pagination.IsLoading;
+
+            tsbPrevious.Enabled = _pagination.CanGoPrevious() && !_pagination.IsLoading;
+            tsbNext.Enabled = _pagination.CanGoNext() && !_pagination.IsLoading;
+
+            // Page info
+            tstbPageNumber.Text = _pagination.CurrentPage.ToString();
+            tslPageNumber.Text = $"of {_pagination.TotalPages}";
+
+            int startItem = _pagination.TotalServerCount == 0 ? 0 : (_pagination.CurrentPage - 1) * _pagination.PageSize + 1;
+            int endItem = Math.Min(_pagination.CurrentPage * _pagination.PageSize, _pagination.TotalServerCount);
+            tslTotalItems.Text = $"{startItem} - {endItem} of {_pagination.TotalServerCount} flow runs";
+        }
+
+        private void TscNumberOfRuns_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (tscNumberOfRuns?.SelectedItem == null) return;
+            if (!int.TryParse(tscNumberOfRuns.SelectedItem.ToString(), out int newPageSize)) return;
+            if (_pagination == null) return;
+            if (_pagination.PageSize == newPageSize) return;
+
+            _pagination.PageSize = newPageSize;
+            _pagination.CurrentPage = 1;
+
+            ShowCurrentPage();
+            UpdatePaginationUI();
+        }
+
+        private void TstbPageNumber_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Enter) return;
+
+            if (int.TryParse(tstbPageNumber.Text, out int targetPage))
+            {
+                if (targetPage >= 1 && targetPage <= _pagination.TotalPages)
+                {
+                    if (targetPage <= _pagination.TotalCachedPages)
+                    {
+                        _pagination.CurrentPage = targetPage;
+                        ShowCurrentPage();
+                        UpdatePaginationUI();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Please load intermediate pages using the 'Next' button first.", "Info");
+                        tstbPageNumber.Text = _pagination.CurrentPage.ToString();
+                    }
+                }
+                else
+                {
+                    tstbPageNumber.Text = _pagination.CurrentPage.ToString();
+                }
+            }
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+        }
+
+        private void tsbPrevious_Click(object sender, EventArgs e)
+        {
+            if (!_pagination.CanGoPrevious() || _pagination.IsLoading) return;
+            _pagination.CurrentPage--;
+            ShowCurrentPage();
+            UpdatePaginationUI();
+        }
+
+        private void tsbNext_Click(object sender, EventArgs e)
+        {
+            if (_pagination.IsLoading) return;
+
+            if (_pagination.CurrentPage < _pagination.TotalCachedPages)
+            {
+                _pagination.CurrentPage++;
+                ShowCurrentPage();
+                UpdatePaginationUI();
+            }
+            else if (_pagination.HasMoreServerPages)
+            {
+                var (fromDate, toDate, status) = GetFilterValues();
+                FetchPage(GetSelectedFlows(), fromDate, toDate, status, isNextPage: true);
+            }
+        }
+
+        private void tsbSkipPrevious_Click(object sender, EventArgs e)
+        {
+            if (_pagination.IsLoading) return;
+
+            int targetPage = Math.Max(1, _pagination.CurrentPage - 2);
+            if (targetPage != _pagination.CurrentPage)
+            {
+                _pagination.CurrentPage = targetPage;
+                ShowCurrentPage();
+                UpdatePaginationUI();
+            }
+        }
+
+        private void tsbSkipNext_Click(object sender, EventArgs e)
+        {
+            if (_pagination.IsLoading) return;
+
+            int targetPage = _pagination.CurrentPage + 2;
+
+            if (targetPage <= _pagination.TotalCachedPages)
+            {
+                _pagination.CurrentPage = targetPage;
+                ShowCurrentPage();
+                UpdatePaginationUI();
+            }
+            else if (_pagination.HasMoreServerPages)
+            {
+                FetchTwoPages();
+            }
+        }
 
         #endregion
 
@@ -402,8 +585,6 @@ namespace ExecutionFlowHistoryViewer
                     var client = _flowClientFactory.Create();
                     var detail = client.GetRunDetails(flow.Id, run.Id);
                     var actions = client.GetRunActions(flow.Id, run.Id);
-
-                    // ← Passer le client aussi
                     args.Result = new Tuple<FlowRunDetailDto, FlowActionsResponseDto, IFlowClient>(detail, actions, client);
                 },
                 PostWorkCallBack = (args) =>
@@ -415,11 +596,7 @@ namespace ExecutionFlowHistoryViewer
                     }
 
                     var tuple = (Tuple<FlowRunDetailDto, FlowActionsResponseDto, IFlowClient>)args.Result;
-                    var detail = tuple.Item1;
-                    var actions = tuple.Item2;
-                    var client = tuple.Item3;
-
-                    using (var form = new RunDetailForm(run, detail, actions, client))  // ← Passer client
+                    using (var form = new RunDetailForm(run, tuple.Item1, tuple.Item2, tuple.Item3))
                     {
                         form.ShowDialog(this);
                     }
@@ -452,7 +629,7 @@ namespace ExecutionFlowHistoryViewer
 
         #endregion
 
-        #region Helpers
+        #region Helpers & Validation
 
         private (DateTime fromDate, DateTime toDate, string status) GetFilterValues()
         {
@@ -494,11 +671,6 @@ namespace ExecutionFlowHistoryViewer
 
         private void ShowError(Exception ex) =>
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-        private void tsbClose_Click(object sender, EventArgs e) => CloseTool();
-
-        private void MyPluginControl_OnCloseTool(object sender, EventArgs e) =>
-            SettingsManager.Instance.Save(GetType(), _settings);
 
         private System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {

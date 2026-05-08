@@ -19,6 +19,40 @@ namespace ExecutionFlowHistoryViewer.Services
             _service = service ?? throw new ArgumentNullException(nameof(service));
         }
 
+        public int GetTotalFlowRunsCount(List<string> flowIds, DateTime from, DateTime to, string status)
+        {
+            if (flowIds == null || !flowIds.Any()) return 0;
+
+            // Construction des filtres <value> pour le IN
+            string flowFilter = string.Join("", flowIds.Select(id => $"<value>{id}</value>"));
+
+            // Filtre de statut
+            string statusFilter = status == "All" ? "" : $"<condition attribute='status' operator='eq' value='{status}' />";
+
+            string fetchXml = $@"
+        <fetch aggregate='true'>
+          <entity name='flowrun'>
+            <attribute name='flowrunid' aggregate='count' alias='total' />
+            <filter type='and'>
+              <condition attribute='workflowid' operator='in'>{flowFilter}</condition>
+              <condition attribute='starttime' operator='on-or-after' value='{from:yyyy-MM-dd}' />
+              <condition attribute='starttime' operator='on-or-before' value='{to:yyyy-MM-dd}' />
+              {statusFilter}
+            </filter>
+          </entity>
+        </fetch>";
+
+            var result = _service.RetrieveMultiple(new FetchExpression(fetchXml));
+
+            if (result.Entities.Count > 0 && result.Entities[0].Contains("total"))
+            {
+                var aliasedValue = (AliasedValue)result.Entities[0]["total"];
+                return (int)aliasedValue.Value;
+            }
+
+            return 0;
+        }
+
         public List<SolutionItem> GetSolutions()
         {
             var query = new QueryExpression("solution")
