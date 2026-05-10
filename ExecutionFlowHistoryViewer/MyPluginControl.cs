@@ -1,4 +1,4 @@
-﻿// MyPluginControl.cs
+// MyPluginControl.cs
 using ExecutionFlowHistoryViewer.DTO;
 using ExecutionFlowHistoryViewer.Forms;
 using ExecutionFlowHistoryViewer.Contracts;
@@ -9,10 +9,12 @@ using McTools.Xrm.Connection;
 using Microsoft.Xrm.Sdk;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using Newtonsoft.Json;
 using XrmToolBox.Extensibility;
 
 namespace ExecutionFlowHistoryViewer
@@ -30,6 +32,10 @@ namespace ExecutionFlowHistoryViewer
         private List<Flow> _currentFlows = new List<Flow>();
         private readonly HashSet<string> _checkedFlowIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private Dictionary<string, string> _flowSkipTokens = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        // Deep search state
+        private bool _isDeepSearchActive;
+        private BackgroundWorker _deepSearchWorker;
 
         public MyPluginControl()
         {
@@ -105,6 +111,15 @@ namespace ExecutionFlowHistoryViewer
 
             cbSelectAllFlows.CheckedChanged -= cbSelectAllFlows_CheckedChanged;
             cbSelectAllFlows.CheckedChanged += cbSelectAllFlows_CheckedChanged;
+
+            btnDeepSearch.Click -= btnDeepSearch_Click;
+            btnDeepSearch.Click += btnDeepSearch_Click;
+
+            btnClearDeepSearch.Click -= btnClearDeepSearch_Click;
+            btnClearDeepSearch.Click += btnClearDeepSearch_Click;
+
+            tbDeepSearch.KeyDown -= tbDeepSearch_KeyDown;
+            tbDeepSearch.KeyDown += tbDeepSearch_KeyDown;
         }
 
         private void InitializeServices()
@@ -425,6 +440,261 @@ namespace ExecutionFlowHistoryViewer
                     }
                 }
             });
+        }
+
+        #endregion
+
+        #region Deep Search
+
+        private void tbDeepSearch_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                btnDeepSearch_Click(sender, e);
+            }
+        }
+
+        private void btnDeepSearch_Click(object sender, EventArgs e)
+        {
+            string searchValue = tbDeepSearch.Text?.Trim();
+            if (string.IsNullOrEmpty(searchValue))
+            {
+                MessageBox.Show("Please enter a value to search for in the run details.",
+                    "Search Value Required", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                tbDeepSearch.Focus();
+                return;
+            }
+
+            var allRuns = _pagination.AllRuns;
+            if (allRuns == null || allRuns.Count == 0)
+            {
+                MessageBox.Show("No run history loaded. Please fetch run history first.",
+                    "No Data", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Cancel any existing search
+            if (_deepSearchWorker != null && _deepSearchWorker.IsBusy)
+            {
+                _deepSearchWorker.CancelAsync();
+                return;
+            }
+
+            PerformDeepSearch(allRuns.ToList(), searchValue);
+        }
+
+        private void btnClearDeepSearch_Click(object sender, EventArgs e)
+        {
+            // Cancel any running search
+            if (_deepSearchWorker != null && _deepSearchWorker.IsBusy)
+            {
+                _deepSearchWorker.CancelAsync();
+            }
+
+            _isDeepSearchActive = false;
+            tbDeepSearch.Text = "";
+            lblDeepSearchStatus.Text = "";
+            progressBarDeepSearch.Visible = false;
+            gbFlowRuns.Text = "Flow Runs";
+
+            // Restore original paginated view
+            ShowCurrentPage();
+            UpdatePaginationUI();
+        }
+
+        private void PerformDeepSearch(List<FlowRun> runsToSearch, string searchValue)
+        {
+            // Setup UI for search in progress
+            progressBarDeepSearch.Visible = true;
+            progressBarDeepSearch.Minimum = 0;
+            progressBarDeepSearch.Maximum = runsToSearch.Count;
+            progressBarDeepSearch.Value = 0;
+            lblDeepSearchStatus.Text = $"Scanning 0/{runsToSearch.Count}...";
+            btnDeepSearch.Text = "❌ Cancel";
+            btnDeepSearch.Enabled = true;
+            btnClearDeepSearch.Enabled = false;
+            btnFetchHistory.Enabled = false;
+
+            _deepSearchWorker = new BackgroundWorker
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+
+            _deepSearchWorker.DoWork += (s, args) =>
+            {
+                var matchingRuns = new List<FlowRun>();
+                var client = _flowClientFactory.Create();
+                int processed = 0;
+
+                foreach (var run in runsToSearch)
+                {
+                    if (_deepSearchWorker.CancellationPending)
+                    {
+                        args.Cancel = true;
+                        return;
+                    }
+
+                    try
+                    {
+                        // Find the flow for this run
+                        var flow = _currentFlows.FirstOrDefault(f => f.DisplayName == run.FlowName);
+                        if (flow == null)
+                        {
+                            processed++;
+                            _deepSearchWorker.ReportProgress(processed);
+                            continue;
+                        }
+
+                        bool matched = false;
+
+                        // 1) Check run details (trigger inputs/outputs)
+                        var detail = client.GetRunDetails(flow.Id, run.Id);
+                        if (detail?.Properties?.Trigger != null)
+                        {
+                            var trigger = detail.Properties.Trigger;
+
+                            // Check inputs
+                            string inputs = null;
+                            if (trigger.InputsLink?.Uri != null)
+                            {
+                                try { inputs = client.GetContentFromLink(trigger.InputsLink.Uri); }
+                                catch { /* skip */ }
+                            }
+                            else if (trigger.Inputs != null)
+                            {
+                                inputs = JsonConvert.SerializeObject(trigger.Inputs);
+                            }
+
+                            if (inputs != null && inputs.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                                matched = true;
+
+                            // Check outputs
+                            if (!matched)
+                            {
+                                string outputs = null;
+                                if (trigger.OutputsLink?.Uri != null)
+                                {
+                                    try { outputs = client.GetContentFromLink(trigger.OutputsLink.Uri); }
+                                    catch { /* skip */ }
+                                }
+                                else if (trigger.Outputs != null)
+                                {
+                                    outputs = JsonConvert.SerializeObject(trigger.Outputs);
+                                }
+
+                                if (outputs != null && outputs.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                                    matched = true;
+                            }
+                        }
+
+                        // 2) Check actions (inputs/outputs/errors)
+                        if (!matched)
+                        {
+                            var actions = client.GetRunActions(flow.Id, run.Id);
+                            if (actions?.Value != null)
+                            {
+                                foreach (var action in actions.Value)
+                                {
+                                    if (action.Properties?.Inputs != null)
+                                    {
+                                        string actionInputs = JsonConvert.SerializeObject(action.Properties.Inputs);
+                                        if (actionInputs.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                                        {
+                                            matched = true;
+                                            break;
+                                        }
+                                    }
+                                    if (action.Properties?.Outputs != null)
+                                    {
+                                        string actionOutputs = JsonConvert.SerializeObject(action.Properties.Outputs);
+                                        if (actionOutputs.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                                        {
+                                            matched = true;
+                                            break;
+                                        }
+                                    }
+                                    if (action.Properties?.Error != null)
+                                    {
+                                        string errorStr = $"{action.Properties.Error.Code} {action.Properties.Error.Message}";
+                                        if (errorStr.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                                        {
+                                            matched = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (matched)
+                            matchingRuns.Add(run);
+                    }
+                    catch
+                    {
+                        // Skip runs that fail to load — don't crash the search
+                    }
+
+                    processed++;
+                    _deepSearchWorker.ReportProgress(processed);
+                }
+
+                args.Result = matchingRuns;
+            };
+
+            _deepSearchWorker.ProgressChanged += (s, args) =>
+            {
+                if (args.ProgressPercentage <= progressBarDeepSearch.Maximum)
+                    progressBarDeepSearch.Value = args.ProgressPercentage;
+                lblDeepSearchStatus.Text = $"Scanning {args.ProgressPercentage}/{runsToSearch.Count}...";
+            };
+
+            _deepSearchWorker.RunWorkerCompleted += (s, args) =>
+            {
+                btnDeepSearch.Text = "🔍 Search";
+                btnDeepSearch.Enabled = true;
+                btnClearDeepSearch.Enabled = true;
+                btnFetchHistory.Enabled = true;
+                progressBarDeepSearch.Visible = false;
+
+                if (args.Cancelled)
+                {
+                    lblDeepSearchStatus.Text = "Search cancelled.";
+                    return;
+                }
+
+                if (args.Error != null)
+                {
+                    lblDeepSearchStatus.Text = "Search failed.";
+                    MessageBox.Show($"Deep search error:\n{args.Error.Message}",
+                        "Search Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                var matchingRuns = args.Result as List<FlowRun>;
+                if (matchingRuns == null || matchingRuns.Count == 0)
+                {
+                    lblDeepSearchStatus.Text = $"No matches found for \"{searchValue}\".";
+                    gbFlowRuns.Text = $"Flow Runs — 0 results for \"{searchValue}\"";
+                    DataGridBinder.BindFlowRuns(dataGridView1, new List<FlowRun>());
+                    _isDeepSearchActive = true;
+                    return;
+                }
+
+                _isDeepSearchActive = true;
+                lblDeepSearchStatus.Text = $"✔ {matchingRuns.Count} match(es) found!";
+                gbFlowRuns.Text = $"Flow Runs — {matchingRuns.Count} result(s) for \"{searchValue}\"";
+
+                // Hide pagination controls during deep search result view
+                btnPrev.Enabled = false;
+                btnNext.Enabled = false;
+                lblPageInfo.Text = $"Showing {matchingRuns.Count} filtered result(s)";
+
+                DataGridBinder.BindFlowRuns(dataGridView1, matchingRuns);
+            };
+
+            _deepSearchWorker.RunWorkerAsync();
         }
 
         #endregion

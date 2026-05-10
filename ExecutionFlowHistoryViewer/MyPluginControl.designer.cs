@@ -1,4 +1,4 @@
-﻿namespace ExecutionFlowHistoryViewer
+namespace ExecutionFlowHistoryViewer
 {
     partial class MyPluginControl
     {
@@ -61,6 +61,13 @@
             this.lblDateTo = new System.Windows.Forms.Label();
             this.dtpDateFrom = new System.Windows.Forms.DateTimePicker();
             this.lblDateFrom = new System.Windows.Forms.Label();
+            this.gbDeepSearch = new System.Windows.Forms.GroupBox();
+            this.lblDeepSearchStatus = new System.Windows.Forms.Label();
+            this.progressBarDeepSearch = new System.Windows.Forms.ProgressBar();
+            this.btnClearDeepSearch = new System.Windows.Forms.Button();
+            this.btnDeepSearch = new System.Windows.Forms.Button();
+            this.tbDeepSearch = new System.Windows.Forms.TextBox();
+            this.lblDeepSearch = new System.Windows.Forms.Label();
             this.tsmContainer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).BeginInit();
             this.splitContainerMain.Panel1.SuspendLayout();
@@ -72,6 +79,7 @@
             this.gbFlowRuns.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.gbRunFilters.SuspendLayout();
+            this.gbDeepSearch.SuspendLayout();
             this.SuspendLayout();
             // 
             // tsmContainer
@@ -139,6 +147,7 @@
             // splitContainerMain.Panel2
             // 
             this.splitContainerMain.Panel2.Controls.Add(this.gbFlowRuns);
+            this.splitContainerMain.Panel2.Controls.Add(this.gbDeepSearch);
             this.splitContainerMain.Panel2.Controls.Add(this.gbRunFilters);
             this.splitContainerMain.Size = new System.Drawing.Size(1347, 664);
             this.splitContainerMain.SplitterDistance = 365;
@@ -265,15 +274,89 @@
             this.cbSolutions.TabIndex = 0;
             this.cbSolutions.SelectedIndexChanged += new System.EventHandler(this.cbSolutions_SelectedIndexChanged);
             // 
+            // gbDeepSearch
+            // 
+            this.gbDeepSearch.Controls.Add(this.lblDeepSearchStatus);
+            this.gbDeepSearch.Controls.Add(this.progressBarDeepSearch);
+            this.gbDeepSearch.Controls.Add(this.btnClearDeepSearch);
+            this.gbDeepSearch.Controls.Add(this.btnDeepSearch);
+            this.gbDeepSearch.Controls.Add(this.tbDeepSearch);
+            this.gbDeepSearch.Controls.Add(this.lblDeepSearch);
+            this.gbDeepSearch.Dock = System.Windows.Forms.DockStyle.Top;
+            this.gbDeepSearch.Location = new System.Drawing.Point(0, 57);
+            this.gbDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.gbDeepSearch.Name = "gbDeepSearch";
+            this.gbDeepSearch.Padding = new System.Windows.Forms.Padding(7, 6, 7, 6);
+            this.gbDeepSearch.Size = new System.Drawing.Size(978, 62);
+            this.gbDeepSearch.TabIndex = 2;
+            this.gbDeepSearch.TabStop = false;
+            this.gbDeepSearch.Text = "🔍 Search in Run Details";
+            // 
+            // lblDeepSearch
+            // 
+            this.lblDeepSearch.AutoSize = true;
+            this.lblDeepSearch.Location = new System.Drawing.Point(11, 28);
+            this.lblDeepSearch.Name = "lblDeepSearch";
+            this.lblDeepSearch.Size = new System.Drawing.Size(91, 16);
+            this.lblDeepSearch.TabIndex = 0;
+            this.lblDeepSearch.Text = "Search value:";
+            // 
+            // tbDeepSearch
+            // 
+            this.tbDeepSearch.Location = new System.Drawing.Point(108, 25);
+            this.tbDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tbDeepSearch.Name = "tbDeepSearch";
+            this.tbDeepSearch.Size = new System.Drawing.Size(280, 22);
+            this.tbDeepSearch.TabIndex = 1;
+            // 
+            // btnDeepSearch
+            // 
+            this.btnDeepSearch.Location = new System.Drawing.Point(396, 23);
+            this.btnDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.btnDeepSearch.Name = "btnDeepSearch";
+            this.btnDeepSearch.Size = new System.Drawing.Size(110, 26);
+            this.btnDeepSearch.TabIndex = 2;
+            this.btnDeepSearch.Text = "🔍 Search";
+            this.btnDeepSearch.UseVisualStyleBackColor = true;
+            this.btnDeepSearch.Click += new System.EventHandler(this.btnDeepSearch_Click);
+            // 
+            // btnClearDeepSearch
+            // 
+            this.btnClearDeepSearch.Location = new System.Drawing.Point(512, 23);
+            this.btnClearDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.btnClearDeepSearch.Name = "btnClearDeepSearch";
+            this.btnClearDeepSearch.Size = new System.Drawing.Size(75, 26);
+            this.btnClearDeepSearch.TabIndex = 3;
+            this.btnClearDeepSearch.Text = "✕ Clear";
+            this.btnClearDeepSearch.UseVisualStyleBackColor = true;
+            this.btnClearDeepSearch.Click += new System.EventHandler(this.btnClearDeepSearch_Click);
+            // 
+            // progressBarDeepSearch
+            // 
+            this.progressBarDeepSearch.Location = new System.Drawing.Point(596, 27);
+            this.progressBarDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.progressBarDeepSearch.Name = "progressBarDeepSearch";
+            this.progressBarDeepSearch.Size = new System.Drawing.Size(150, 18);
+            this.progressBarDeepSearch.TabIndex = 4;
+            this.progressBarDeepSearch.Visible = false;
+            // 
+            // lblDeepSearchStatus
+            // 
+            this.lblDeepSearchStatus.AutoSize = true;
+            this.lblDeepSearchStatus.Location = new System.Drawing.Point(752, 28);
+            this.lblDeepSearchStatus.Name = "lblDeepSearchStatus";
+            this.lblDeepSearchStatus.Size = new System.Drawing.Size(0, 16);
+            this.lblDeepSearchStatus.TabIndex = 5;
+            // 
             // gbFlowRuns
             // 
             this.gbFlowRuns.Controls.Add(this.dataGridView1);
             this.gbFlowRuns.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gbFlowRuns.Location = new System.Drawing.Point(0, 57);
+            this.gbFlowRuns.Location = new System.Drawing.Point(0, 119);
             this.gbFlowRuns.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.gbFlowRuns.Name = "gbFlowRuns";
             this.gbFlowRuns.Padding = new System.Windows.Forms.Padding(7, 6, 7, 6);
-            this.gbFlowRuns.Size = new System.Drawing.Size(978, 607);
+            this.gbFlowRuns.Size = new System.Drawing.Size(978, 545);
             this.gbFlowRuns.TabIndex = 1;
             this.gbFlowRuns.TabStop = false;
             this.gbFlowRuns.Text = "Flow Runs";
@@ -477,6 +560,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.gbRunFilters.ResumeLayout(false);
             this.gbRunFilters.PerformLayout();
+            this.gbDeepSearch.ResumeLayout(false);
+            this.gbDeepSearch.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -516,5 +601,12 @@
         private System.Windows.Forms.Label lblPageInfo;
         private System.Windows.Forms.Button btnNext;
         private System.Windows.Forms.Button btnPrev;
+        private System.Windows.Forms.GroupBox gbDeepSearch;
+        private System.Windows.Forms.Label lblDeepSearch;
+        private System.Windows.Forms.TextBox tbDeepSearch;
+        private System.Windows.Forms.Button btnDeepSearch;
+        private System.Windows.Forms.Button btnClearDeepSearch;
+        private System.Windows.Forms.ProgressBar progressBarDeepSearch;
+        private System.Windows.Forms.Label lblDeepSearchStatus;
     }
 }

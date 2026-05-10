@@ -1,9 +1,11 @@
-﻿using ExecutionFlowHistoryViewer.Contracts;
+using ExecutionFlowHistoryViewer.Contracts;
 using ExecutionFlowHistoryViewer.DTO;
 using ExecutionFlowHistoryViewer.Models;
 using ExecutionFlowHistoryViewer.Services;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -17,10 +19,22 @@ namespace ExecutionFlowHistoryViewer.Forms
         private readonly FlowActionsResponseDto _actions;
         private readonly IFlowClient _flowClient;
 
-        private TextBox _txtGeneral;
-        private TextBox _txtTrigger;
-        private TreeView _treeActions;
-        private TextBox _txtError;
+        // Table controls for each tab
+        private DataGridView _dgvGeneral;
+        private DataGridView _dgvTrigger;
+        private DataGridView _dgvActions;
+        private DataGridView _dgvErrors;
+
+        // Styling constants
+        private static readonly Color HeaderBackColor = Color.FromArgb(45, 55, 72);
+        private static readonly Color HeaderForeColor = Color.White;
+        private static readonly Color AlternatingRowColor = Color.FromArgb(237, 242, 247);
+        private static readonly Color GridLineColor = Color.FromArgb(203, 213, 224);
+        private static readonly Color SucceededColor = Color.FromArgb(56, 161, 105);
+        private static readonly Color FailedColor = Color.FromArgb(229, 62, 62);
+        private static readonly Color SkippedColor = Color.FromArgb(160, 174, 192);
+        private static readonly Color RunningColor = Color.FromArgb(49, 130, 206);
+        private static readonly Color CancelledColor = Color.FromArgb(214, 158, 46);
 
         public RunDetailForm(FlowRun run, FlowRunDetailDto detail, FlowActionsResponseDto actions, IFlowClient flowClient)
         {
@@ -33,55 +47,42 @@ namespace ExecutionFlowHistoryViewer.Forms
             LoadData();
         }
 
+        #region UI Construction
+
         private void BuildUi()
         {
-            this.Text = $"Run Details - {_run.FlowName}";
-            this.Size = new Size(900, 700);
+            this.Text = $"Run Details — {_run.FlowName}";
+            this.Size = new Size(1000, 720);
+            this.MinimumSize = new Size(750, 500);
             this.StartPosition = FormStartPosition.CenterParent;
+            this.BackColor = Color.FromArgb(247, 250, 252);
 
-            var tabControl = new TabControl { Dock = DockStyle.Fill };
-
-            // Tab General
-            var tabGeneral = new TabPage("General");
-            _txtGeneral = new TextBox
+            var tabControl = new TabControl
             {
-                Multiline = true,
-                ReadOnly = true,
                 Dock = DockStyle.Fill,
-                ScrollBars = ScrollBars.Both,
-                Font = new Font("Consolas", 10)
+                Font = new Font("Segoe UI", 10F),
+                Padding = new Point(12, 6)
             };
-            tabGeneral.Controls.Add(_txtGeneral);
 
-            // Tab Trigger
-            var tabTrigger = new TabPage("Trigger");
-            _txtTrigger = new TextBox
-            {
-                Multiline = true,
-                ReadOnly = true,
-                Dock = DockStyle.Fill,
-                ScrollBars = ScrollBars.Both,
-                Font = new Font("Consolas", 10)
-            };
-            tabTrigger.Controls.Add(_txtTrigger);
+            // Tab: General
+            var tabGeneral = new TabPage("  General  ") { BackColor = Color.White };
+            _dgvGeneral = CreateStyledGrid();
+            tabGeneral.Controls.Add(_dgvGeneral);
 
-            // Tab Actions
-            var tabActions = new TabPage("Actions");
-            _treeActions = new TreeView { Dock = DockStyle.Fill };
-            tabActions.Controls.Add(_treeActions);
+            // Tab: Trigger
+            var tabTrigger = new TabPage("  Trigger  ") { BackColor = Color.White };
+            _dgvTrigger = CreateStyledGrid();
+            tabTrigger.Controls.Add(_dgvTrigger);
 
-            // Tab Error
-            var tabError = new TabPage("Error");
-            _txtError = new TextBox
-            {
-                Multiline = true,
-                ReadOnly = true,
-                Dock = DockStyle.Fill,
-                ScrollBars = ScrollBars.Both,
-                ForeColor = Color.Red,
-                Font = new Font("Consolas", 10)
-            };
-            tabError.Controls.Add(_txtError);
+            // Tab: Actions
+            var tabActions = new TabPage("  Actions  ") { BackColor = Color.White };
+            _dgvActions = CreateStyledGrid();
+            tabActions.Controls.Add(_dgvActions);
+
+            // Tab: Errors
+            var tabError = new TabPage("  Errors  ") { BackColor = Color.White };
+            _dgvErrors = CreateStyledGrid();
+            tabError.Controls.Add(_dgvErrors);
 
             tabControl.TabPages.Add(tabGeneral);
             tabControl.TabPages.Add(tabTrigger);
@@ -91,128 +92,308 @@ namespace ExecutionFlowHistoryViewer.Forms
             this.Controls.Add(tabControl);
         }
 
+        private DataGridView CreateStyledGrid()
+        {
+            var dgv = new DataGridView
+            {
+                Dock = DockStyle.Fill,
+                ReadOnly = true,
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                AllowUserToResizeRows = true,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                RowHeadersVisible = false,
+                BorderStyle = BorderStyle.None,
+                CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal,
+                GridColor = GridLineColor,
+                BackgroundColor = Color.White,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                MultiSelect = false,
+                Font = new Font("Segoe UI", 9.5F),
+
+                // Row styling
+                RowTemplate = { Height = 34 },
+                AlternatingRowsDefaultCellStyle = new DataGridViewCellStyle
+                {
+                    BackColor = AlternatingRowColor
+                },
+                DefaultCellStyle = new DataGridViewCellStyle
+                {
+                    BackColor = Color.White,
+                    ForeColor = Color.FromArgb(45, 55, 72),
+                    SelectionBackColor = Color.FromArgb(190, 215, 240),
+                    SelectionForeColor = Color.FromArgb(45, 55, 72),
+                    Padding = new Padding(6, 4, 6, 4),
+                    WrapMode = DataGridViewTriState.True
+                },
+
+                // Header styling
+                EnableHeadersVisualStyles = false,
+                ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
+                {
+                    BackColor = HeaderBackColor,
+                    ForeColor = HeaderForeColor,
+                    Font = new Font("Segoe UI Semibold", 10F),
+                    Alignment = DataGridViewContentAlignment.MiddleLeft,
+                    Padding = new Padding(8, 6, 8, 6)
+                },
+                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing,
+                ColumnHeadersHeight = 40
+            };
+
+            dgv.CellFormatting += Dgv_CellFormatting;
+            return dgv;
+        }
+
+        #endregion
+
+        #region Data Loading
+
         private void LoadData()
         {
-            if (_detail?.Properties != null)
+            LoadGeneralTab();
+            LoadTriggerTab();
+            LoadActionsTab();
+            LoadErrorsTab();
+        }
+
+        private void LoadGeneralTab()
+        {
+            _dgvGeneral.Columns.Clear();
+            _dgvGeneral.Columns.Add("Property", "Property");
+            _dgvGeneral.Columns.Add("Value", "Value");
+            _dgvGeneral.Columns["Property"].FillWeight = 30;
+            _dgvGeneral.Columns["Value"].FillWeight = 70;
+
+            // Make the Property column bold
+            _dgvGeneral.Columns["Property"].DefaultCellStyle = new DataGridViewCellStyle
             {
-                var sb = new System.Text.StringBuilder();
-                sb.AppendLine($"Run ID: {_run.Id}");
-                sb.AppendLine($"Flow: {_run.FlowName}");
-                sb.AppendLine($"Status: {_detail.Properties.Status}");
-                sb.AppendLine($"Start: {_detail.Properties.StartTime}");
-                sb.AppendLine($"End: {_detail.Properties.EndTime}");
-                sb.AppendLine($"Duration: {_run.Duration}");
-                sb.AppendLine($"Tracking ID: {_detail.Properties.CorrelationClientTrackingId}");
-                _txtGeneral.Text = sb.ToString();
+                Font = new Font("Segoe UI Semibold", 9.5F),
+                ForeColor = Color.FromArgb(45, 55, 72)
+            };
+
+            AddPropertyRow(_dgvGeneral, "Run ID", _run.Id);
+            AddPropertyRow(_dgvGeneral, "Flow Name", _run.FlowName);
+            AddPropertyRow(_dgvGeneral, "Status", _detail?.Properties?.Status ?? _run.Status);
+            AddPropertyRow(_dgvGeneral, "Start Time", FormatDateTime(_detail?.Properties?.StartTime ?? _run.StartDate));
+            AddPropertyRow(_dgvGeneral, "End Time", FormatDateTime(_detail?.Properties?.EndTime ?? _run.EndDate));
+            AddPropertyRow(_dgvGeneral, "Duration", _run.Duration);
+            AddPropertyRow(_dgvGeneral, "Tracking ID", _detail?.Properties?.CorrelationClientTrackingId ?? "N/A");
+            AddPropertyRow(_dgvGeneral, "Run URL", _run.Url ?? "N/A");
+        }
+
+        private void LoadTriggerTab()
+        {
+            _dgvTrigger.Columns.Clear();
+            _dgvTrigger.Columns.Add("Property", "Property");
+            _dgvTrigger.Columns.Add("Value", "Value");
+            _dgvTrigger.Columns["Property"].FillWeight = 25;
+            _dgvTrigger.Columns["Value"].FillWeight = 75;
+
+            _dgvTrigger.Columns["Property"].DefaultCellStyle = new DataGridViewCellStyle
+            {
+                Font = new Font("Segoe UI Semibold", 9.5F),
+                ForeColor = Color.FromArgb(45, 55, 72)
+            };
+
+            if (_detail?.Properties?.Trigger == null)
+            {
+                AddPropertyRow(_dgvTrigger, "Info", "No trigger data available.");
+                return;
             }
 
-            // --- Trigger ---
-            if (_detail?.Properties?.Trigger != null)
+            var trigger = _detail.Properties.Trigger;
+            AddPropertyRow(_dgvTrigger, "Trigger Name", trigger.Name ?? "N/A");
+
+            // Inputs
+            string inputs = null;
+            if (trigger.InputsLink?.Uri != null)
             {
-                var trigger = _detail.Properties.Trigger;
-                var sb = new System.Text.StringBuilder();
-                sb.AppendLine($"Trigger Name: {trigger.Name}");
-                sb.AppendLine();
-
-                // ← CORRECTION : Récupérer les données depuis les liens
-                string inputs = null;
-                string outputs = null;
-
-                if (trigger.InputsLink?.Uri != null)
-                {
-                    sb.AppendLine("--- Inputs (loading from link) ---");
-                    inputs = GetTriggerContent(trigger.InputsLink.Uri);
-                }
-                else
-                {
-                    sb.AppendLine("--- Inputs ---");
-                    inputs = FormatJson(trigger.Inputs);
-                }
-
-                if (trigger.OutputsLink?.Uri != null)
-                {
-                    sb.AppendLine("--- Outputs (loading from link) ---");
-                    outputs = GetTriggerContent(trigger.OutputsLink.Uri);
-                }
-                else
-                {
-                    sb.AppendLine("--- Outputs ---");
-                    outputs = FormatJson(trigger.Outputs);
-                }
-
-                sb.AppendLine(inputs ?? "null");
-                sb.AppendLine();
-                sb.AppendLine(outputs ?? "null");
-
-                _txtTrigger.Text = sb.ToString();
+                inputs = GetTriggerContent(trigger.InputsLink.Uri);
             }
             else
             {
-                _txtTrigger.Text = "No trigger data available.";
+                inputs = FormatJson(trigger.Inputs);
             }
 
-            // --- Actions ---
-            if (_actions?.Value != null)
+            // Try to parse inputs as JSON and flatten into rows
+            AddJsonPropertyRows(_dgvTrigger, "Input", inputs);
+
+            // Outputs
+            string outputs = null;
+            if (trigger.OutputsLink?.Uri != null)
             {
-                foreach (var action in _actions.Value)
+                outputs = GetTriggerContent(trigger.OutputsLink.Uri);
+            }
+            else
+            {
+                outputs = FormatJson(trigger.Outputs);
+            }
+
+            AddJsonPropertyRows(_dgvTrigger, "Output", outputs);
+        }
+
+        private void LoadActionsTab()
+        {
+            _dgvActions.Columns.Clear();
+            _dgvActions.Columns.Add("ActionName", "Action Name");
+            _dgvActions.Columns.Add("Type", "Type");
+            _dgvActions.Columns.Add("Status", "Status");
+            _dgvActions.Columns.Add("StartTime", "Start Time");
+            _dgvActions.Columns.Add("EndTime", "End Time");
+            _dgvActions.Columns.Add("Duration", "Duration");
+            _dgvActions.Columns.Add("Error", "Error");
+
+            _dgvActions.Columns["ActionName"].FillWeight = 22;
+            _dgvActions.Columns["Type"].FillWeight = 14;
+            _dgvActions.Columns["Status"].FillWeight = 10;
+            _dgvActions.Columns["StartTime"].FillWeight = 15;
+            _dgvActions.Columns["EndTime"].FillWeight = 15;
+            _dgvActions.Columns["Duration"].FillWeight = 10;
+            _dgvActions.Columns["Error"].FillWeight = 14;
+
+            if (_actions?.Value == null || _actions.Value.Count == 0)
+            {
+                _dgvActions.Rows.Add("No actions found", "", "", "", "", "", "");
+                return;
+            }
+
+            foreach (var action in _actions.Value)
+            {
+                string duration = "";
+                if (action.Properties?.StartTime.HasValue == true && action.Properties?.EndTime.HasValue == true)
                 {
-                    var node = new TreeNode($"{action.Name} ({action.Type}) - {action.Properties?.Status}")
-                    {
-                        ForeColor = GetStatusColor(action.Properties?.Status)
-                    };
-
-                    if (action.Properties?.Inputs != null)
-                    {
-                        var inputsNode = new TreeNode("Inputs");
-                        inputsNode.Nodes.Add(new TreeNode(FormatJson(action.Properties.Inputs)));
-                        node.Nodes.Add(inputsNode);
-                    }
-
-                    if (action.Properties?.Outputs != null)
-                    {
-                        var outputsNode = new TreeNode("Outputs");
-                        outputsNode.Nodes.Add(new TreeNode(FormatJson(action.Properties.Outputs)));
-                        node.Nodes.Add(outputsNode);
-                    }
-
-                    if (action.Properties?.Error != null)
-                    {
-                        var errorNode = new TreeNode($"Error: {action.Properties.Error.Message}")
-                        {
-                            ForeColor = Color.Red
-                        };
-                        node.Nodes.Add(errorNode);
-                    }
-
-                    _treeActions.Nodes.Add(node);
+                    var span = action.Properties.EndTime.Value - action.Properties.StartTime.Value;
+                    duration = span.TotalSeconds < 1
+                        ? $"{span.TotalMilliseconds:F0} ms"
+                        : span.ToString(@"hh\:mm\:ss\.fff");
                 }
-                _treeActions.ExpandAll();
+
+                string error = action.Properties?.Error != null
+                    ? $"{action.Properties.Error.Code}: {action.Properties.Error.Message}"
+                    : "";
+
+                int rowIdx = _dgvActions.Rows.Add(
+                    action.Name ?? "N/A",
+                    action.Type ?? "N/A",
+                    action.Properties?.Status ?? "N/A",
+                    FormatDateTime(action.Properties?.StartTime),
+                    FormatDateTime(action.Properties?.EndTime),
+                    duration,
+                    error
+                );
+
+                // Color-code the status cell
+                var statusCell = _dgvActions.Rows[rowIdx].Cells["Status"];
+                statusCell.Style.ForeColor = GetStatusColor(action.Properties?.Status);
+                statusCell.Style.Font = new Font("Segoe UI Semibold", 9.5F);
+
+                // Highlight error cell if present
+                if (!string.IsNullOrEmpty(error))
+                {
+                    _dgvActions.Rows[rowIdx].Cells["Error"].Style.ForeColor = FailedColor;
+                }
+            }
+        }
+
+        private void LoadErrorsTab()
+        {
+            _dgvErrors.Columns.Clear();
+            _dgvErrors.Columns.Add("ActionName", "Action Name");
+            _dgvErrors.Columns.Add("ErrorCode", "Error Code");
+            _dgvErrors.Columns.Add("ErrorMessage", "Error Message");
+
+            _dgvErrors.Columns["ActionName"].FillWeight = 25;
+            _dgvErrors.Columns["ErrorCode"].FillWeight = 20;
+            _dgvErrors.Columns["ErrorMessage"].FillWeight = 55;
+
+            if (_actions?.Value == null)
+            {
+                _dgvErrors.Rows.Add("No data available", "", "");
+                return;
             }
 
-            // --- Error ---
-            if (_actions?.Value != null)
-            {
-                var failedActions = _actions.Value
-                    .Where(a => a.Properties?.Error != null)
-                    .ToList();
+            var failedActions = _actions.Value
+                .Where(a => a.Properties?.Error != null)
+                .ToList();
 
-                if (failedActions.Count > 0)
+            if (failedActions.Count == 0)
+            {
+                _dgvErrors.Rows.Add("✓ No errors found", "", "");
+                _dgvErrors.Rows[0].Cells[0].Style.ForeColor = SucceededColor;
+                _dgvErrors.Rows[0].Cells[0].Style.Font = new Font("Segoe UI Semibold", 10F);
+                return;
+            }
+
+            foreach (var action in failedActions)
+            {
+                int rowIdx = _dgvErrors.Rows.Add(
+                    action.Name,
+                    action.Properties.Error.Code,
+                    action.Properties.Error.Message
+                );
+
+                _dgvErrors.Rows[rowIdx].Cells["ErrorCode"].Style.ForeColor = FailedColor;
+                _dgvErrors.Rows[rowIdx].Cells["ErrorMessage"].Style.ForeColor = FailedColor;
+            }
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private void AddPropertyRow(DataGridView dgv, string property, string value)
+        {
+            dgv.Rows.Add(property, value ?? "N/A");
+        }
+
+        /// <summary>
+        /// Attempts to parse a JSON string and add its top-level keys as individual rows.
+        /// Falls back to a single row if parsing fails.
+        /// </summary>
+        private void AddJsonPropertyRows(DataGridView dgv, string prefix, string jsonString)
+        {
+            if (string.IsNullOrWhiteSpace(jsonString) || jsonString == "null")
+            {
+                AddPropertyRow(dgv, prefix, "null");
+                return;
+            }
+
+            try
+            {
+                var token = JToken.Parse(jsonString);
+                if (token is JObject obj)
                 {
-                    var sb = new System.Text.StringBuilder();
-                    foreach (var action in failedActions)
+                    foreach (var prop in obj.Properties())
                     {
-                        sb.AppendLine($"Action: {action.Name}");
-                        sb.AppendLine($"Code: {action.Properties.Error.Code}");
-                        sb.AppendLine($"Message: {action.Properties.Error.Message}");
-                        sb.AppendLine(new string('-', 50));
+                        string displayValue = prop.Value.Type == JTokenType.Object || prop.Value.Type == JTokenType.Array
+                            ? prop.Value.ToString(Formatting.Indented)
+                            : prop.Value.ToString();
+                        AddPropertyRow(dgv, $"{prefix} › {prop.Name}", displayValue);
                     }
-                    _txtError.Text = sb.ToString();
                 }
                 else
                 {
-                    _txtError.Text = "No errors found.";
+                    // Array or primitive — show as single row
+                    AddPropertyRow(dgv, prefix, token.ToString(Formatting.Indented));
                 }
             }
+            catch
+            {
+                // Not valid JSON — just show the raw string
+                AddPropertyRow(dgv, prefix, jsonString);
+            }
+        }
+
+        private string FormatDateTime(DateTime? dt)
+        {
+            if (!dt.HasValue) return "N/A";
+            return dt.Value.ToString("yyyy-MM-dd HH:mm:ss");
+        }
+
+        private string FormatDateTime(DateTime dt)
+        {
+            return dt.ToString("yyyy-MM-dd HH:mm:ss");
         }
 
         private string GetTriggerContent(string uri)
@@ -227,6 +408,7 @@ namespace ExecutionFlowHistoryViewer.Forms
                 return $"Error loading content: {ex.Message}";
             }
         }
+
         private string FormatJson(object obj)
         {
             if (obj == null) return "null";
@@ -243,12 +425,37 @@ namespace ExecutionFlowHistoryViewer.Forms
         private Color GetStatusColor(string status)
         {
             if (string.Equals(status, "Succeeded", StringComparison.OrdinalIgnoreCase))
-                return Color.Green;
+                return SucceededColor;
             if (string.Equals(status, "Failed", StringComparison.OrdinalIgnoreCase))
-                return Color.Red;
+                return FailedColor;
             if (string.Equals(status, "Skipped", StringComparison.OrdinalIgnoreCase))
-                return Color.Gray;
-            return Color.Black;
+                return SkippedColor;
+            if (string.Equals(status, "Running", StringComparison.OrdinalIgnoreCase))
+                return RunningColor;
+            if (string.Equals(status, "Cancelled", StringComparison.OrdinalIgnoreCase))
+                return CancelledColor;
+            return Color.FromArgb(45, 55, 72);
         }
+
+        /// <summary>
+        /// Applies cell formatting dynamically — bold property columns, wrap long text, etc.
+        /// </summary>
+        private void Dgv_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            // Auto-resize row height for cells with long content
+            var dgv = sender as DataGridView;
+            if (dgv == null || e.RowIndex < 0) return;
+
+            var cell = dgv[e.ColumnIndex, e.RowIndex];
+            if (cell.Value != null && cell.Value.ToString().Length > 100)
+            {
+                dgv.Rows[e.RowIndex].Height = Math.Min(
+                    Math.Max(dgv.Rows[e.RowIndex].Height, 60),
+                    200
+                );
+            }
+        }
+
+        #endregion
     }
 }
