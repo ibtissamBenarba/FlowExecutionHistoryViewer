@@ -79,14 +79,15 @@ namespace ExecutionFlowHistoryViewer.Services
         {
             var query = new QueryExpression("workflow")
             {
-                ColumnSet = new ColumnSet("workflowid", "name"),
+                // AJOUT : statecode et statuscode
+                ColumnSet = new ColumnSet("workflowid", "name", "statecode", "statuscode"),
                 Criteria = new FilterExpression
                 {
                     Conditions =
-                    {
-                        new ConditionExpression("category", ConditionOperator.Equal, 5),
-                        new ConditionExpression("type", ConditionOperator.Equal, 1)
-                    }
+            {
+                new ConditionExpression("category", ConditionOperator.Equal, 5),
+                new ConditionExpression("type", ConditionOperator.Equal, 1)
+            }
                 },
                 Orders = { new OrderExpression("name", OrderType.Ascending) }
             };
@@ -100,8 +101,8 @@ namespace ExecutionFlowHistoryViewer.Services
                         {
                             Conditions =
                             {
-                                new ConditionExpression("solutionid", ConditionOperator.Equal, solutionId.Value),
-                                new ConditionExpression("componenttype", ConditionOperator.Equal, 29)
+                        new ConditionExpression("solutionid", ConditionOperator.Equal, solutionId.Value),
+                        new ConditionExpression("componenttype", ConditionOperator.Equal, 29)
                             }
                         }
                     });
@@ -111,7 +112,10 @@ namespace ExecutionFlowHistoryViewer.Services
             return results.Entities.Select(e => new Models.Flow
             {
                 Id = e.Id.ToString(),
-                DisplayName = e.GetAttributeValue<string>("name")
+                DisplayName = e.GetAttributeValue<string>("name"),
+                // AJOUT : Récupérer les codes d'état
+                StateCode = e.GetAttributeValue<OptionSetValue>("statecode")?.Value ?? 0,
+                StatusCode = e.GetAttributeValue<OptionSetValue>("statuscode")?.Value ?? 0
             }).OrderBy(f => f.DisplayName).ToList();
         }
     }

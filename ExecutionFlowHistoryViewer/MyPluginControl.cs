@@ -149,6 +149,18 @@ namespace ExecutionFlowHistoryViewer
             cbSelectAllFlows.CheckedChanged -= cbSelectAllFlows_CheckedChanged;
             cbSelectAllFlows.CheckedChanged += cbSelectAllFlows_CheckedChanged;
 
+            // AJOUT : Filtres par statut de flow
+            if (cbxFlowStatusActivated != null)
+            {
+                cbxFlowStatusActivated.CheckedChanged -= CbxFlowStatus_CheckedChanged;
+                cbxFlowStatusActivated.CheckedChanged += CbxFlowStatus_CheckedChanged;
+            }
+            if (cbxFlowStatusDraft != null)
+            {
+                cbxFlowStatusDraft.CheckedChanged -= CbxFlowStatus_CheckedChanged;
+                cbxFlowStatusDraft.CheckedChanged += CbxFlowStatus_CheckedChanged;
+            }
+
             if (tscNumberOfRuns != null)
             {
                 tscNumberOfRuns.SelectedIndexChanged -= TscNumberOfRuns_SelectedIndexChanged;
@@ -257,9 +269,29 @@ namespace ExecutionFlowHistoryViewer
         private void ApplyFlowFilter()
         {
             string search = tbSearch.Text?.Trim() ?? string.Empty;
+
             var filtered = string.IsNullOrEmpty(search)
                 ? _currentFlows
                 : _currentFlows.Where(f => f.DisplayName.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+
+            bool showActivated = cbxFlowStatusActivated?.Checked ?? true;
+            bool showDraft = cbxFlowStatusDraft?.Checked ?? true;
+
+            if (!showActivated || !showDraft)
+            {
+                filtered = filtered.Where(f =>
+                {
+                    // CORRECTION : Inversé !
+                    // StateCode 0 = Draft (Inactive)  
+                    // StateCode 1 = Activated (Active)
+                    bool isActivated = f.StateCode == 1;
+                    bool isDraft = f.StateCode == 0;
+
+                    if (showActivated && isActivated) return true;
+                    if (showDraft && isDraft) return true;
+                    return false;
+                }).ToList();
+            }
 
             clbFlows.ItemCheck -= clbFlows_ItemCheck;
             clbFlows.Items.Clear();
@@ -291,6 +323,11 @@ namespace ExecutionFlowHistoryViewer
         {
             if (!(cbSolutions.SelectedItem is SolutionItem selected)) return;
             LoadFlows(selected.Id == Guid.Empty ? (Guid?)null : selected.Id);
+        }
+
+        private void CbxFlowStatus_CheckedChanged(object sender, EventArgs e)
+        {
+            ApplyFlowFilter();
         }
 
         private void tbSearch_TextChanged(object sender, EventArgs e) => ApplyFlowFilter();
