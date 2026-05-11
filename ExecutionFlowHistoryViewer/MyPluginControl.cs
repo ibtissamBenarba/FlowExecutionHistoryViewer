@@ -635,14 +635,83 @@ namespace ExecutionFlowHistoryViewer
                 return;
             }
 
-            // Récupère TOUTES les runs en cache (toutes les pages chargées)
-            var allRuns = (_pagination != null && _pagination.AllRuns != null)
-                ? _pagination.AllRuns.ToList()
-                : currentPage;
-
-            using (var form = new ExportForm(currentPage, allRuns))
+            using (var form = new ExportForm())
             {
-                form.ShowDialog(this);
+                if (form.ShowDialog(this) != DialogResult.OK) return;
+
+                // Choisir le fichier d'abord
+                string filter = form.IsCsv ? "CSV files (*.csv)|*.csv" : "Excel files (*.xlsx)|*.xlsx";
+                string filePath;
+                using (var sfd = new SaveFileDialog { Filter = filter })
+                {
+                    if (sfd.ShowDialog() != DialogResult.OK) return;
+                    filePath = sfd.FileName;
+                }
+
+                // Exporter selon la portée choisie
+                if (form.ExportAllPages)
+                {
+                    FetchAllPagesAndExport(filePath, form);
+                }
+                else
+                {
+                    ExecuteExport(currentPage, filePath, form);
+                }
+            }
+        }
+
+        private void FetchAllPagesAndExport(string filePath, ExportForm options)
+        {
+            var (fromDate, toDate, status) = GetFilterValues();
+            var flows = GetSelectedFlows();
+
+            WorkAsync(new WorkAsyncInfo
+            {
+                Message = "Loading all pages for export...",
+                Work = (worker, args) =>
+                {
+                    // Charger toutes les pages restantes depuis le serveur
+                    while (_pagination.HasMoreServerPages)
+                    {
+                        var result = _historyService.FetchRuns(
+                            flows, fromDate, toDate, status, true, _flowSkipTokens, _pagination.PageSize);
+
+                        _pagination.AppendRuns(result.Runs);
+                        _pagination.HasMoreServerPages = result.HasMore;
+                    }
+
+                    args.Result = _pagination.AllRuns.ToList();
+                },
+                PostWorkCallBack = (args) =>
+                {
+                    if (args.Error != null) { ShowError(args.Error); return; }
+
+                    var allRuns = (List<FlowRun>)args.Result;
+                    ExecuteExport(allRuns, filePath, options);
+                }
+            });
+        }
+
+        private void ExecuteExport(List<FlowRun> runs, string filePath, ExportForm options)
+        {
+            try
+            {
+                if (options.IsCsv)
+                {
+                    CsvService.Export(runs, filePath, options.GetSelectedDelimiter(), options.GetSelectedEncoding(), options.IncludeHeaders);
+                }
+                else
+                {
+                    ExcelService.Export(runs, filePath, options.IncludeHeaders);
+                }
+
+                MessageBox.Show("Export completed successfully!", "Export",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Export failed:\n\n" + ex.Message, "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
