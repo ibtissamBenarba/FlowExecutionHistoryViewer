@@ -65,6 +65,13 @@ namespace ExecutionFlowHistoryViewer
             this.tstbPageNumber = new System.Windows.Forms.ToolStripTextBox();
             this.tsbPrevious = new System.Windows.Forms.ToolStripButton();
             this.tsbSkipPrevious = new System.Windows.Forms.ToolStripButton();
+            this.gbDeepSearch = new System.Windows.Forms.GroupBox();
+            this.lblDeepSearchStatus = new System.Windows.Forms.Label();
+            this.progressBarDeepSearch = new System.Windows.Forms.ProgressBar();
+            this.btnClearDeepSearch = new System.Windows.Forms.Button();
+            this.btnDeepSearch = new System.Windows.Forms.Button();
+            this.tbDeepSearch = new System.Windows.Forms.TextBox();
+            this.lblDeepSearch = new System.Windows.Forms.Label();
             this.gbRunFilters = new System.Windows.Forms.GroupBox();
             this.btnFetchHistory = new System.Windows.Forms.Button();
             this.cmbStatus = new System.Windows.Forms.ComboBox();
@@ -73,13 +80,6 @@ namespace ExecutionFlowHistoryViewer
             this.lblDateTo = new System.Windows.Forms.Label();
             this.dtpDateFrom = new System.Windows.Forms.DateTimePicker();
             this.lblDateFrom = new System.Windows.Forms.Label();
-            this.gbDeepSearch = new System.Windows.Forms.GroupBox();
-            this.lblDeepSearchStatus = new System.Windows.Forms.Label();
-            this.progressBarDeepSearch = new System.Windows.Forms.ProgressBar();
-            this.btnClearDeepSearch = new System.Windows.Forms.Button();
-            this.btnDeepSearch = new System.Windows.Forms.Button();
-            this.tbDeepSearch = new System.Windows.Forms.TextBox();
-            this.lblDeepSearch = new System.Windows.Forms.Label();
             this.tsmContainer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).BeginInit();
             this.splitContainerMain.Panel1.SuspendLayout();
@@ -91,8 +91,8 @@ namespace ExecutionFlowHistoryViewer
             this.gbFlowRuns.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.tsPagination.SuspendLayout();
-            this.gbRunFilters.SuspendLayout();
             this.gbDeepSearch.SuspendLayout();
+            this.gbRunFilters.SuspendLayout();
             this.SuspendLayout();
             // 
             // tsmContainer
@@ -114,25 +114,25 @@ namespace ExecutionFlowHistoryViewer
             // 
             this.tsbClose.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.tsbClose.Name = "tsbClose";
-            this.tsbClose.Size = new System.Drawing.Size(107, 24);
+            this.tsbClose.Size = new System.Drawing.Size(107, 28);
             this.tsbClose.Text = "Close this tool";
             this.tsbClose.Click += new System.EventHandler(this.tsbClose_Click);
             // 
             // tssSeparator1
             // 
             this.tssSeparator1.Name = "tssSeparator1";
-            this.tssSeparator1.Size = new System.Drawing.Size(6, 27);
+            this.tssSeparator1.Size = new System.Drawing.Size(6, 31);
             // 
             // tsbSample
             // 
             this.tsbSample.Name = "tsbSample";
-            this.tsbSample.Size = new System.Drawing.Size(29, 24);
+            this.tsbSample.Size = new System.Drawing.Size(29, 28);
             // 
             // tsmConnectToPA
             // 
             this.tsmConnectToPA.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.tsmConnectToPA.Name = "tsmConnectToPA";
-            this.tsmConnectToPA.Size = new System.Drawing.Size(225, 24);
+            this.tsmConnectToPA.Size = new System.Drawing.Size(225, 28);
             this.tsmConnectToPA.Text = "Connect to Power Automate API";
             this.tsmConnectToPA.Click += new System.EventHandler(this.tsmConnectToPA_ItemClicked);
             // 
@@ -140,7 +140,7 @@ namespace ExecutionFlowHistoryViewer
             // 
             this.btnExport.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.btnExport.Name = "btnExport";
-            this.btnExport.Size = new System.Drawing.Size(134, 24);
+            this.btnExport.Size = new System.Drawing.Size(134, 28);
             this.btnExport.Text = "Export CSV / Excel";
             this.btnExport.Click += new System.EventHandler(this.btnExport_Click_1);
             // 
@@ -287,80 +287,6 @@ namespace ExecutionFlowHistoryViewer
             this.cbSolutions.TabIndex = 0;
             this.cbSolutions.SelectedIndexChanged += new System.EventHandler(this.cbSolutions_SelectedIndexChanged);
             // 
-            // gbDeepSearch
-            // 
-            this.gbDeepSearch.Controls.Add(this.lblDeepSearchStatus);
-            this.gbDeepSearch.Controls.Add(this.progressBarDeepSearch);
-            this.gbDeepSearch.Controls.Add(this.btnClearDeepSearch);
-            this.gbDeepSearch.Controls.Add(this.btnDeepSearch);
-            this.gbDeepSearch.Controls.Add(this.tbDeepSearch);
-            this.gbDeepSearch.Controls.Add(this.lblDeepSearch);
-            this.gbDeepSearch.Dock = System.Windows.Forms.DockStyle.Top;
-            this.gbDeepSearch.Location = new System.Drawing.Point(0, 57);
-            this.gbDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.gbDeepSearch.Name = "gbDeepSearch";
-            this.gbDeepSearch.Padding = new System.Windows.Forms.Padding(7, 6, 7, 6);
-            this.gbDeepSearch.Size = new System.Drawing.Size(978, 62);
-            this.gbDeepSearch.TabIndex = 2;
-            this.gbDeepSearch.TabStop = false;
-            this.gbDeepSearch.Text = "🔍 Search in Run Details";
-            // 
-            // lblDeepSearch
-            // 
-            this.lblDeepSearch.AutoSize = true;
-            this.lblDeepSearch.Location = new System.Drawing.Point(11, 28);
-            this.lblDeepSearch.Name = "lblDeepSearch";
-            this.lblDeepSearch.Size = new System.Drawing.Size(91, 16);
-            this.lblDeepSearch.TabIndex = 0;
-            this.lblDeepSearch.Text = "Search value:";
-            // 
-            // tbDeepSearch
-            // 
-            this.tbDeepSearch.Location = new System.Drawing.Point(108, 25);
-            this.tbDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tbDeepSearch.Name = "tbDeepSearch";
-            this.tbDeepSearch.Size = new System.Drawing.Size(280, 22);
-            this.tbDeepSearch.TabIndex = 1;
-            // 
-            // btnDeepSearch
-            // 
-            this.btnDeepSearch.Location = new System.Drawing.Point(396, 23);
-            this.btnDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.btnDeepSearch.Name = "btnDeepSearch";
-            this.btnDeepSearch.Size = new System.Drawing.Size(110, 26);
-            this.btnDeepSearch.TabIndex = 2;
-            this.btnDeepSearch.Text = "🔍 Search";
-            this.btnDeepSearch.UseVisualStyleBackColor = true;
-            this.btnDeepSearch.Click += new System.EventHandler(this.btnDeepSearch_Click);
-            // 
-            // btnClearDeepSearch
-            // 
-            this.btnClearDeepSearch.Location = new System.Drawing.Point(512, 23);
-            this.btnClearDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.btnClearDeepSearch.Name = "btnClearDeepSearch";
-            this.btnClearDeepSearch.Size = new System.Drawing.Size(75, 26);
-            this.btnClearDeepSearch.TabIndex = 3;
-            this.btnClearDeepSearch.Text = "✕ Clear";
-            this.btnClearDeepSearch.UseVisualStyleBackColor = true;
-            this.btnClearDeepSearch.Click += new System.EventHandler(this.btnClearDeepSearch_Click);
-            // 
-            // progressBarDeepSearch
-            // 
-            this.progressBarDeepSearch.Location = new System.Drawing.Point(596, 27);
-            this.progressBarDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.progressBarDeepSearch.Name = "progressBarDeepSearch";
-            this.progressBarDeepSearch.Size = new System.Drawing.Size(150, 18);
-            this.progressBarDeepSearch.TabIndex = 4;
-            this.progressBarDeepSearch.Visible = false;
-            // 
-            // lblDeepSearchStatus
-            // 
-            this.lblDeepSearchStatus.AutoSize = true;
-            this.lblDeepSearchStatus.Location = new System.Drawing.Point(752, 28);
-            this.lblDeepSearchStatus.Name = "lblDeepSearchStatus";
-            this.lblDeepSearchStatus.Size = new System.Drawing.Size(0, 16);
-            this.lblDeepSearchStatus.TabIndex = 5;
-            // 
             // gbFlowRuns
             // 
             this.gbFlowRuns.Controls.Add(this.dataGridView1);
@@ -398,7 +324,7 @@ namespace ExecutionFlowHistoryViewer
             this.dataGridView1.RowHeadersVisible = false;
             this.dataGridView1.RowHeadersWidth = 51;
             this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView1.Size = new System.Drawing.Size(964, 540);
+            this.dataGridView1.Size = new System.Drawing.Size(964, 478);
             this.dataGridView1.TabIndex = 0;
             // 
             // FlowName
@@ -464,7 +390,7 @@ namespace ExecutionFlowHistoryViewer
             this.tstbPageNumber,
             this.tsbPrevious,
             this.tsbSkipPrevious});
-            this.tsPagination.Location = new System.Drawing.Point(7, 561);
+            this.tsPagination.Location = new System.Drawing.Point(7, 499);
             this.tsPagination.Name = "tsPagination";
             this.tsPagination.Size = new System.Drawing.Size(964, 40);
             this.tsPagination.TabIndex = 1;
@@ -565,6 +491,80 @@ namespace ExecutionFlowHistoryViewer
             this.tsbSkipPrevious.Size = new System.Drawing.Size(29, 33);
             this.tsbSkipPrevious.Text = "tsbSkipPrevious";
             this.tsbSkipPrevious.Click += new System.EventHandler(this.tsbSkipPrevious_Click);
+            // 
+            // gbDeepSearch
+            // 
+            this.gbDeepSearch.Controls.Add(this.lblDeepSearchStatus);
+            this.gbDeepSearch.Controls.Add(this.progressBarDeepSearch);
+            this.gbDeepSearch.Controls.Add(this.btnClearDeepSearch);
+            this.gbDeepSearch.Controls.Add(this.btnDeepSearch);
+            this.gbDeepSearch.Controls.Add(this.tbDeepSearch);
+            this.gbDeepSearch.Controls.Add(this.lblDeepSearch);
+            this.gbDeepSearch.Dock = System.Windows.Forms.DockStyle.Top;
+            this.gbDeepSearch.Location = new System.Drawing.Point(0, 57);
+            this.gbDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.gbDeepSearch.Name = "gbDeepSearch";
+            this.gbDeepSearch.Padding = new System.Windows.Forms.Padding(7, 6, 7, 6);
+            this.gbDeepSearch.Size = new System.Drawing.Size(978, 62);
+            this.gbDeepSearch.TabIndex = 2;
+            this.gbDeepSearch.TabStop = false;
+            this.gbDeepSearch.Text = "🔍 Search in Run Details";
+            // 
+            // lblDeepSearchStatus
+            // 
+            this.lblDeepSearchStatus.AutoSize = true;
+            this.lblDeepSearchStatus.Location = new System.Drawing.Point(752, 28);
+            this.lblDeepSearchStatus.Name = "lblDeepSearchStatus";
+            this.lblDeepSearchStatus.Size = new System.Drawing.Size(0, 16);
+            this.lblDeepSearchStatus.TabIndex = 5;
+            // 
+            // progressBarDeepSearch
+            // 
+            this.progressBarDeepSearch.Location = new System.Drawing.Point(596, 27);
+            this.progressBarDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.progressBarDeepSearch.Name = "progressBarDeepSearch";
+            this.progressBarDeepSearch.Size = new System.Drawing.Size(150, 18);
+            this.progressBarDeepSearch.TabIndex = 4;
+            this.progressBarDeepSearch.Visible = false;
+            // 
+            // btnClearDeepSearch
+            // 
+            this.btnClearDeepSearch.Location = new System.Drawing.Point(512, 23);
+            this.btnClearDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.btnClearDeepSearch.Name = "btnClearDeepSearch";
+            this.btnClearDeepSearch.Size = new System.Drawing.Size(75, 26);
+            this.btnClearDeepSearch.TabIndex = 3;
+            this.btnClearDeepSearch.Text = "✕ Clear";
+            this.btnClearDeepSearch.UseVisualStyleBackColor = true;
+            this.btnClearDeepSearch.Click += new System.EventHandler(this.btnClearDeepSearch_Click);
+            // 
+            // btnDeepSearch
+            // 
+            this.btnDeepSearch.Location = new System.Drawing.Point(396, 23);
+            this.btnDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.btnDeepSearch.Name = "btnDeepSearch";
+            this.btnDeepSearch.Size = new System.Drawing.Size(110, 26);
+            this.btnDeepSearch.TabIndex = 2;
+            this.btnDeepSearch.Text = "🔍 Search";
+            this.btnDeepSearch.UseVisualStyleBackColor = true;
+            this.btnDeepSearch.Click += new System.EventHandler(this.btnDeepSearch_Click);
+            // 
+            // tbDeepSearch
+            // 
+            this.tbDeepSearch.Location = new System.Drawing.Point(108, 25);
+            this.tbDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tbDeepSearch.Name = "tbDeepSearch";
+            this.tbDeepSearch.Size = new System.Drawing.Size(280, 22);
+            this.tbDeepSearch.TabIndex = 1;
+            // 
+            // lblDeepSearch
+            // 
+            this.lblDeepSearch.AutoSize = true;
+            this.lblDeepSearch.Location = new System.Drawing.Point(11, 28);
+            this.lblDeepSearch.Name = "lblDeepSearch";
+            this.lblDeepSearch.Size = new System.Drawing.Size(89, 16);
+            this.lblDeepSearch.TabIndex = 0;
+            this.lblDeepSearch.Text = "Search value:";
             // 
             // gbRunFilters
             // 
@@ -684,10 +684,10 @@ namespace ExecutionFlowHistoryViewer
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.tsPagination.ResumeLayout(false);
             this.tsPagination.PerformLayout();
-            this.gbRunFilters.ResumeLayout(false);
-            this.gbRunFilters.PerformLayout();
             this.gbDeepSearch.ResumeLayout(false);
             this.gbDeepSearch.PerformLayout();
+            this.gbRunFilters.ResumeLayout(false);
+            this.gbRunFilters.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 

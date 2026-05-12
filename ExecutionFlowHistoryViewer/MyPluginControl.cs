@@ -16,6 +16,8 @@ using System.Linq;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using XrmToolBox.Extensibility;
+using System.Drawing;
+
 
 namespace ExecutionFlowHistoryViewer
 {
@@ -137,6 +139,9 @@ namespace ExecutionFlowHistoryViewer
         {
             tstbPageNumber.KeyDown -= TstbPageNumber_KeyDown;
             tstbPageNumber.KeyDown += TstbPageNumber_KeyDown;
+
+            dataGridView1.CellFormatting -= dataGridView1_CellFormatting;
+            dataGridView1.CellFormatting += dataGridView1_CellFormatting;
 
             dataGridView1.CellClick -= dataGridView1_CellClick;
             dataGridView1.CellClick += dataGridView1_CellClick;
@@ -631,6 +636,67 @@ namespace ExecutionFlowHistoryViewer
             {
                 ShowRunDetails(run);
             }
+        }
+
+        private void dataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0)
+                return;
+
+            var column = dataGridView1.Columns[e.ColumnIndex];
+
+            if (column.DataPropertyName != "Status")
+                return;
+
+            string status = e.Value?.ToString();
+
+            if (string.IsNullOrWhiteSpace(status))
+                return;
+
+            // Reset style first
+            e.CellStyle.Font = dataGridView1.DefaultCellStyle.Font;
+
+            switch (status)
+            {
+                case "Succeeded":
+                    e.CellStyle.BackColor = Color.LightGreen;
+                    e.CellStyle.ForeColor = Color.Black;
+
+                    e.CellStyle.SelectionBackColor = Color.Green;
+                    e.CellStyle.SelectionForeColor = Color.White;
+                    break;
+
+                case "Failed":
+                    e.CellStyle.BackColor = Color.LightCoral;
+                    e.CellStyle.ForeColor = Color.Black;
+
+                    e.CellStyle.SelectionBackColor = Color.Red;
+                    e.CellStyle.SelectionForeColor = Color.White;
+                    break;
+
+                case "Cancelled":
+                    e.CellStyle.BackColor = Color.Khaki;
+                    e.CellStyle.ForeColor = Color.Black;
+
+                    e.CellStyle.SelectionBackColor = Color.Goldenrod;
+                    e.CellStyle.SelectionForeColor = Color.White;
+                    break;
+
+                case "Running":
+                    e.CellStyle.BackColor = Color.LightBlue;
+                    e.CellStyle.ForeColor = Color.Black;
+
+                    e.CellStyle.SelectionBackColor = Color.RoyalBlue;
+                    e.CellStyle.SelectionForeColor = Color.White;
+                    break;
+
+                default:
+                    e.CellStyle.BackColor = Color.White;
+                    e.CellStyle.ForeColor = Color.Black;
+                    break;
+            }
+
+            e.FormattingApplied = true;
         }
 
         private void ShowRunDetails(FlowRun run)
