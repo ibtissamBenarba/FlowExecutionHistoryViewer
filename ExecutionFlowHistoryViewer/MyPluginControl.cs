@@ -300,9 +300,6 @@ namespace ExecutionFlowHistoryViewer
             {
                 filtered = filtered.Where(f =>
                 {
-                    // CORRECTION : Inversé !
-                    // StateCode 0 = Draft (Inactive)  
-                    // StateCode 1 = Activated (Active)
                     bool isActivated = f.StateCode == 1;
                     bool isDraft = f.StateCode == 0;
 
@@ -313,29 +310,66 @@ namespace ExecutionFlowHistoryViewer
             }
 
             clbFlows.ItemCheck -= clbFlows_ItemCheck;
+
             clbFlows.Items.Clear();
+
             foreach (var flow in filtered)
                 clbFlows.Items.Add(flow, _checkedFlowIds.Contains(flow.Id));
+
             clbFlows.ItemCheck += clbFlows_ItemCheck;
+
+            // ADD THIS
+            UpdateSelectAllState();
         }
 
         private void cbSelectAllFlows_CheckedChanged(object sender, EventArgs e)
         {
+            // Get only visible/filtered flows
+            var visibleFlows = clbFlows.Items.Cast<Flow>().ToList();
+
             if (cbSelectAllFlows.Checked)
-                foreach (var flow in _currentFlows) _checkedFlowIds.Add(flow.Id);
+            {
+                foreach (var flow in visibleFlows)
+                    _checkedFlowIds.Add(flow.Id);
+            }
             else
-                _checkedFlowIds.Clear();
+            {
+                foreach (var flow in visibleFlows)
+                    _checkedFlowIds.Remove(flow.Id);
+            }
+
             ApplyFlowFilter();
         }
 
         private void clbFlows_ItemCheck(object sender, ItemCheckEventArgs e)
         {
             if (e.Index < 0 || e.Index >= clbFlows.Items.Count) return;
+
             var flow = clbFlows.Items[e.Index] as Flow;
             if (flow == null) return;
 
-            if (e.NewValue == CheckState.Checked) _checkedFlowIds.Add(flow.Id);
-            else _checkedFlowIds.Remove(flow.Id);
+            if (e.NewValue == CheckState.Checked)
+                _checkedFlowIds.Add(flow.Id);
+            else
+                _checkedFlowIds.Remove(flow.Id);
+
+            BeginInvoke((MethodInvoker)(() =>
+            {
+                UpdateSelectAllState();
+            }));
+        }
+
+        private void UpdateSelectAllState()
+        {
+            var visibleFlows = clbFlows.Items.Cast<Flow>().ToList();
+
+            bool allVisibleChecked =
+                visibleFlows.Count > 0 &&
+                visibleFlows.All(f => _checkedFlowIds.Contains(f.Id));
+
+            cbSelectAllFlows.CheckedChanged -= cbSelectAllFlows_CheckedChanged;
+            cbSelectAllFlows.Checked = allVisibleChecked;
+            cbSelectAllFlows.CheckedChanged += cbSelectAllFlows_CheckedChanged;
         }
 
         private void cbSolutions_SelectedIndexChanged(object sender, EventArgs e)
