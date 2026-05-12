@@ -1,0 +1,93 @@
+using ExecutionFlowHistoryViewer.Contracts;
+using ExecutionFlowHistoryViewer.Models;
+using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Query;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ExecutionFlowHistoryViewer.Services
+{
+    public class DataverseService : IDataverseService
+    {
+        private readonly IOrganizationService _service;
+
+        public DataverseService(IOrganizationService service)
+        {
+            _service = service ?? throw new ArgumentNullException(nameof(service));
+        }
+
+        public List<SolutionItem> GetSolutions()
+        {
+            var query = new QueryExpression("solution")
+            {
+                ColumnSet = new ColumnSet("solutionid", "friendlyname", "uniquename"),
+                Criteria = new FilterExpression
+                {
+                    Conditions = { new ConditionExpression("isvisible", ConditionOperator.Equal, true) }
+                },
+                Orders = { new OrderExpression("friendlyname", OrderType.Ascending) }
+            };
+
+            var results = _service.RetrieveMultiple(query);
+            return results.Entities.Select(e => new SolutionItem
+            {
+                Id = e.Id,
+                Name = e.GetAttributeValue<string>("friendlyname")
+                    ?? e.GetAttributeValue<string>("uniquename")
+                    ?? e.Id.ToString()
+            }).ToList();
+        }
+
+        public List<Models.Flow> GetFlows(Guid? solutionId = null)
+        {
+            var query = new QueryExpression("workflow")
+            {
+                ColumnSet = new ColumnSet("workflowid", "name"),
+                Criteria = new FilterExpression
+                {
+                    Conditions =
+                    {
+                        new ConditionExpression("category", ConditionOperator.Equal, 5),
+                        new ConditionExpression("type", ConditionOperator.Equal, 1)
+                    }
+                },
+                Orders = { new OrderExpression("name", OrderType.Ascending) }
+            };
+
+            if (solutionId.HasValue && solutionId.Value != Guid.Empty)
+            {
+                query.LinkEntities.Add(
+                    new LinkEntity("workflow", "solutioncomponent", "workflowid", "objectid", JoinOperator.Inner)
+                    {
+                        LinkCriteria = new FilterExpression
+                        {
+                            Conditions =
+                            {
+                                new ConditionExpression("solutionid", ConditionOperator.Equal, solutionId.Value),
+                                new ConditionExpression("componenttype", ConditionOperator.Equal, 29)
+                            }
+                        }
+                    });
+            }
+
+            var results = _service.RetrieveMultiple(query);
+            return results.Entities.Select(e => new Models.Flow
+            {
+                Id = e.Id.ToString(),
+                DisplayName = e.GetAttributeValue<string>("name")
+            }).OrderBy(f => f.DisplayName).ToList();
+        }
+
+        public void UpdateFlowState(string flowId, bool enable)
+        {
+            var req = new OrganizationRequest("SetState");
+            req["EntityMoniker"] = new EntityReference("workflow", Guid.Parse(flowId));
+            req["State"] = new OptionSetValue(enable ? 1 : 0);
+            req["Status"] = new OptionSetValue(enable ? 2 : 1);
+            _service.Execute(req);
+        }
+    }
+}

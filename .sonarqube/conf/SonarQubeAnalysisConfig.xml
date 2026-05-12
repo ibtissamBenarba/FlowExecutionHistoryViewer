@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AnalysisConfig xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.sonarsource.com/msbuild/integration/2015/1">
-  <SonarConfigDir>C:\Users\ouselamrani\source\repos\pfe-project\FlowExecutionHistoryViewer\.sonarqube\conf</SonarConfigDir>
-  <SonarOutputDir>C:\Users\ouselamrani\source\repos\pfe-project\FlowExecutionHistoryViewer\.sonarqube\out</SonarOutputDir>
-  <SonarBinDir>C:\Users\ouselamrani\source\repos\pfe-project\FlowExecutionHistoryViewer\.sonarqube\bin</SonarBinDir>
-  <SonarScannerWorkingDirectory>C:\Users\ouselamrani\source\repos\pfe-project\FlowExecutionHistoryViewer</SonarScannerWorkingDirectory>
-  <JavaExePath>C:\Users\ouselamrani\.sonar\cache\39c5e23f3ce4d420663afba8ffde28034b72e2b3e240943dc2321bc1f912eef9\OpenJDK21U-jre_x64_windows_hotspot_21.0.9_10.zip_extracted\jdk-21.0.9+10-jre\bin\java.exe</JavaExePath>
-  <EngineJarPath>C:\Users\ouselamrani\.sonar\cache\39dee3273a4ff432de0b3b588cc75bf40c7c30b03cbe8409728ead765f5f2d9b\sonar-scanner-engine-shaded-26.4.0.121862-all.jar</EngineJarPath>
+  <SonarConfigDir>C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\.sonarqube\conf</SonarConfigDir>
+  <SonarOutputDir>C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\.sonarqube\out</SonarOutputDir>
+  <SonarBinDir>C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\.sonarqube\bin</SonarBinDir>
+  <SonarScannerWorkingDirectory>C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer</SonarScannerWorkingDirectory>
+  <JavaExePath>C:\Users\ibenarba\.sonar\cache\39c5e23f3ce4d420663afba8ffde28034b72e2b3e240943dc2321bc1f912eef9\OpenJDK21U-jre_x64_windows_hotspot_21.0.9_10.zip_extracted\jdk-21.0.9+10-jre\bin\java.exe</JavaExePath>
+  <EngineJarPath>C:\Users\ibenarba\.sonar\cache\39dee3273a4ff432de0b3b588cc75bf40c7c30b03cbe8409728ead765f5f2d9b\sonar-scanner-engine-shaded-26.4.0.121862-all.jar</EngineJarPath>
   <UseSonarScannerCli>false</UseSonarScannerCli>
   <ScanAllAnalysis>true</ScanAllAnalysis>
   <HasBeginStepCommandLineCredentials>true</HasBeginStepCommandLineCredentials>
   <HasBeginStepCommandLineTruststorePassword>false</HasBeginStepCommandLineTruststorePassword>
   <SonarQubeHostUrl>http://localhost:9000</SonarQubeHostUrl>
   <SonarQubeVersion>26.4.0.121862</SonarQubeVersion>
-  <SonarProjectKey>FlowExecutionHistory</SonarProjectKey>
+  <SonarProjectKey>ExecutionFlowHistoryViewer</SonarProjectKey>
   <AdditionalConfig>
     <ConfigSetting Id="BuildUri" />
     <ConfigSetting Id="TfsUri" />
     <ConfigSetting Id="VsCoverageConverterToolPath" />
     <ConfigSetting Id="UnchangedFilesPath" />
-    <ConfigSetting Id="sonar.pullrequest.cache.basepath" Value="C:\Users\ouselamrani\source\repos\pfe-project\FlowExecutionHistoryViewer" />
-    <ConfigSetting Id="settings.file.path" Value="C:\SonarScanner\SonarQube.Analysis.xml" />
+    <ConfigSetting Id="sonar.pullrequest.cache.basepath" Value="C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer" />
+    <ConfigSetting Id="settings.file.path" Value="C:\Scanner\sonar-scanner-11.2.1.137242-net-framework\SonarQube.Analysis.xml" />
   </AdditionalConfig>
   <ServerSettings>
     <Property Name="sonar.cs.ignoreHeaderComments">true</Property>
@@ -158,8 +158,8 @@
     <Property Name="sonaranalyzer-vbnet.pluginKey">vbnet</Property>
     <Property Name="sonar.java.jvmframeworkconfig.activate">true</Property>
     <Property Name="sonar.updatecenter.url">https://downloads.sonarsource.com/sonarqube/update/update-center.properties</Property>
-    <Property Name="sonar.core.startTime">4/27/2026 9:52:24 AM</Property>
-    <Property Name="sonar.core.id">147B411E-AZ3OI84rSU7KSph6XCQj</Property>
+    <Property Name="sonar.core.id">147B411E-AZ3TkDZ0AmVBajeqff33</Property>
+    <Property Name="sonar.core.startTime">30/04/2026 11:14:16</Property>
   </ServerSettings>
   <LocalSettings>
     <Property Name="sonar.host.url">http://localhost:9000</Property>
@@ -168,40 +168,40 @@
   <AnalyzersSettings>
     <AnalyzerSettings>
       <Language>cs</Language>
-      <RulesetPath>C:\Users\ouselamrani\source\repos\pfe-project\FlowExecutionHistoryViewer\.sonarqube\conf\Sonar-cs.ruleset</RulesetPath>
-      <DeactivatedRulesetPath>C:\Users\ouselamrani\source\repos\pfe-project\FlowExecutionHistoryViewer\.sonarqube\conf\Sonar-cs-none.ruleset</DeactivatedRulesetPath>
+      <RulesetPath>C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\.sonarqube\conf\Sonar-cs.ruleset</RulesetPath>
+      <DeactivatedRulesetPath>C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\.sonarqube\conf\Sonar-cs-none.ruleset</DeactivatedRulesetPath>
       <AnalyzerPlugins>
         <AnalyzerPlugin Key="csharp" Version="10.23.0.137933" StaticResourceName="SonarAnalyzer-csharp-10.23.0.137933.zip">
           <AssemblyPaths>
-            <Path>C:\Users\ouselamrani\AppData\Local\Temp\.sonarqube\resources\0\SonarAnalyzer.CSharp.dll</Path>
-            <Path>C:\Users\ouselamrani\AppData\Local\Temp\.sonarqube\resources\0\licenses\LICENSE.txt</Path>
-            <Path>C:\Users\ouselamrani\AppData\Local\Temp\.sonarqube\resources\0\licenses\THIRD_PARTY_LICENSES\Google.Protobuf-LICENSE.txt</Path>
-            <Path>C:\Users\ouselamrani\AppData\Local\Temp\.sonarqube\resources\0\licenses\THIRD_PARTY_LICENSES\Roslyn-LICENSE.txt</Path>
-            <Path>C:\Users\ouselamrani\AppData\Local\Temp\.sonarqube\resources\0\licenses\THIRD_PARTY_LICENSES\StyleCop.Analyzers-LICENSE.txt</Path>
+            <Path>C:\Users\ibenarba\AppData\Local\Temp\.sonarqube\resources\0\SonarAnalyzer.CSharp.dll</Path>
+            <Path>C:\Users\ibenarba\AppData\Local\Temp\.sonarqube\resources\0\licenses\LICENSE.txt</Path>
+            <Path>C:\Users\ibenarba\AppData\Local\Temp\.sonarqube\resources\0\licenses\THIRD_PARTY_LICENSES\Google.Protobuf-LICENSE.txt</Path>
+            <Path>C:\Users\ibenarba\AppData\Local\Temp\.sonarqube\resources\0\licenses\THIRD_PARTY_LICENSES\Roslyn-LICENSE.txt</Path>
+            <Path>C:\Users\ibenarba\AppData\Local\Temp\.sonarqube\resources\0\licenses\THIRD_PARTY_LICENSES\StyleCop.Analyzers-LICENSE.txt</Path>
           </AssemblyPaths>
         </AnalyzerPlugin>
       </AnalyzerPlugins>
       <AdditionalFilePaths>
-        <Path>C:\Users\ouselamrani\source\repos\pfe-project\FlowExecutionHistoryViewer\.sonarqube\conf\cs\SonarLint.xml</Path>
+        <Path>C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\.sonarqube\conf\cs\SonarLint.xml</Path>
       </AdditionalFilePaths>
     </AnalyzerSettings>
     <AnalyzerSettings>
       <Language>vbnet</Language>
-      <RulesetPath>C:\Users\ouselamrani\source\repos\pfe-project\FlowExecutionHistoryViewer\.sonarqube\conf\Sonar-vbnet.ruleset</RulesetPath>
-      <DeactivatedRulesetPath>C:\Users\ouselamrani\source\repos\pfe-project\FlowExecutionHistoryViewer\.sonarqube\conf\Sonar-vbnet-none.ruleset</DeactivatedRulesetPath>
+      <RulesetPath>C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\.sonarqube\conf\Sonar-vbnet.ruleset</RulesetPath>
+      <DeactivatedRulesetPath>C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\.sonarqube\conf\Sonar-vbnet-none.ruleset</DeactivatedRulesetPath>
       <AnalyzerPlugins>
         <AnalyzerPlugin Key="vbnet" Version="10.23.0.137933" StaticResourceName="SonarAnalyzer-vbnet-10.23.0.137933.zip">
           <AssemblyPaths>
-            <Path>C:\Users\ouselamrani\AppData\Local\Temp\.sonarqube\resources\1\SonarAnalyzer.VisualBasic.dll</Path>
-            <Path>C:\Users\ouselamrani\AppData\Local\Temp\.sonarqube\resources\1\licenses\LICENSE.txt</Path>
-            <Path>C:\Users\ouselamrani\AppData\Local\Temp\.sonarqube\resources\1\licenses\THIRD_PARTY_LICENSES\Google.Protobuf-LICENSE.txt</Path>
-            <Path>C:\Users\ouselamrani\AppData\Local\Temp\.sonarqube\resources\1\licenses\THIRD_PARTY_LICENSES\Roslyn-LICENSE.txt</Path>
-            <Path>C:\Users\ouselamrani\AppData\Local\Temp\.sonarqube\resources\1\licenses\THIRD_PARTY_LICENSES\StyleCop.Analyzers-LICENSE.txt</Path>
+            <Path>C:\Users\ibenarba\AppData\Local\Temp\.sonarqube\resources\1\SonarAnalyzer.VisualBasic.dll</Path>
+            <Path>C:\Users\ibenarba\AppData\Local\Temp\.sonarqube\resources\1\licenses\LICENSE.txt</Path>
+            <Path>C:\Users\ibenarba\AppData\Local\Temp\.sonarqube\resources\1\licenses\THIRD_PARTY_LICENSES\Google.Protobuf-LICENSE.txt</Path>
+            <Path>C:\Users\ibenarba\AppData\Local\Temp\.sonarqube\resources\1\licenses\THIRD_PARTY_LICENSES\Roslyn-LICENSE.txt</Path>
+            <Path>C:\Users\ibenarba\AppData\Local\Temp\.sonarqube\resources\1\licenses\THIRD_PARTY_LICENSES\StyleCop.Analyzers-LICENSE.txt</Path>
           </AssemblyPaths>
         </AnalyzerPlugin>
       </AnalyzerPlugins>
       <AdditionalFilePaths>
-        <Path>C:\Users\ouselamrani\source\repos\pfe-project\FlowExecutionHistoryViewer\.sonarqube\conf\vbnet\SonarLint.xml</Path>
+        <Path>C:\Users\ibenarba\source\repos\PFEprojectPlugin\FlowExecutionHistoryViewer\.sonarqube\conf\vbnet\SonarLint.xml</Path>
       </AdditionalFilePaths>
     </AnalyzerSettings>
   </AnalyzersSettings>

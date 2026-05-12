@@ -1,14 +1,17 @@
-﻿using ExecutionFlowHistoryViewer.Models;
+﻿// Services/FlowClient.cs
+using ExecutionFlowHistoryViewer.Contracts;
+using ExecutionFlowHistoryViewer.DTO;
+using ExecutionFlowHistoryViewer.Helpers;
+using ExecutionFlowHistoryViewer.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Net.Http;
 
 namespace ExecutionFlowHistoryViewer.Services
 {
-    public class FlowClient
+
+    public class FlowClient : IFlowClient
     {
         private readonly string _envId;
         private readonly string _token;
@@ -21,47 +24,146 @@ namespace ExecutionFlowHistoryViewer.Services
             _baseUrl = regionUrl;
         }
 
-        public List<FlowRun> GetFlowRuns(string flowId)
+        public FlowRunPageResult GetFlowRuns(string flowId, int top = 100, string skipToken = null)
         {
-            var runs = new List<FlowRun>();
-            // Utilisation de l'API-Version standard
-            string url = $"{_baseUrl}/providers/Microsoft.ProcessSimple/environments/{_envId}/flows/{flowId}/runs?api-version=2016-11-01";
+            var result = new FlowRunPageResult();
 
-            using (var client = new System.Net.Http.HttpClient())
+            string url = $"{_baseUrl}/providers/Microsoft.ProcessSimple/environments/{_envId}/flows/{flowId}/runs?api-version=2016-11-01&$top={top}";
+
+            if (!string.IsNullOrEmpty(skipToken))
+                url += $"&$skiptoken={Uri.EscapeDataString(skipToken)}";
+
+            using (var client = new HttpClient())
             {
-                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _token);
+                client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _token);
 
-                // Utilisation de GetAwaiter().GetResult() pour éviter les blocages de thread en WinForms
                 var response = client.GetAsync(url).GetAwaiter().GetResult();
+                var json = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
 
-                if (response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception($"Power Automate Error: {response.StatusCode} - {json}");
+
+                // --- LECTURE DU NEXT LINK VIA JOBJECT (infaillible) ---
+                var jObject = JObject.Parse(json);
+                string nextLink = jObject["@odata.nextLink"]?.ToString()
+                               ?? jObject["nextLink"]?.ToString();
+
+                if (!string.IsNullOrEmpty(nextLink))
                 {
-                    var json = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-                    dynamic data = JsonConvert.DeserializeObject(json);
+                    result.HasMore = true;
+                    var uri = new Uri(nextLink);
+                    var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
+                    result.NextSkipToken = queryParams["$skiptoken"];
+                }
 
-                    if (data.value != null)
+                // --- LECTURE DES RUNS VIA DTO (typé et propre) ---
+                var dto = jObject.ToObject<FlowRunsResponseDto>();
+
+                if (dto?.Value != null)
+                {
+                    foreach (var item in dto.Value)
                     {
-                        foreach (var item in data.value)
+                        if (item == null) continue;
+
+                        result.Runs.Add(new FlowRun
                         {
-                            runs.Add(new FlowRun
-                            {
-                                Id = item.name,
-                                Status = item.properties.status,
-                                StartDate = item.properties.startTime,
-                                EndDate = item.properties.endTime,
-                                Url = $"https://make.powerautomate.com/environments/{_envId}/flows/{flowId}/runs/{item.name}"
-                            });
-                        }
+                            Id = item.Name,
+                            Status = item.Properties?.Status ?? "Unknown",
+                            StartDate = item.Properties?.StartTime ?? DateTime.MinValue,
+                            EndDate = item.Properties?.EndTime ?? DateTime.MinValue,
+                            Url = $"https://make.powerautomate.com/environments/{_envId}/flows/{flowId}/runs/{item.Name}"
+                        });
                     }
                 }
-                else
+            }
+
+            return result;
+        }
+        public FlowRunDetailDto GetRunDetails(string flowId, string runId)
+        {
+            string url = $"{_baseUrl}/providers/Microsoft.ProcessSimple/environments/{_envId}/flows/{flowId}/runs/{runId}?api-version=2016-11-01";
+
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _token);
+
+                var response = client.GetAsync(url).GetAwaiter().GetResult();
+                var json = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception($"Power Automate Error: {response.StatusCode} - {json}");
+
+                var jObject = Newtonsoft.Json.Linq.JObject.Parse(json);
+                var dto = jObject.ToObject<FlowRunDetailDto>();
+
+                // Correlation n'est pas toujours mappé automatiquement
+                var correlation = jObject["properties"]?["correlation"];
+                if (correlation != null && dto?.Properties != null)
                 {
-                    // Permet de voir l'erreur réelle renvoyée par Microsoft (ex: FlowNotFound)
-                    var errorBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-                    throw new Exception($"Erreur Power Automate : {response.StatusCode} - {errorBody}");
+                    dto.Properties.CorrelationClientTrackingId = correlation["clientTrackingId"]?.ToString();
+                }
+
+                return dto;
+            }
+        }
+
+        public FlowActionsResponseDto GetRunActions(string flowId, string runId)
+        {
+            string url = $"{_baseUrl}/providers/Microsoft.ProcessSimple/environments/{_envId}/flows/{flowId}/runs/{runId}/actions?api-version=2016-11-01";
+
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _token);
+
+                var response = client.GetAsync(url).GetAwaiter().GetResult();
+                var json = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception($"Power Automate Error: {response.StatusCode} - {json}");
+
+                return JsonConvert.DeserializeObject<FlowActionsResponseDto>(json);
+            }
+        }
+
+        public string GetContentFromLink(string linkUri)
+        {
+            if (string.IsNullOrEmpty(linkUri))
+                return null;
+
+            using (var client = new HttpClient())
+            {
+                // Si l'URI contient déjà un token SAS (sig=), ne pas envoyer Bearer
+                bool hasSasToken = linkUri.Contains("sig=") || linkUri.Contains("sp=");
+
+                if (!hasSasToken)
+                {
+                    // Seulement si PAS de SAS dans l'URL
+                    client.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _token);
+                }
+
+                var response = client.GetAsync(linkUri).GetAwaiter().GetResult();
+                var content = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return $"Error: {response.StatusCode}\nURI: {linkUri}\nResponse: {content}";
+                }
+
+                // Formater le JSON
+                try
+                {
+                    var obj = JsonConvert.DeserializeObject(content);
+                    return JsonConvert.SerializeObject(obj, Formatting.Indented);
+                }
+                catch
+                {
+                    return content;
                 }
             }
-            return runs;
         }
     }
 }

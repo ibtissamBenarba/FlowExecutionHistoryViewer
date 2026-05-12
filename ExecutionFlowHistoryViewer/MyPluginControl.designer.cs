@@ -1,4 +1,4 @@
-﻿namespace ExecutionFlowHistoryViewer
+namespace ExecutionFlowHistoryViewer
 {
     partial class MyPluginControl
     {
@@ -33,6 +33,7 @@
             this.tssSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.tsbSample = new System.Windows.Forms.ToolStripButton();
             this.tsmConnectToPA = new System.Windows.Forms.ToolStripButton();
+            this.btnExport = new System.Windows.Forms.ToolStripButton();
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
             this.gbFlows = new System.Windows.Forms.GroupBox();
             this.clbFlows = new System.Windows.Forms.CheckedListBox();
@@ -46,14 +47,13 @@
             this.cbSolutions = new System.Windows.Forms.ComboBox();
             this.gbFlowRuns = new System.Windows.Forms.GroupBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.FlowRunFlow = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.FlowRunStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.FlowRunStartDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.FlowRunEndDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.FlowRunDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.FlowRunUrl = new System.Windows.Forms.DataGridViewLinkColumn();
             this.FlowRunError = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.gbRunFilters = new System.Windows.Forms.GroupBox();
+            this.btnNext = new System.Windows.Forms.Button();
+            this.btnPrev = new System.Windows.Forms.Button();
+            this.lblPageInfo = new System.Windows.Forms.Label();
             this.btnFetchHistory = new System.Windows.Forms.Button();
             this.cmbStatus = new System.Windows.Forms.ComboBox();
             this.lblStatus = new System.Windows.Forms.Label();
@@ -61,6 +61,13 @@
             this.lblDateTo = new System.Windows.Forms.Label();
             this.dtpDateFrom = new System.Windows.Forms.DateTimePicker();
             this.lblDateFrom = new System.Windows.Forms.Label();
+            this.gbDeepSearch = new System.Windows.Forms.GroupBox();
+            this.lblDeepSearchStatus = new System.Windows.Forms.Label();
+            this.progressBarDeepSearch = new System.Windows.Forms.ProgressBar();
+            this.btnClearDeepSearch = new System.Windows.Forms.Button();
+            this.btnDeepSearch = new System.Windows.Forms.Button();
+            this.tbDeepSearch = new System.Windows.Forms.TextBox();
+            this.lblDeepSearch = new System.Windows.Forms.Label();
             this.tsmContainer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).BeginInit();
             this.splitContainerMain.Panel1.SuspendLayout();
@@ -72,6 +79,7 @@
             this.gbFlowRuns.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.gbRunFilters.SuspendLayout();
+            this.gbDeepSearch.SuspendLayout();
             this.SuspendLayout();
             // 
             // tsmContainer
@@ -81,43 +89,52 @@
             this.tsbClose,
             this.tssSeparator1,
             this.tsbSample,
-            this.tsmConnectToPA});
+            this.tsmConnectToPA,
+            this.btnExport});
             this.tsmContainer.Location = new System.Drawing.Point(0, 0);
             this.tsmContainer.Name = "tsmContainer";
-            this.tsmContainer.Size = new System.Drawing.Size(1346, 27);
+            this.tsmContainer.Size = new System.Drawing.Size(1347, 31);
             this.tsmContainer.TabIndex = 4;
             this.tsmContainer.Text = "toolStrip1";
-            this.tsmContainer.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.tsmConnectToPA_ItemClicked);
             // 
             // tsbClose
             // 
             this.tsbClose.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.tsbClose.Name = "tsbClose";
-            this.tsbClose.Size = new System.Drawing.Size(107, 24);
+            this.tsbClose.Size = new System.Drawing.Size(107, 28);
             this.tsbClose.Text = "Close this tool";
             this.tsbClose.Click += new System.EventHandler(this.tsbClose_Click);
             // 
             // tssSeparator1
             // 
             this.tssSeparator1.Name = "tssSeparator1";
-            this.tssSeparator1.Size = new System.Drawing.Size(6, 27);
+            this.tssSeparator1.Size = new System.Drawing.Size(6, 31);
             // 
             // tsbSample
             // 
             this.tsbSample.Name = "tsbSample";
-            this.tsbSample.Size = new System.Drawing.Size(29, 24);
+            this.tsbSample.Size = new System.Drawing.Size(29, 28);
             // 
             // tsmConnectToPA
             // 
             this.tsmConnectToPA.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.tsmConnectToPA.Name = "tsmConnectToPA";
-            this.tsmConnectToPA.Size = new System.Drawing.Size(225, 24);
+            this.tsmConnectToPA.Size = new System.Drawing.Size(225, 28);
             this.tsmConnectToPA.Text = "Connect to Power Automate API";
+            this.tsmConnectToPA.Click += new System.EventHandler(this.tsmConnectToPA_ItemClicked);
+            // 
+            // btnExport
+            // 
+            this.btnExport.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.btnExport.Name = "btnExport";
+            this.btnExport.Size = new System.Drawing.Size(134, 28);
+            this.btnExport.Text = "Export CSV / Excel";
+            this.btnExport.Click += new System.EventHandler(this.btnExport_Click_1);
             // 
             // splitContainerMain
             // 
             this.splitContainerMain.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainerMain.Location = new System.Drawing.Point(0, 27);
+            this.splitContainerMain.Location = new System.Drawing.Point(0, 31);
             this.splitContainerMain.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.splitContainerMain.Name = "splitContainerMain";
             // 
@@ -130,9 +147,10 @@
             // splitContainerMain.Panel2
             // 
             this.splitContainerMain.Panel2.Controls.Add(this.gbFlowRuns);
+            this.splitContainerMain.Panel2.Controls.Add(this.gbDeepSearch);
             this.splitContainerMain.Panel2.Controls.Add(this.gbRunFilters);
-            this.splitContainerMain.Size = new System.Drawing.Size(1346, 668);
-            this.splitContainerMain.SplitterDistance = 366;
+            this.splitContainerMain.Size = new System.Drawing.Size(1347, 664);
+            this.splitContainerMain.SplitterDistance = 365;
             this.splitContainerMain.TabIndex = 5;
             // 
             // gbFlows
@@ -144,7 +162,7 @@
             this.gbFlows.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.gbFlows.Name = "gbFlows";
             this.gbFlows.Padding = new System.Windows.Forms.Padding(7, 6, 7, 6);
-            this.gbFlows.Size = new System.Drawing.Size(366, 540);
+            this.gbFlows.Size = new System.Drawing.Size(365, 536);
             this.gbFlows.TabIndex = 2;
             this.gbFlows.TabStop = false;
             this.gbFlows.Text = "Flows";
@@ -154,12 +172,11 @@
             this.clbFlows.CheckOnClick = true;
             this.clbFlows.Dock = System.Windows.Forms.DockStyle.Fill;
             this.clbFlows.FormattingEnabled = true;
-            this.clbFlows.Location = new System.Drawing.Point(7, 46);
+            this.clbFlows.Location = new System.Drawing.Point(7, 45);
             this.clbFlows.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.clbFlows.Name = "clbFlows";
-            this.clbFlows.Size = new System.Drawing.Size(352, 488);
+            this.clbFlows.Size = new System.Drawing.Size(351, 485);
             this.clbFlows.TabIndex = 1;
-            this.clbFlows.SelectedIndexChanged += new System.EventHandler(this.clbFlows_SelectedIndexChanged);
             // 
             // cbSelectAllFlows
             // 
@@ -168,8 +185,8 @@
             this.cbSelectAllFlows.Location = new System.Drawing.Point(7, 21);
             this.cbSelectAllFlows.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.cbSelectAllFlows.Name = "cbSelectAllFlows";
-            this.cbSelectAllFlows.Padding = new System.Windows.Forms.Padding(4, 2, 0, 3);
-            this.cbSelectAllFlows.Size = new System.Drawing.Size(352, 25);
+            this.cbSelectAllFlows.Padding = new System.Windows.Forms.Padding(4, 2, 0, 2);
+            this.cbSelectAllFlows.Size = new System.Drawing.Size(351, 24);
             this.cbSelectAllFlows.TabIndex = 0;
             this.cbSelectAllFlows.Text = "Select All";
             this.cbSelectAllFlows.CheckedChanged += new System.EventHandler(this.cbSelectAllFlows_CheckedChanged);
@@ -185,7 +202,7 @@
             this.gbFlowFilters.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.gbFlowFilters.Name = "gbFlowFilters";
             this.gbFlowFilters.Padding = new System.Windows.Forms.Padding(7, 6, 7, 6);
-            this.gbFlowFilters.Size = new System.Drawing.Size(366, 80);
+            this.gbFlowFilters.Size = new System.Drawing.Size(365, 80);
             this.gbFlowFilters.TabIndex = 1;
             this.gbFlowFilters.TabStop = false;
             this.gbFlowFilters.Text = "Flow Filters";
@@ -213,7 +230,7 @@
             // cbxFlowStatusDraft
             // 
             this.cbxFlowStatusDraft.AutoSize = true;
-            this.cbxFlowStatusDraft.Location = new System.Drawing.Point(98, 20);
+            this.cbxFlowStatusDraft.Location = new System.Drawing.Point(99, 20);
             this.cbxFlowStatusDraft.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.cbxFlowStatusDraft.Name = "cbxFlowStatusDraft";
             this.cbxFlowStatusDraft.Size = new System.Drawing.Size(57, 20);
@@ -240,7 +257,7 @@
             this.gbSolution.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.gbSolution.Name = "gbSolution";
             this.gbSolution.Padding = new System.Windows.Forms.Padding(7, 6, 7, 6);
-            this.gbSolution.Size = new System.Drawing.Size(366, 48);
+            this.gbSolution.Size = new System.Drawing.Size(365, 48);
             this.gbSolution.TabIndex = 0;
             this.gbSolution.TabStop = false;
             this.gbSolution.Text = "Solution";
@@ -253,19 +270,93 @@
             this.cbSolutions.Location = new System.Drawing.Point(7, 21);
             this.cbSolutions.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.cbSolutions.Name = "cbSolutions";
-            this.cbSolutions.Size = new System.Drawing.Size(352, 24);
+            this.cbSolutions.Size = new System.Drawing.Size(351, 24);
             this.cbSolutions.TabIndex = 0;
             this.cbSolutions.SelectedIndexChanged += new System.EventHandler(this.cbSolutions_SelectedIndexChanged);
+            // 
+            // gbDeepSearch
+            // 
+            this.gbDeepSearch.Controls.Add(this.lblDeepSearchStatus);
+            this.gbDeepSearch.Controls.Add(this.progressBarDeepSearch);
+            this.gbDeepSearch.Controls.Add(this.btnClearDeepSearch);
+            this.gbDeepSearch.Controls.Add(this.btnDeepSearch);
+            this.gbDeepSearch.Controls.Add(this.tbDeepSearch);
+            this.gbDeepSearch.Controls.Add(this.lblDeepSearch);
+            this.gbDeepSearch.Dock = System.Windows.Forms.DockStyle.Top;
+            this.gbDeepSearch.Location = new System.Drawing.Point(0, 57);
+            this.gbDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.gbDeepSearch.Name = "gbDeepSearch";
+            this.gbDeepSearch.Padding = new System.Windows.Forms.Padding(7, 6, 7, 6);
+            this.gbDeepSearch.Size = new System.Drawing.Size(978, 62);
+            this.gbDeepSearch.TabIndex = 2;
+            this.gbDeepSearch.TabStop = false;
+            this.gbDeepSearch.Text = "🔍 Search in Run Details";
+            // 
+            // lblDeepSearch
+            // 
+            this.lblDeepSearch.AutoSize = true;
+            this.lblDeepSearch.Location = new System.Drawing.Point(11, 28);
+            this.lblDeepSearch.Name = "lblDeepSearch";
+            this.lblDeepSearch.Size = new System.Drawing.Size(91, 16);
+            this.lblDeepSearch.TabIndex = 0;
+            this.lblDeepSearch.Text = "Search value:";
+            // 
+            // tbDeepSearch
+            // 
+            this.tbDeepSearch.Location = new System.Drawing.Point(108, 25);
+            this.tbDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tbDeepSearch.Name = "tbDeepSearch";
+            this.tbDeepSearch.Size = new System.Drawing.Size(280, 22);
+            this.tbDeepSearch.TabIndex = 1;
+            // 
+            // btnDeepSearch
+            // 
+            this.btnDeepSearch.Location = new System.Drawing.Point(396, 23);
+            this.btnDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.btnDeepSearch.Name = "btnDeepSearch";
+            this.btnDeepSearch.Size = new System.Drawing.Size(110, 26);
+            this.btnDeepSearch.TabIndex = 2;
+            this.btnDeepSearch.Text = "🔍 Search";
+            this.btnDeepSearch.UseVisualStyleBackColor = true;
+            this.btnDeepSearch.Click += new System.EventHandler(this.btnDeepSearch_Click);
+            // 
+            // btnClearDeepSearch
+            // 
+            this.btnClearDeepSearch.Location = new System.Drawing.Point(512, 23);
+            this.btnClearDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.btnClearDeepSearch.Name = "btnClearDeepSearch";
+            this.btnClearDeepSearch.Size = new System.Drawing.Size(75, 26);
+            this.btnClearDeepSearch.TabIndex = 3;
+            this.btnClearDeepSearch.Text = "✕ Clear";
+            this.btnClearDeepSearch.UseVisualStyleBackColor = true;
+            this.btnClearDeepSearch.Click += new System.EventHandler(this.btnClearDeepSearch_Click);
+            // 
+            // progressBarDeepSearch
+            // 
+            this.progressBarDeepSearch.Location = new System.Drawing.Point(596, 27);
+            this.progressBarDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.progressBarDeepSearch.Name = "progressBarDeepSearch";
+            this.progressBarDeepSearch.Size = new System.Drawing.Size(150, 18);
+            this.progressBarDeepSearch.TabIndex = 4;
+            this.progressBarDeepSearch.Visible = false;
+            // 
+            // lblDeepSearchStatus
+            // 
+            this.lblDeepSearchStatus.AutoSize = true;
+            this.lblDeepSearchStatus.Location = new System.Drawing.Point(752, 28);
+            this.lblDeepSearchStatus.Name = "lblDeepSearchStatus";
+            this.lblDeepSearchStatus.Size = new System.Drawing.Size(0, 16);
+            this.lblDeepSearchStatus.TabIndex = 5;
             // 
             // gbFlowRuns
             // 
             this.gbFlowRuns.Controls.Add(this.dataGridView1);
             this.gbFlowRuns.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gbFlowRuns.Location = new System.Drawing.Point(0, 56);
+            this.gbFlowRuns.Location = new System.Drawing.Point(0, 119);
             this.gbFlowRuns.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.gbFlowRuns.Name = "gbFlowRuns";
             this.gbFlowRuns.Padding = new System.Windows.Forms.Padding(7, 6, 7, 6);
-            this.gbFlowRuns.Size = new System.Drawing.Size(976, 612);
+            this.gbFlowRuns.Size = new System.Drawing.Size(978, 545);
             this.gbFlowRuns.TabIndex = 1;
             this.gbFlowRuns.TabStop = false;
             this.gbFlowRuns.Text = "Flow Runs";
@@ -278,12 +369,8 @@
             this.dataGridView1.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.FlowRunFlow,
             this.FlowRunStatus,
-            this.FlowRunStartDate,
-            this.FlowRunEndDate,
             this.FlowRunDuration,
-            this.FlowRunUrl,
             this.FlowRunError});
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView1.Location = new System.Drawing.Point(7, 21);
@@ -293,17 +380,8 @@
             this.dataGridView1.RowHeadersVisible = false;
             this.dataGridView1.RowHeadersWidth = 51;
             this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView1.Size = new System.Drawing.Size(962, 585);
+            this.dataGridView1.Size = new System.Drawing.Size(964, 580);
             this.dataGridView1.TabIndex = 0;
-            // 
-            // FlowRunFlow
-            // 
-            this.FlowRunFlow.DataPropertyName = "Flow";
-            this.FlowRunFlow.FillWeight = 120F;
-            this.FlowRunFlow.HeaderText = "Flow";
-            this.FlowRunFlow.MinimumWidth = 6;
-            this.FlowRunFlow.Name = "FlowRunFlow";
-            this.FlowRunFlow.ReadOnly = true;
             // 
             // FlowRunStatus
             // 
@@ -314,22 +392,6 @@
             this.FlowRunStatus.Name = "FlowRunStatus";
             this.FlowRunStatus.ReadOnly = true;
             // 
-            // FlowRunStartDate
-            // 
-            this.FlowRunStartDate.DataPropertyName = "StartDate";
-            this.FlowRunStartDate.HeaderText = "Start Date";
-            this.FlowRunStartDate.MinimumWidth = 6;
-            this.FlowRunStartDate.Name = "FlowRunStartDate";
-            this.FlowRunStartDate.ReadOnly = true;
-            // 
-            // FlowRunEndDate
-            // 
-            this.FlowRunEndDate.DataPropertyName = "EndDate";
-            this.FlowRunEndDate.HeaderText = "End Date";
-            this.FlowRunEndDate.MinimumWidth = 6;
-            this.FlowRunEndDate.Name = "FlowRunEndDate";
-            this.FlowRunEndDate.ReadOnly = true;
-            // 
             // FlowRunDuration
             // 
             this.FlowRunDuration.DataPropertyName = "FormattedDuration";
@@ -338,17 +400,6 @@
             this.FlowRunDuration.MinimumWidth = 6;
             this.FlowRunDuration.Name = "FlowRunDuration";
             this.FlowRunDuration.ReadOnly = true;
-            // 
-            // FlowRunUrl
-            // 
-            this.FlowRunUrl.DataPropertyName = "Url";
-            this.FlowRunUrl.FillWeight = 50F;
-            this.FlowRunUrl.HeaderText = "Run URL";
-            this.FlowRunUrl.MinimumWidth = 6;
-            this.FlowRunUrl.Name = "FlowRunUrl";
-            this.FlowRunUrl.ReadOnly = true;
-            this.FlowRunUrl.Text = "Open";
-            this.FlowRunUrl.UseColumnTextForLinkValue = true;
             // 
             // FlowRunError
             // 
@@ -360,6 +411,9 @@
             // 
             // gbRunFilters
             // 
+            this.gbRunFilters.Controls.Add(this.btnNext);
+            this.gbRunFilters.Controls.Add(this.btnPrev);
+            this.gbRunFilters.Controls.Add(this.lblPageInfo);
             this.gbRunFilters.Controls.Add(this.btnFetchHistory);
             this.gbRunFilters.Controls.Add(this.cmbStatus);
             this.gbRunFilters.Controls.Add(this.lblStatus);
@@ -372,14 +426,44 @@
             this.gbRunFilters.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.gbRunFilters.Name = "gbRunFilters";
             this.gbRunFilters.Padding = new System.Windows.Forms.Padding(7, 6, 7, 6);
-            this.gbRunFilters.Size = new System.Drawing.Size(976, 56);
+            this.gbRunFilters.Size = new System.Drawing.Size(978, 57);
             this.gbRunFilters.TabIndex = 0;
             this.gbRunFilters.TabStop = false;
             this.gbRunFilters.Text = "Run Filters";
             // 
+            // btnNext
+            // 
+            this.btnNext.Dock = System.Windows.Forms.DockStyle.Right;
+            this.btnNext.Location = new System.Drawing.Point(917, 21);
+            this.btnNext.Name = "btnNext";
+            this.btnNext.Size = new System.Drawing.Size(54, 30);
+            this.btnNext.TabIndex = 9;
+            this.btnNext.Text = ">";
+            this.btnNext.UseVisualStyleBackColor = true;
+            this.btnNext.Click += new System.EventHandler(this.btnNext_Click);
+            // 
+            // btnPrev
+            // 
+            this.btnPrev.Location = new System.Drawing.Point(777, 19);
+            this.btnPrev.Name = "btnPrev";
+            this.btnPrev.Size = new System.Drawing.Size(53, 29);
+            this.btnPrev.TabIndex = 8;
+            this.btnPrev.Text = "<";
+            this.btnPrev.UseVisualStyleBackColor = true;
+            this.btnPrev.Click += new System.EventHandler(this.btnPrev_Click);
+            // 
+            // lblPageInfo
+            // 
+            this.lblPageInfo.AutoSize = true;
+            this.lblPageInfo.Location = new System.Drawing.Point(836, 25);
+            this.lblPageInfo.Name = "lblPageInfo";
+            this.lblPageInfo.Size = new System.Drawing.Size(75, 16);
+            this.lblPageInfo.TabIndex = 7;
+            this.lblPageInfo.Text = "lblPageInfo";
+            // 
             // btnFetchHistory
             // 
-            this.btnFetchHistory.Location = new System.Drawing.Point(604, 19);
+            this.btnFetchHistory.Location = new System.Drawing.Point(623, 21);
             this.btnFetchHistory.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnFetchHistory.Name = "btnFetchHistory";
             this.btnFetchHistory.Size = new System.Drawing.Size(89, 26);
@@ -403,12 +487,11 @@
             this.cmbStatus.Name = "cmbStatus";
             this.cmbStatus.Size = new System.Drawing.Size(107, 24);
             this.cmbStatus.TabIndex = 5;
-            this.cmbStatus.SelectedIndexChanged += new System.EventHandler(this.cmbStatus_SelectedIndexChanged);
             // 
             // lblStatus
             // 
             this.lblStatus.AutoSize = true;
-            this.lblStatus.Location = new System.Drawing.Point(431, 24);
+            this.lblStatus.Location = new System.Drawing.Point(431, 25);
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(47, 16);
             this.lblStatus.TabIndex = 4;
@@ -423,12 +506,11 @@
             this.dtpDateTo.Name = "dtpDateTo";
             this.dtpDateTo.Size = new System.Drawing.Size(160, 22);
             this.dtpDateTo.TabIndex = 3;
-            this.dtpDateTo.ValueChanged += new System.EventHandler(this.dtpDateTo_ValueChanged);
             // 
             // lblDateTo
             // 
             this.lblDateTo.AutoSize = true;
-            this.lblDateTo.Location = new System.Drawing.Point(227, 24);
+            this.lblDateTo.Location = new System.Drawing.Point(227, 25);
             this.lblDateTo.Name = "lblDateTo";
             this.lblDateTo.Size = new System.Drawing.Size(27, 16);
             this.lblDateTo.TabIndex = 2;
@@ -443,12 +525,11 @@
             this.dtpDateFrom.Name = "dtpDateFrom";
             this.dtpDateFrom.Size = new System.Drawing.Size(160, 22);
             this.dtpDateFrom.TabIndex = 1;
-            this.dtpDateFrom.ValueChanged += new System.EventHandler(this.dtpDateFrom_ValueChanged);
             // 
             // lblDateFrom
             // 
             this.lblDateFrom.AutoSize = true;
-            this.lblDateFrom.Location = new System.Drawing.Point(11, 24);
+            this.lblDateFrom.Location = new System.Drawing.Point(11, 25);
             this.lblDateFrom.Name = "lblDateFrom";
             this.lblDateFrom.Size = new System.Drawing.Size(41, 16);
             this.lblDateFrom.TabIndex = 0;
@@ -462,7 +543,7 @@
             this.Controls.Add(this.tsmContainer);
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "MyPluginControl";
-            this.Size = new System.Drawing.Size(1346, 695);
+            this.Size = new System.Drawing.Size(1347, 695);
             this.Load += new System.EventHandler(this.MyPluginControl_Load);
             this.tsmContainer.ResumeLayout(false);
             this.tsmContainer.PerformLayout();
@@ -479,6 +560,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.gbRunFilters.ResumeLayout(false);
             this.gbRunFilters.PerformLayout();
+            this.gbDeepSearch.ResumeLayout(false);
+            this.gbDeepSearch.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -501,14 +584,6 @@
         private System.Windows.Forms.GroupBox gbSolution;
         private System.Windows.Forms.ComboBox cbSolutions;
         private System.Windows.Forms.GroupBox gbFlowRuns;
-        private System.Windows.Forms.DataGridView dataGridView1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunFlow;
-        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunStatus;
-        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunStartDate;
-        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunEndDate;
-        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunDuration;
-        private System.Windows.Forms.DataGridViewLinkColumn FlowRunUrl;
-        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunError;
         private System.Windows.Forms.GroupBox gbRunFilters;
         private System.Windows.Forms.Button btnFetchHistory;
         private System.Windows.Forms.ComboBox cmbStatus;
@@ -518,5 +593,20 @@
         private System.Windows.Forms.DateTimePicker dtpDateFrom;
         private System.Windows.Forms.Label lblDateFrom;
         private System.Windows.Forms.ToolStripButton tsmConnectToPA;
+        private System.Windows.Forms.ToolStripButton btnExport;
+        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunStatus;
+        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunDuration;
+        private System.Windows.Forms.DataGridViewTextBoxColumn FlowRunError;
+        private System.Windows.Forms.Label lblPageInfo;
+        private System.Windows.Forms.Button btnNext;
+        private System.Windows.Forms.Button btnPrev;
+        private System.Windows.Forms.GroupBox gbDeepSearch;
+        private System.Windows.Forms.Label lblDeepSearch;
+        private System.Windows.Forms.TextBox tbDeepSearch;
+        private System.Windows.Forms.Button btnDeepSearch;
+        private System.Windows.Forms.Button btnClearDeepSearch;
+        private System.Windows.Forms.ProgressBar progressBarDeepSearch;
+        private System.Windows.Forms.Label lblDeepSearchStatus;
     }
 }
