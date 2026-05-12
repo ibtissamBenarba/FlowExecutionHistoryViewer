@@ -51,7 +51,9 @@ namespace ExecutionFlowHistoryViewer
 
         private void MyPluginControl_Load(object sender, EventArgs e)
         {
+            dataGridView1.ReadOnly = true;
             clbFlows.CheckOnClick = true;
+            dataGridView1.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
             InitializeFilters();
             InitializePagination();
             InitializeSettings();
