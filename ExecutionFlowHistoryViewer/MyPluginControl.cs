@@ -1,22 +1,23 @@
 // MyPluginControl.cs
+using ExecutionFlowHistoryViewer.Contracts;
 using ExecutionFlowHistoryViewer.DTO;
 using ExecutionFlowHistoryViewer.Forms;
-using ExecutionFlowHistoryViewer.Contracts;
 using ExecutionFlowHistoryViewer.Helpers;
 using ExecutionFlowHistoryViewer.Models;
 using ExecutionFlowHistoryViewer.Services;
 using McTools.Xrm.Connection;
 using Microsoft.Xrm.Sdk;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Windows.Documents;
 using System.Windows.Forms;
-using Newtonsoft.Json;
 using XrmToolBox.Extensibility;
-using System.Drawing;
 
 
 namespace ExecutionFlowHistoryViewer
@@ -353,6 +354,10 @@ namespace ExecutionFlowHistoryViewer
             else
                 _checkedFlowIds.Remove(flow.Id);
 
+            ResetPagination();
+            DataGridBinder.BindFlowRuns(dataGridView1, new List<FlowRun>());
+            UpdatePaginationUI();
+
             BeginInvoke((MethodInvoker)(() =>
             {
                 UpdateSelectAllState();
@@ -419,6 +424,7 @@ namespace ExecutionFlowHistoryViewer
         {
             if (_pagination.IsLoading) return;
             _pagination.IsLoading = true;
+            UpdatePaginationUI();
 
             WorkAsync(new WorkAsyncInfo
             {
@@ -431,11 +437,13 @@ namespace ExecutionFlowHistoryViewer
                     if (args.Error != null) { ShowError(args.Error); UpdatePaginationUI(); return; }
 
                     var result = (FlowRunPageResult)args.Result;
+
+                    int countBefore = _pagination.AllRuns.Count;
                     _pagination.AppendRuns(result.Runs);
                     _pagination.HasMoreServerPages = result.HasMore;
 
-                    // CORRECTION : n'incrémenter la page que si des données ont été reçues
-                    if (isNextPage && result.Runs.Count > 0)
+                    // Only advance page if NEW unique runs were actually added
+                    if (isNextPage && _pagination.AllRuns.Count > countBefore)
                         _pagination.CurrentPage++;
 
                     ShowCurrentPage();
@@ -446,6 +454,11 @@ namespace ExecutionFlowHistoryViewer
 
         private void FetchTwoPages()
         {
+            if (_pagination.IsLoading) return;
+            _pagination.IsLoading = true;
+            UpdatePaginationUI();
+
+            int targetPage = _pagination.CurrentPage + 2;
             var (fromDate, toDate, status) = GetFilterValues();
             var flows = GetSelectedFlows();
 
@@ -454,39 +467,50 @@ namespace ExecutionFlowHistoryViewer
                 Message = "Loading next 2 pages...",
                 Work = (worker, args) =>
                 {
-                    var res1 = _historyService.FetchRuns(flows, fromDate, toDate, status, true, _flowSkipTokens, _pagination.PageSize);
+                    int requiredItems = targetPage * _pagination.PageSize;
+                    var fetchedRuns = new List< FlowRun > ();
+                    bool hasMore = _pagination.HasMoreServerPages;
+                    int baseCount = _pagination.AllRuns.Count;
+                    int safety = 0;
 
-                    if (res1.HasMore)
+                    while (baseCount + fetchedRuns.Count < requiredItems && hasMore && safety < 50)
                     {
-                        var res2 = _historyService.FetchRuns(flows, fromDate, toDate, status, true, _flowSkipTokens, _pagination.PageSize);
-                        args.Result = new List<FlowRunPageResult> { res1, res2 };
+                        var result = _historyService.FetchRuns(
+                            flows, fromDate, toDate, status, true, _flowSkipTokens, _pagination.PageSize);
+
+                        if (result?.Runs != null && result.Runs.Count > 0)
+                        {
+                            fetchedRuns.AddRange(result.Runs);
+                            hasMore = result.HasMore;
+                        }
+                        else
+                        {
+                            hasMore = false;
+                            break;
+                        }
+                        safety++;
                     }
-                    else
-                    {
-                        args.Result = new List<FlowRunPageResult> { res1 };
-                    }
+
+                    args.Result = new Tuple<List< FlowRun >, bool> (fetchedRuns, hasMore);
                 },
                 PostWorkCallBack = (args) =>
                 {
-                    if (args.Error != null) { ShowError(args.Error); return; }
+                    _pagination.IsLoading = false;
+                    if (args.Error != null) { ShowError(args.Error); UpdatePaginationUI(); return; }
 
-                    var results = (List<FlowRunPageResult>)args.Result;
-                    int pagesWithData = 0;
+                    var result = (Tuple < List < FlowRun >, bool >)args.Result;
+                    _pagination.AppendRuns(result.Item1);
+                    _pagination.HasMoreServerPages = result.Item2;
 
-                    foreach (var res in results)
+                    int requiredItems = targetPage * _pagination.PageSize;
+                    if (_pagination.AllRuns.Count >= requiredItems || !_pagination.HasMoreServerPages)
                     {
-                        _pagination.AppendRuns(res.Runs);
-                        _pagination.HasMoreServerPages = res.HasMore;
-                        if (res.Runs.Count > 0)
-                            pagesWithData++;
+                        _pagination.CurrentPage = targetPage;
                     }
-
-                    // CORRECTION : n'avancer que du nombre de pages qui ont réellement des données
-                    _pagination.CurrentPage += pagesWithData;
-
-                    // Si on est sur une page vide et qu'il n'y a plus de pages serveur, reculer
-                    if (_pagination.GetCurrentPage().Count == 0 && !_pagination.HasMoreServerPages && _pagination.CurrentPage > 1)
-                        _pagination.CurrentPage--;
+                    else
+                    {
+                        _pagination.CurrentPage = Math.Max(1, _pagination.TotalCachedPages);
+                    }
 
                     ShowCurrentPage();
                     UpdatePaginationUI();
@@ -540,7 +564,7 @@ namespace ExecutionFlowHistoryViewer
             if (!int.TryParse(tscNumberOfRuns.SelectedItem.ToString(), out int newPageSize)) return;
             if (_pagination == null) return;
             if (_pagination.PageSize == newPageSize) return;
-
+             
             _pagination.PageSize = newPageSize;
             _pagination.CurrentPage = 1;
 
@@ -556,7 +580,12 @@ namespace ExecutionFlowHistoryViewer
             {
                 if (targetPage >= 1 && targetPage <= _pagination.TotalPages)
                 {
-                    if (targetPage <= _pagination.TotalCachedPages)
+                    int requiredItems = targetPage * _pagination.PageSize;
+                    bool hasEnoughData = _pagination.AllRuns.Count >= requiredItems;
+                    bool isLastPage = !_pagination.HasMoreServerPages
+                        && _pagination.AllRuns.Count > (targetPage - 1) * _pagination.PageSize;
+
+                    if (hasEnoughData || isLastPage)
                     {
                         _pagination.CurrentPage = targetPage;
                         ShowCurrentPage();
@@ -569,7 +598,6 @@ namespace ExecutionFlowHistoryViewer
                     }
                     else
                     {
-                        // La page demandée dépasse les données disponibles et il n'y a plus rien sur le serveur
                         tstbPageNumber.Text = _pagination.CurrentPage.ToString();
                     }
                 }
@@ -594,16 +622,22 @@ namespace ExecutionFlowHistoryViewer
         {
             if (_pagination.IsLoading) return;
 
-            if (_pagination.CurrentPage < _pagination.TotalCachedPages)
+            int targetPage = _pagination.CurrentPage + 1;
+            int requiredItems = targetPage * _pagination.PageSize;
+
+            bool hasEnoughData = _pagination.AllRuns.Count >= requiredItems;
+            bool isLastPage = !_pagination.HasMoreServerPages
+                && _pagination.AllRuns.Count > (targetPage - 1) * _pagination.PageSize;
+
+            if (hasEnoughData || isLastPage)
             {
-                _pagination.CurrentPage++;
+                _pagination.CurrentPage = targetPage;
                 ShowCurrentPage();
                 UpdatePaginationUI();
             }
             else if (_pagination.HasMoreServerPages)
             {
-                var (fromDate, toDate, status) = GetFilterValues();
-                FetchPage(GetSelectedFlows(), fromDate, toDate, status, isNextPage: true);
+                EnsurePageLoaded(targetPage);
             }
         }
 
@@ -625,8 +659,13 @@ namespace ExecutionFlowHistoryViewer
             if (_pagination.IsLoading) return;
 
             int targetPage = _pagination.CurrentPage + 2;
+            int requiredItems = targetPage * _pagination.PageSize;
 
-            if (targetPage <= _pagination.TotalCachedPages)
+            bool hasEnoughData = _pagination.AllRuns.Count >= requiredItems;
+            bool isLastPage = !_pagination.HasMoreServerPages
+                && _pagination.AllRuns.Count > (targetPage - 1) * _pagination.PageSize;
+
+            if (hasEnoughData || isLastPage)
             {
                 _pagination.CurrentPage = targetPage;
                 ShowCurrentPage();
@@ -636,6 +675,83 @@ namespace ExecutionFlowHistoryViewer
             {
                 FetchTwoPages();
             }
+        }
+
+        private void EnsurePageLoaded(int targetPage)
+        {
+            if (_pagination.IsLoading) return;
+            _pagination.IsLoading = true;
+            UpdatePaginationUI();
+
+            var (fromDate, toDate, status) = GetFilterValues();
+            var flows = GetSelectedFlows();
+
+            WorkAsync(new WorkAsyncInfo
+            {
+                Message = "Loading page...",
+                Work = (worker, args) =>
+                {
+                    int requiredItems = targetPage * _pagination.PageSize;
+                    var fetchedRuns = new List< FlowRun > ();
+                    bool hasMore = _pagination.HasMoreServerPages;
+                    int baseCount = _pagination.AllRuns.Count;
+                    int safety = 0;
+
+                    while (baseCount + fetchedRuns.Count < requiredItems && hasMore && safety < 50)
+                    {
+                        var result = _historyService.FetchRuns(
+                            flows,
+                            fromDate,
+                            toDate,
+                            status,
+                            true,
+                            _flowSkipTokens,
+                            _pagination.PageSize);
+
+                        if (result?.Runs != null && result.Runs.Count > 0)
+                        {
+                            fetchedRuns.AddRange(result.Runs);
+                            hasMore = result.HasMore;
+                        }
+                        else
+                        {
+                            hasMore = false;
+                            break;
+                        }
+                        safety++;
+                    }
+
+                    args.Result = new Tuple<List< FlowRun >, bool> (fetchedRuns, hasMore);
+                },
+                PostWorkCallBack = (args) =>
+                {
+                    _pagination.IsLoading = false;
+
+                    if (args.Error != null)
+                    {
+                        ShowError(args.Error);
+                        UpdatePaginationUI();
+                        return;
+                    }
+
+                    var result = (Tuple < List < FlowRun >, bool >)args.Result;
+                    _pagination.AppendRuns(result.Item1);
+                    _pagination.HasMoreServerPages = result.Item2;
+
+                    int requiredItems = targetPage * _pagination.PageSize;
+                    if (_pagination.AllRuns.Count >= requiredItems || !_pagination.HasMoreServerPages)
+                    {
+                        _pagination.CurrentPage = targetPage;
+                    }
+                    else
+                    {
+                        _pagination.CurrentPage = Math.Max(1, _pagination.TotalCachedPages);
+                    }
+
+                    ShowCurrentPage();
+                    UpdatePaginationUI();
+                }
+            });
         }
 
         #endregion
@@ -1065,34 +1181,72 @@ namespace ExecutionFlowHistoryViewer
                 }
             }
         }
-
+ 
         private void FetchAllPagesAndExport(string filePath, ExportForm options)
         {
             var (fromDate, toDate, status) = GetFilterValues();
             var flows = GetSelectedFlows();
+
+            var skipTokens = new Dictionary<string, string>(_flowSkipTokens, StringComparer.OrdinalIgnoreCase);
+            int pageSize = _pagination.PageSize;
+            var accumulatedRuns = new List<FlowRun>(_pagination.AllRuns);
 
             WorkAsync(new WorkAsyncInfo
             {
                 Message = "Loading all pages for export...",
                 Work = (worker, args) =>
                 {
-                    // Charger toutes les pages restantes depuis le serveur
-                    while (_pagination.HasMoreServerPages)
+                    int safety = 0;
+                    bool hasMore = true;
+                    bool isFirstFetch = accumulatedRuns.Count == 0;
+
+                    while (hasMore && safety < 500)
                     {
                         var result = _historyService.FetchRuns(
-                            flows, fromDate, toDate, status, true, _flowSkipTokens, _pagination.PageSize);
+                            flows, fromDate, toDate, status, !isFirstFetch, skipTokens, pageSize);
 
-                        _pagination.AppendRuns(result.Runs);
-                        _pagination.HasMoreServerPages = result.HasMore;
+                        int runsInThisBatch = 0;
+                        if (result?.Runs != null)
+                        {
+                            runsInThisBatch = result.Runs.Count;
+                            accumulatedRuns.AddRange(result.Runs);
+                        }
+
+                        hasMore = result?.HasMore ?? false;
+
+                        // IMPORTANT: If API says there's more but we got zero items, 
+                        // something is wrong - log it but don't infinite loop
+                        if (hasMore && runsInThisBatch == 0)
+                        {
+                            // Force exit to prevent infinite loop on buggy API
+                            hasMore = false;
+                        }
+
+                        isFirstFetch = false;
+                        safety++;
                     }
 
-                    args.Result = _pagination.AllRuns.ToList();
+                    // Final deduplication and chronological sort
+                    var distinctRuns = accumulatedRuns
+                        .GroupBy(r => r.Id)
+                        .Select(g => g.First())
+                        .OrderByDescending(r => r.StartDate)
+                        .ToList();
+
+                    args.Result = distinctRuns;
                 },
                 PostWorkCallBack = (args) =>
                 {
                     if (args.Error != null) { ShowError(args.Error); return; }
 
                     var allRuns = (List<FlowRun>)args.Result;
+
+                    // Sync pagination state with fully loaded data
+                    _pagination.Reset();
+                    _pagination.AppendRuns(allRuns);
+                    _pagination.HasMoreServerPages = false;
+                    _pagination.TotalServerCount = allRuns.Count;
+
                     ExecuteExport(allRuns, filePath, options);
                 }
             });
@@ -1180,5 +1334,6 @@ namespace ExecutionFlowHistoryViewer
         }
 
         #endregion
+
     }
 }

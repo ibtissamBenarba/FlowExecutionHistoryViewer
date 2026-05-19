@@ -28,23 +28,27 @@ namespace ExecutionFlowHistoryViewer
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.ToolStripButton tsmConnectToPA;
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MyPluginControl));
             this.tsmContainer = new System.Windows.Forms.ToolStrip();
             this.tsbClose = new System.Windows.Forms.ToolStripButton();
             this.tssSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.tsbSample = new System.Windows.Forms.ToolStripButton();
-            this.tsmConnectToPA = new System.Windows.Forms.ToolStripButton();
             this.btnExport = new System.Windows.Forms.ToolStripButton();
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
             this.gbFlows = new System.Windows.Forms.GroupBox();
             this.clbFlows = new System.Windows.Forms.CheckedListBox();
             this.cbSelectAllFlows = new System.Windows.Forms.CheckBox();
+            this.label4 = new System.Windows.Forms.Label();
             this.gbFlowFilters = new System.Windows.Forms.GroupBox();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.cbSolutions = new System.Windows.Forms.ComboBox();
             this.tbSearch = new System.Windows.Forms.TextBox();
             this.lblSearch = new System.Windows.Forms.Label();
             this.cbxFlowStatusDraft = new System.Windows.Forms.CheckBox();
             this.cbxFlowStatusActivated = new System.Windows.Forms.CheckBox();
-            this.gbSolution = new System.Windows.Forms.GroupBox();
-            this.cbSolutions = new System.Windows.Forms.ComboBox();
             this.gbFlowRuns = new System.Windows.Forms.GroupBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.FlowName = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -80,6 +84,7 @@ namespace ExecutionFlowHistoryViewer
             this.lblDateTo = new System.Windows.Forms.Label();
             this.dtpDateFrom = new System.Windows.Forms.DateTimePicker();
             this.lblDateFrom = new System.Windows.Forms.Label();
+            tsmConnectToPA = new System.Windows.Forms.ToolStripButton();
             this.tsmContainer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).BeginInit();
             this.splitContainerMain.Panel1.SuspendLayout();
@@ -87,7 +92,7 @@ namespace ExecutionFlowHistoryViewer
             this.splitContainerMain.SuspendLayout();
             this.gbFlows.SuspendLayout();
             this.gbFlowFilters.SuspendLayout();
-            this.gbSolution.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.gbFlowRuns.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.tsPagination.SuspendLayout();
@@ -95,14 +100,26 @@ namespace ExecutionFlowHistoryViewer
             this.gbRunFilters.SuspendLayout();
             this.SuspendLayout();
             // 
+            // tsmConnectToPA
+            // 
+            tsmConnectToPA.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(240)))), ((int)(((byte)(255)))));
+            tsmConnectToPA.DoubleClickEnabled = true;
+            tsmConnectToPA.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            tsmConnectToPA.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(99)))), ((int)(((byte)(235)))));
+            tsmConnectToPA.Image = ((System.Drawing.Image)(resources.GetObject("tsmConnectToPA.Image")));
+            tsmConnectToPA.ImageAlign = System.Drawing.ContentAlignment.TopLeft;
+            tsmConnectToPA.Name = "tsmConnectToPA";
+            tsmConnectToPA.Size = new System.Drawing.Size(255, 28);
+            tsmConnectToPA.Text = "Connect to Power Automate API";
+            tsmConnectToPA.Click += new System.EventHandler(this.tsmConnectToPA_ItemClicked);
+            // 
             // tsmContainer
             // 
             this.tsmContainer.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.tsmContainer.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tsbClose,
             this.tssSeparator1,
-            this.tsbSample,
-            this.tsmConnectToPA,
+            tsmConnectToPA,
             this.btnExport});
             this.tsmContainer.Location = new System.Drawing.Point(0, 0);
             this.tsmContainer.Name = "tsmContainer";
@@ -123,24 +140,14 @@ namespace ExecutionFlowHistoryViewer
             this.tssSeparator1.Name = "tssSeparator1";
             this.tssSeparator1.Size = new System.Drawing.Size(6, 31);
             // 
-            // tsbSample
-            // 
-            this.tsbSample.Name = "tsbSample";
-            this.tsbSample.Size = new System.Drawing.Size(29, 28);
-            // 
-            // tsmConnectToPA
-            // 
-            this.tsmConnectToPA.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.tsmConnectToPA.Name = "tsmConnectToPA";
-            this.tsmConnectToPA.Size = new System.Drawing.Size(225, 28);
-            this.tsmConnectToPA.Text = "Connect to Power Automate API";
-            this.tsmConnectToPA.Click += new System.EventHandler(this.tsmConnectToPA_ItemClicked);
-            // 
             // btnExport
             // 
-            this.btnExport.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.btnExport.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(242)))), ((int)(((byte)(234)))));
+            this.btnExport.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnExport.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(115)))), ((int)(((byte)(70)))));
+            this.btnExport.Image = ((System.Drawing.Image)(resources.GetObject("btnExport.Image")));
             this.btnExport.Name = "btnExport";
-            this.btnExport.Size = new System.Drawing.Size(134, 28);
+            this.btnExport.Size = new System.Drawing.Size(162, 28);
             this.btnExport.Text = "Export CSV / Excel";
             this.btnExport.Click += new System.EventHandler(this.btnExport_Click_1);
             // 
@@ -155,7 +162,6 @@ namespace ExecutionFlowHistoryViewer
             // 
             this.splitContainerMain.Panel1.Controls.Add(this.gbFlows);
             this.splitContainerMain.Panel1.Controls.Add(this.gbFlowFilters);
-            this.splitContainerMain.Panel1.Controls.Add(this.gbSolution);
             // 
             // splitContainerMain.Panel2
             // 
@@ -168,34 +174,35 @@ namespace ExecutionFlowHistoryViewer
             // 
             // gbFlows
             // 
+            this.gbFlows.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(245)))), ((int)(((byte)(250)))));
             this.gbFlows.Controls.Add(this.clbFlows);
             this.gbFlows.Controls.Add(this.cbSelectAllFlows);
+            this.gbFlows.Controls.Add(this.label4);
             this.gbFlows.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gbFlows.Location = new System.Drawing.Point(0, 128);
+            this.gbFlows.Location = new System.Drawing.Point(0, 254);
             this.gbFlows.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.gbFlows.Name = "gbFlows";
             this.gbFlows.Padding = new System.Windows.Forms.Padding(7, 6, 7, 6);
-            this.gbFlows.Size = new System.Drawing.Size(365, 536);
+            this.gbFlows.Size = new System.Drawing.Size(365, 410);
             this.gbFlows.TabIndex = 2;
             this.gbFlows.TabStop = false;
-            this.gbFlows.Text = "Flows";
             // 
             // clbFlows
             // 
             this.clbFlows.CheckOnClick = true;
             this.clbFlows.Dock = System.Windows.Forms.DockStyle.Fill;
             this.clbFlows.FormattingEnabled = true;
-            this.clbFlows.Location = new System.Drawing.Point(7, 45);
+            this.clbFlows.Location = new System.Drawing.Point(7, 67);
             this.clbFlows.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.clbFlows.Name = "clbFlows";
-            this.clbFlows.Size = new System.Drawing.Size(351, 485);
+            this.clbFlows.Size = new System.Drawing.Size(351, 337);
             this.clbFlows.TabIndex = 1;
             // 
             // cbSelectAllFlows
             // 
             this.cbSelectAllFlows.AutoSize = true;
             this.cbSelectAllFlows.Dock = System.Windows.Forms.DockStyle.Top;
-            this.cbSelectAllFlows.Location = new System.Drawing.Point(7, 21);
+            this.cbSelectAllFlows.Location = new System.Drawing.Point(7, 43);
             this.cbSelectAllFlows.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.cbSelectAllFlows.Name = "cbSelectAllFlows";
             this.cbSelectAllFlows.Padding = new System.Windows.Forms.Padding(4, 2, 0, 2);
@@ -204,46 +211,119 @@ namespace ExecutionFlowHistoryViewer
             this.cbSelectAllFlows.Text = "Select All";
             this.cbSelectAllFlows.CheckedChanged += new System.EventHandler(this.cbSelectAllFlows_CheckedChanged);
             // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label4.Font = new System.Drawing.Font("Microsoft Tai Le", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label4.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(107)))), ((int)(((byte)(114)))), ((int)(((byte)(128)))));
+            this.label4.Location = new System.Drawing.Point(7, 21);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(68, 22);
+            this.label4.TabIndex = 7;
+            this.label4.Text = "FLOWS";
+            // 
             // gbFlowFilters
             // 
+            this.gbFlowFilters.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(245)))), ((int)(((byte)(250)))));
+            this.gbFlowFilters.Controls.Add(this.pictureBox1);
+            this.gbFlowFilters.Controls.Add(this.label3);
+            this.gbFlowFilters.Controls.Add(this.label2);
+            this.gbFlowFilters.Controls.Add(this.label1);
+            this.gbFlowFilters.Controls.Add(this.cbSolutions);
             this.gbFlowFilters.Controls.Add(this.tbSearch);
             this.gbFlowFilters.Controls.Add(this.lblSearch);
             this.gbFlowFilters.Controls.Add(this.cbxFlowStatusDraft);
             this.gbFlowFilters.Controls.Add(this.cbxFlowStatusActivated);
             this.gbFlowFilters.Dock = System.Windows.Forms.DockStyle.Top;
-            this.gbFlowFilters.Location = new System.Drawing.Point(0, 48);
+            this.gbFlowFilters.Location = new System.Drawing.Point(0, 0);
             this.gbFlowFilters.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.gbFlowFilters.Name = "gbFlowFilters";
             this.gbFlowFilters.Padding = new System.Windows.Forms.Padding(7, 6, 7, 6);
-            this.gbFlowFilters.Size = new System.Drawing.Size(365, 80);
+            this.gbFlowFilters.Size = new System.Drawing.Size(365, 254);
             this.gbFlowFilters.TabIndex = 1;
             this.gbFlowFilters.TabStop = false;
-            this.gbFlowFilters.Text = "Flow Filters";
+            // 
+            // pictureBox1
+            // 
+            this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
+            this.pictureBox1.Location = new System.Drawing.Point(11, 17);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(24, 24);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
+            this.pictureBox1.TabIndex = 7;
+            this.pictureBox1.TabStop = false;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Microsoft Tai Le", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label3.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(107)))), ((int)(((byte)(114)))), ((int)(((byte)(128)))));
+            this.label3.Location = new System.Drawing.Point(41, 24);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(73, 22);
+            this.label3.TabIndex = 6;
+            this.label3.Text = "FILTERS";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Microsoft Tai Le", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.label2.Location = new System.Drawing.Point(17, 63);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(67, 19);
+            this.label2.TabIndex = 5;
+            this.label2.Text = "Solution";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Microsoft Tai Le", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Location = new System.Drawing.Point(16, 129);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(90, 19);
+            this.label1.TabIndex = 4;
+            this.label1.Text = "Flow Status";
+            // 
+            // cbSolutions
+            // 
+            this.cbSolutions.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbSolutions.FormattingEnabled = true;
+            this.cbSolutions.Location = new System.Drawing.Point(20, 84);
+            this.cbSolutions.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.cbSolutions.Name = "cbSolutions";
+            this.cbSolutions.Size = new System.Drawing.Size(325, 24);
+            this.cbSolutions.TabIndex = 0;
+            this.cbSolutions.SelectedIndexChanged += new System.EventHandler(this.cbSolutions_SelectedIndexChanged);
             // 
             // tbSearch
             // 
             this.tbSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbSearch.Location = new System.Drawing.Point(64, 44);
+            this.tbSearch.Font = new System.Drawing.Font("Microsoft Tai Le", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tbSearch.ForeColor = System.Drawing.SystemColors.ControlDark;
+            this.tbSearch.Location = new System.Drawing.Point(17, 216);
             this.tbSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tbSearch.Name = "tbSearch";
-            this.tbSearch.Size = new System.Drawing.Size(291, 22);
+            this.tbSearch.Size = new System.Drawing.Size(325, 27);
             this.tbSearch.TabIndex = 3;
             this.tbSearch.TextChanged += new System.EventHandler(this.tbSearch_TextChanged);
             // 
             // lblSearch
             // 
             this.lblSearch.AutoSize = true;
-            this.lblSearch.Location = new System.Drawing.Point(11, 46);
+            this.lblSearch.Font = new System.Drawing.Font("Microsoft Tai Le", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSearch.Location = new System.Drawing.Point(17, 193);
             this.lblSearch.Name = "lblSearch";
-            this.lblSearch.Size = new System.Drawing.Size(53, 16);
+            this.lblSearch.Size = new System.Drawing.Size(97, 19);
             this.lblSearch.TabIndex = 2;
-            this.lblSearch.Text = "Search:";
+            this.lblSearch.Text = "Search flows";
             // 
             // cbxFlowStatusDraft
             // 
             this.cbxFlowStatusDraft.AutoSize = true;
-            this.cbxFlowStatusDraft.Location = new System.Drawing.Point(99, 20);
+            this.cbxFlowStatusDraft.Location = new System.Drawing.Point(140, 150);
             this.cbxFlowStatusDraft.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.cbxFlowStatusDraft.Name = "cbxFlowStatusDraft";
             this.cbxFlowStatusDraft.Size = new System.Drawing.Size(57, 20);
@@ -255,40 +335,16 @@ namespace ExecutionFlowHistoryViewer
             this.cbxFlowStatusActivated.AutoSize = true;
             this.cbxFlowStatusActivated.Checked = true;
             this.cbxFlowStatusActivated.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbxFlowStatusActivated.Location = new System.Drawing.Point(11, 20);
+            this.cbxFlowStatusActivated.Location = new System.Drawing.Point(21, 150);
             this.cbxFlowStatusActivated.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.cbxFlowStatusActivated.Name = "cbxFlowStatusActivated";
             this.cbxFlowStatusActivated.Size = new System.Drawing.Size(85, 20);
             this.cbxFlowStatusActivated.TabIndex = 0;
             this.cbxFlowStatusActivated.Text = "Activated";
             // 
-            // gbSolution
-            // 
-            this.gbSolution.Controls.Add(this.cbSolutions);
-            this.gbSolution.Dock = System.Windows.Forms.DockStyle.Top;
-            this.gbSolution.Location = new System.Drawing.Point(0, 0);
-            this.gbSolution.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.gbSolution.Name = "gbSolution";
-            this.gbSolution.Padding = new System.Windows.Forms.Padding(7, 6, 7, 6);
-            this.gbSolution.Size = new System.Drawing.Size(365, 48);
-            this.gbSolution.TabIndex = 0;
-            this.gbSolution.TabStop = false;
-            this.gbSolution.Text = "Solution";
-            // 
-            // cbSolutions
-            // 
-            this.cbSolutions.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cbSolutions.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cbSolutions.FormattingEnabled = true;
-            this.cbSolutions.Location = new System.Drawing.Point(7, 21);
-            this.cbSolutions.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.cbSolutions.Name = "cbSolutions";
-            this.cbSolutions.Size = new System.Drawing.Size(351, 24);
-            this.cbSolutions.TabIndex = 0;
-            this.cbSolutions.SelectedIndexChanged += new System.EventHandler(this.cbSolutions_SelectedIndexChanged);
-            // 
             // gbFlowRuns
             // 
+            this.gbFlowRuns.BackColor = System.Drawing.SystemColors.ButtonHighlight;
             this.gbFlowRuns.Controls.Add(this.dataGridView1);
             this.gbFlowRuns.Controls.Add(this.tsPagination);
             this.gbFlowRuns.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -427,7 +483,7 @@ namespace ExecutionFlowHistoryViewer
             // 
             this.tsbSkipNext.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.tsbSkipNext.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.tsbSkipNext.Image = global::ExecutionFlowHistoryViewer.Properties.Resources.skip_next;
+            this.tsbSkipNext.Image = ((System.Drawing.Image)(resources.GetObject("tsbSkipNext.Image")));
             this.tsbSkipNext.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tsbSkipNext.Margin = new System.Windows.Forms.Padding(10, 5, 20, 2);
             this.tsbSkipNext.Name = "tsbSkipNext";
@@ -439,7 +495,7 @@ namespace ExecutionFlowHistoryViewer
             // tsbNext
             // 
             this.tsbNext.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.tsbNext.Image = global::ExecutionFlowHistoryViewer.Properties.Resources.chevron_right;
+            this.tsbNext.Image = ((System.Drawing.Image)(resources.GetObject("tsbNext.Image")));
             this.tsbNext.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tsbNext.Margin = new System.Windows.Forms.Padding(10, 5, 10, 2);
             this.tsbNext.Name = "tsbNext";
@@ -460,8 +516,9 @@ namespace ExecutionFlowHistoryViewer
             // tstbPageNumber
             // 
             this.tstbPageNumber.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.tstbPageNumber.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.tstbPageNumber.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.tstbPageNumber.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(99)))), ((int)(((byte)(235)))));
+            this.tstbPageNumber.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tstbPageNumber.ForeColor = System.Drawing.SystemColors.Window;
             this.tstbPageNumber.Margin = new System.Windows.Forms.Padding(10, 5, 4, 2);
             this.tstbPageNumber.Name = "tstbPageNumber";
             this.tstbPageNumber.ShortcutsEnabled = false;
@@ -472,7 +529,7 @@ namespace ExecutionFlowHistoryViewer
             // tsbPrevious
             // 
             this.tsbPrevious.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.tsbPrevious.Image = global::ExecutionFlowHistoryViewer.Properties.Resources.chevron_left;
+            this.tsbPrevious.Image = ((System.Drawing.Image)(resources.GetObject("tsbPrevious.Image")));
             this.tsbPrevious.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tsbPrevious.Margin = new System.Windows.Forms.Padding(10, 5, 10, 2);
             this.tsbPrevious.Name = "tsbPrevious";
@@ -484,7 +541,7 @@ namespace ExecutionFlowHistoryViewer
             // 
             this.tsbSkipPrevious.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.tsbSkipPrevious.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.tsbSkipPrevious.Image = global::ExecutionFlowHistoryViewer.Properties.Resources.skip_previous;
+            this.tsbSkipPrevious.Image = ((System.Drawing.Image)(resources.GetObject("tsbSkipPrevious.Image")));
             this.tsbSkipPrevious.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tsbSkipPrevious.Margin = new System.Windows.Forms.Padding(10, 5, 10, 2);
             this.tsbSkipPrevious.Name = "tsbSkipPrevious";
@@ -494,6 +551,7 @@ namespace ExecutionFlowHistoryViewer
             // 
             // gbDeepSearch
             // 
+            this.gbDeepSearch.BackColor = System.Drawing.SystemColors.ButtonHighlight;
             this.gbDeepSearch.Controls.Add(this.lblDeepSearchStatus);
             this.gbDeepSearch.Controls.Add(this.progressBarDeepSearch);
             this.gbDeepSearch.Controls.Add(this.btnClearDeepSearch);
@@ -520,7 +578,7 @@ namespace ExecutionFlowHistoryViewer
             // 
             // progressBarDeepSearch
             // 
-            this.progressBarDeepSearch.Location = new System.Drawing.Point(596, 27);
+            this.progressBarDeepSearch.Location = new System.Drawing.Point(707, 33);
             this.progressBarDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.progressBarDeepSearch.Name = "progressBarDeepSearch";
             this.progressBarDeepSearch.Size = new System.Drawing.Size(150, 18);
@@ -529,32 +587,45 @@ namespace ExecutionFlowHistoryViewer
             // 
             // btnClearDeepSearch
             // 
-            this.btnClearDeepSearch.Location = new System.Drawing.Point(512, 23);
+            this.btnClearDeepSearch.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.btnClearDeepSearch.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnClearDeepSearch.Image = ((System.Drawing.Image)(resources.GetObject("btnClearDeepSearch.Image")));
+            this.btnClearDeepSearch.Location = new System.Drawing.Point(592, 23);
             this.btnClearDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnClearDeepSearch.Name = "btnClearDeepSearch";
-            this.btnClearDeepSearch.Size = new System.Drawing.Size(75, 26);
+            this.btnClearDeepSearch.Size = new System.Drawing.Size(92, 29);
             this.btnClearDeepSearch.TabIndex = 3;
-            this.btnClearDeepSearch.Text = "✕ Clear";
-            this.btnClearDeepSearch.UseVisualStyleBackColor = true;
+            this.btnClearDeepSearch.Text = "Clear";
+            this.btnClearDeepSearch.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnClearDeepSearch.UseVisualStyleBackColor = false;
             this.btnClearDeepSearch.Click += new System.EventHandler(this.btnClearDeepSearch_Click);
             // 
             // btnDeepSearch
             // 
-            this.btnDeepSearch.Location = new System.Drawing.Point(396, 23);
+            this.btnDeepSearch.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(99)))), ((int)(((byte)(235)))));
+            this.btnDeepSearch.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.btnDeepSearch.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnDeepSearch.Font = new System.Drawing.Font("Microsoft Tai Le", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnDeepSearch.ForeColor = System.Drawing.SystemColors.HighlightText;
+            this.btnDeepSearch.Image = ((System.Drawing.Image)(resources.GetObject("btnDeepSearch.Image")));
+            this.btnDeepSearch.Location = new System.Drawing.Point(460, 23);
             this.btnDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnDeepSearch.Name = "btnDeepSearch";
-            this.btnDeepSearch.Size = new System.Drawing.Size(110, 26);
+            this.btnDeepSearch.Size = new System.Drawing.Size(110, 29);
             this.btnDeepSearch.TabIndex = 2;
-            this.btnDeepSearch.Text = "🔍 Search";
-            this.btnDeepSearch.UseVisualStyleBackColor = true;
+            this.btnDeepSearch.Text = "Search";
+            this.btnDeepSearch.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnDeepSearch.UseVisualStyleBackColor = false;
             this.btnDeepSearch.Click += new System.EventHandler(this.btnDeepSearch_Click);
             // 
             // tbDeepSearch
             // 
+            this.tbDeepSearch.Font = new System.Drawing.Font("Microsoft Tai Le", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tbDeepSearch.ForeColor = System.Drawing.SystemColors.ControlDark;
             this.tbDeepSearch.Location = new System.Drawing.Point(108, 25);
             this.tbDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tbDeepSearch.Name = "tbDeepSearch";
-            this.tbDeepSearch.Size = new System.Drawing.Size(280, 22);
+            this.tbDeepSearch.Size = new System.Drawing.Size(333, 27);
             this.tbDeepSearch.TabIndex = 1;
             // 
             // lblDeepSearch
@@ -568,6 +639,7 @@ namespace ExecutionFlowHistoryViewer
             // 
             // gbRunFilters
             // 
+            this.gbRunFilters.BackColor = System.Drawing.SystemColors.ButtonHighlight;
             this.gbRunFilters.Controls.Add(this.btnFetchHistory);
             this.gbRunFilters.Controls.Add(this.cmbStatus);
             this.gbRunFilters.Controls.Add(this.lblStatus);
@@ -587,13 +659,18 @@ namespace ExecutionFlowHistoryViewer
             // 
             // btnFetchHistory
             // 
-            this.btnFetchHistory.Location = new System.Drawing.Point(623, 21);
+            this.btnFetchHistory.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(99)))), ((int)(((byte)(235)))));
+            this.btnFetchHistory.Dock = System.Windows.Forms.DockStyle.Right;
+            this.btnFetchHistory.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnFetchHistory.Font = new System.Drawing.Font("Microsoft Tai Le", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnFetchHistory.ForeColor = System.Drawing.SystemColors.HighlightText;
+            this.btnFetchHistory.Location = new System.Drawing.Point(822, 21);
             this.btnFetchHistory.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnFetchHistory.Name = "btnFetchHistory";
-            this.btnFetchHistory.Size = new System.Drawing.Size(89, 26);
+            this.btnFetchHistory.Size = new System.Drawing.Size(149, 30);
             this.btnFetchHistory.TabIndex = 6;
             this.btnFetchHistory.Text = "Get Runs";
-            this.btnFetchHistory.UseVisualStyleBackColor = true;
+            this.btnFetchHistory.UseVisualStyleBackColor = false;
             this.btnFetchHistory.Click += new System.EventHandler(this.btnFetchHistory_Click_1);
             // 
             // cmbStatus
@@ -606,56 +683,61 @@ namespace ExecutionFlowHistoryViewer
             "Failed",
             "Cancelled",
             "Running"});
-            this.cmbStatus.Location = new System.Drawing.Point(483, 22);
+            this.cmbStatus.Location = new System.Drawing.Point(571, 22);
             this.cmbStatus.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.cmbStatus.Name = "cmbStatus";
-            this.cmbStatus.Size = new System.Drawing.Size(107, 24);
+            this.cmbStatus.Size = new System.Drawing.Size(150, 24);
             this.cmbStatus.TabIndex = 5;
             // 
             // lblStatus
             // 
             this.lblStatus.AutoSize = true;
-            this.lblStatus.Location = new System.Drawing.Point(431, 25);
+            this.lblStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblStatus.Location = new System.Drawing.Point(511, 26);
             this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(47, 16);
+            this.lblStatus.Size = new System.Drawing.Size(54, 18);
             this.lblStatus.TabIndex = 4;
             this.lblStatus.Text = "Status:";
             // 
             // dtpDateTo
             // 
             this.dtpDateTo.CustomFormat = "yyyy-MM-dd HH:mm";
+            this.dtpDateTo.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.dtpDateTo.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dtpDateTo.Location = new System.Drawing.Point(256, 22);
+            this.dtpDateTo.Location = new System.Drawing.Point(295, 19);
             this.dtpDateTo.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.dtpDateTo.Name = "dtpDateTo";
-            this.dtpDateTo.Size = new System.Drawing.Size(160, 22);
+            this.dtpDateTo.Size = new System.Drawing.Size(185, 27);
             this.dtpDateTo.TabIndex = 3;
             // 
             // lblDateTo
             // 
             this.lblDateTo.AutoSize = true;
-            this.lblDateTo.Location = new System.Drawing.Point(227, 25);
+            this.lblDateTo.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblDateTo.Location = new System.Drawing.Point(259, 25);
             this.lblDateTo.Name = "lblDateTo";
-            this.lblDateTo.Size = new System.Drawing.Size(27, 16);
+            this.lblDateTo.Size = new System.Drawing.Size(30, 18);
             this.lblDateTo.TabIndex = 2;
             this.lblDateTo.Text = "To:";
             // 
             // dtpDateFrom
             // 
             this.dtpDateFrom.CustomFormat = "yyyy-MM-dd HH:mm";
+            this.dtpDateFrom.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.dtpDateFrom.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dtpDateFrom.Location = new System.Drawing.Point(55, 22);
+            this.dtpDateFrom.Location = new System.Drawing.Point(63, 20);
             this.dtpDateFrom.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.dtpDateFrom.Name = "dtpDateFrom";
-            this.dtpDateFrom.Size = new System.Drawing.Size(160, 22);
+            this.dtpDateFrom.Size = new System.Drawing.Size(177, 27);
             this.dtpDateFrom.TabIndex = 1;
             // 
             // lblDateFrom
             // 
             this.lblDateFrom.AutoSize = true;
-            this.lblDateFrom.Location = new System.Drawing.Point(11, 25);
+            this.lblDateFrom.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblDateFrom.Location = new System.Drawing.Point(10, 24);
             this.lblDateFrom.Name = "lblDateFrom";
-            this.lblDateFrom.Size = new System.Drawing.Size(41, 16);
+            this.lblDateFrom.Size = new System.Drawing.Size(46, 20);
             this.lblDateFrom.TabIndex = 0;
             this.lblDateFrom.Text = "From:";
             // 
@@ -679,7 +761,7 @@ namespace ExecutionFlowHistoryViewer
             this.gbFlows.PerformLayout();
             this.gbFlowFilters.ResumeLayout(false);
             this.gbFlowFilters.PerformLayout();
-            this.gbSolution.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.gbFlowRuns.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.tsPagination.ResumeLayout(false);
@@ -696,7 +778,6 @@ namespace ExecutionFlowHistoryViewer
         #endregion
         private System.Windows.Forms.ToolStrip tsmContainer;
         private System.Windows.Forms.ToolStripButton tsbClose;
-        private System.Windows.Forms.ToolStripButton tsbSample;
         private System.Windows.Forms.ToolStripSeparator tssSeparator1;
         private System.Windows.Forms.SplitContainer splitContainerMain;
         private System.Windows.Forms.GroupBox gbFlows;
@@ -707,8 +788,6 @@ namespace ExecutionFlowHistoryViewer
         private System.Windows.Forms.Label lblSearch;
         private System.Windows.Forms.CheckBox cbxFlowStatusDraft;
         private System.Windows.Forms.CheckBox cbxFlowStatusActivated;
-        private System.Windows.Forms.GroupBox gbSolution;
-        private System.Windows.Forms.ComboBox cbSolutions;
         private System.Windows.Forms.GroupBox gbFlowRuns;
         private System.Windows.Forms.GroupBox gbRunFilters;
         private System.Windows.Forms.Button btnFetchHistory;
@@ -718,7 +797,6 @@ namespace ExecutionFlowHistoryViewer
         private System.Windows.Forms.Label lblDateTo;
         private System.Windows.Forms.DateTimePicker dtpDateFrom;
         private System.Windows.Forms.Label lblDateFrom;
-        private System.Windows.Forms.ToolStripButton tsmConnectToPA;
         private System.Windows.Forms.ToolStripButton btnExport;
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.ToolStrip tsPagination;
@@ -748,5 +826,11 @@ namespace ExecutionFlowHistoryViewer
         private System.Windows.Forms.Button btnClearDeepSearch;
         private System.Windows.Forms.ProgressBar progressBarDeepSearch;
         private System.Windows.Forms.Label lblDeepSearchStatus;
+        private System.Windows.Forms.ComboBox cbSolutions;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.Label label4;
     }
 }

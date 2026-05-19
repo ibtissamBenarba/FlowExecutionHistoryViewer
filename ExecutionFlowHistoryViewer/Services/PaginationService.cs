@@ -1,8 +1,10 @@
 ﻿using ExecutionFlowHistoryViewer.Contracts;
 using ExecutionFlowHistoryViewer.Models;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Documents;
 
 namespace ExecutionFlowHistoryViewer.Services
 {
@@ -27,7 +29,6 @@ namespace ExecutionFlowHistoryViewer.Services
 
         public bool HasMoreServerPages { get; set; }
         public bool IsLoading { get; set; }
-
         public int TotalServerCount { get; set; }
 
         public void Reset()
@@ -38,18 +39,32 @@ namespace ExecutionFlowHistoryViewer.Services
             TotalServerCount = 0;
         }
 
-        public void AppendRuns(IEnumerable<FlowRun> runs) => _allRuns.AddRange(runs);
+        public void AppendRuns(IEnumerable<FlowRun> runs)
+        {
+            var incoming = runs?.ToList() ?? new List< FlowRun > ();
+            if (incoming.Count == 0) return;
+
+            // Deduplicate by Run Id
+            var existingIds = new HashSet<string>(_allRuns.Select(r => r.Id));
+            var unique = incoming.Where(r => !existingIds.Contains(r.Id)).ToList();
+
+            if (unique.Count == 0) return;
+
+            _allRuns.AddRange(unique);
+
+            // Sort globally by StartDate descending (newest first)
+            _allRuns.Sort((a, b) => b.StartDate.CompareTo(a.StartDate));
+        }
 
         public List<FlowRun> GetCurrentPage()
         {
             if (_allRuns.Count == 0)
-                return new List<FlowRun>();
+                return new List< FlowRun > ();
 
             int startIndex = (CurrentPage - 1) * PageSize;
 
-            // Sécurité : si on dépasse les données en cache, retourner vide
             if (startIndex >= _allRuns.Count)
-                return new List<FlowRun>();
+                return new List< FlowRun > ();
 
             return _allRuns.Skip(startIndex).Take(PageSize).ToList();
         }
@@ -62,7 +77,9 @@ namespace ExecutionFlowHistoryViewer.Services
             ? (int)Math.Ceiling((double)TotalServerCount / PageSize)
             : 1;
 
-        public int TotalCachedPages => Math.Max(1, (int)Math.Ceiling((double)_allRuns.Count / PageSize));
+        public int TotalCachedPages => _allRuns.Count == 0
+            ? 0
+            : (int)Math.Ceiling((double)_allRuns.Count / PageSize);
 
         public string GetPageInfoText()
         {
