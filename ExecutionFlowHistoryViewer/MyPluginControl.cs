@@ -54,6 +54,8 @@ namespace ExecutionFlowHistoryViewer
         {
             dataGridView1.ReadOnly = true;
             clbFlows.CheckOnClick = true;
+            dataGridView1.MultiSelect = true;
+            dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridView1.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
             InitializeFilters();
             InitializePagination();
@@ -84,7 +86,10 @@ namespace ExecutionFlowHistoryViewer
         {
             _authService = new AuthenticationService(ConnectionDetail);
             _dataverseService = new DataverseService(Service);
-            _flowClientFactory = new FlowClientFactory(_authService, ConnectionDetail.EnvironmentId.ToString());
+            _flowClientFactory = new FlowClientFactory(
+                _authService,
+                ConnectionDetail.EnvironmentId.ToString(),
+                ConnectionDetail);  // ← Pass ConnectionDetail here
             _historyService = new FlowHistoryService(_flowClientFactory);
             _pagination = new PaginationService();
         }
@@ -1335,5 +1340,152 @@ namespace ExecutionFlowHistoryViewer
 
         #endregion
 
+        private void btnResubmit_Click(object sender, EventArgs e)
+        {
+            // Get all selected rows
+            if (dataGridView1.SelectedRows.Count == 0)
+            {
+                MessageBox.Show(
+                    "Please select one or more flow runs to resubmit.",
+                    "No Selection",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
+                return;
+            }
+
+            // Extract valid FlowRun objects
+            var selectedRuns = dataGridView1.SelectedRows
+                .Cast<DataGridViewRow>()
+                .Select(r => r.DataBoundItem as FlowRun)
+                .Where(r => r != null)
+                .ToList();
+
+            if (selectedRuns.Count == 0)
+            {
+                MessageBox.Show(
+                    "Could not get selected runs.",
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
+                return;
+            }
+
+            // Confirmation
+            if (MessageBox.Show(
+                $"Resubmit {selectedRuns.Count} selected run(s)?",
+                "Confirm Bulk Resubmit",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question) != DialogResult.Yes)
+            {
+                return;
+            }
+
+            WorkAsync(new WorkAsyncInfo
+            {
+                Message = $"Resubmitting {selectedRuns.Count} run(s)...",
+
+                Work = (worker, args) =>
+                {
+                    var client = _flowClientFactory.Create();
+
+                    int successCount = 0;
+                    int failedCount = 0;
+
+                    var errors = new List<string>();
+
+                    foreach (var run in selectedRuns)
+                    {
+                        try
+                        {
+                            string flowId = GetFlowIdForRun(run);
+
+                            if (string.IsNullOrEmpty(flowId))
+                            {
+                                failedCount++;
+                                errors.Add($"Run {run.Id}: Flow ID not found.");
+                                continue;
+                            }
+
+                            bool result = client.ResubmitRun(flowId, run.Id);
+
+                            if (result)
+                            {
+                                successCount++;
+                            }
+                            else
+                            {
+                                failedCount++;
+                                errors.Add($"Run {run.Id}: Resubmit failed.");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            failedCount++;
+                            errors.Add($"Run {run.Id}: {ex.Message}");
+                        }
+                    }
+
+                    args.Result = new
+                    {
+                        Success = successCount,
+                        Failed = failedCount,
+                        Errors = errors
+                    };
+                },
+
+                PostWorkCallBack = (args) =>
+                {
+                    if (args.Error != null)
+                    {
+                        ShowError(args.Error);
+                        return;
+                    }
+
+                    dynamic result = args.Result;
+
+                    lblDeepSearchStatus.Text =
+                        $"✔ {result.Success} run(s) resubmitted, ✖ {result.Failed} failed.";
+
+                    lblDeepSearchStatus.ForeColor =
+                        result.Failed > 0 ? Color.DarkOrange : Color.Green;
+
+                    string message =
+                        $"Successfully resubmitted: {result.Success}\n" +
+                        $"Failed: {result.Failed}";
+
+                    if (result.Errors.Count > 0)
+                    {
+                        message += "\n\nErrors:\n- " +
+                                   string.Join("\n- ", result.Errors);
+                    }
+
+                    MessageBox.Show(
+                        message,
+                        "Bulk Resubmit Completed",
+                        MessageBoxButtons.OK,
+                        result.Failed > 0
+                            ? MessageBoxIcon.Warning
+                            : MessageBoxIcon.Information);
+                }
+            });
+        }
+
+        private string GetFlowIdForRun(FlowRun run)
+        {
+            if (run == null) return null;
+
+            // If the run already has FlowId stored, use it
+            if (!string.IsNullOrEmpty(run.FlowId))
+                return run.FlowId;
+
+            // Otherwise, look it up from the cached flows list
+            var flow = _currentFlows.FirstOrDefault(f =>
+                f.DisplayName == run.FlowName ||
+                f.Id == run.FlowName);
+
+            return flow?.Id;
+        }
     }
 }

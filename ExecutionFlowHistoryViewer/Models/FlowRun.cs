@@ -5,6 +5,9 @@ namespace ExecutionFlowHistoryViewer.Models
 {
     public class FlowRun
     {
+        [Browsable(false)]
+        public string FlowId { get; set; }
+
         [DisplayName("Nom du Flux")]
         public string FlowName { get; set; }
 
@@ -51,6 +54,8 @@ namespace ExecutionFlowHistoryViewer.Models
         }
 
         [DisplayName("Run URL")]
-        public string Url { get; set; }  
+        public string Url { get; set; }
+
+        public string TriggerName { get; set; }
     }
 }

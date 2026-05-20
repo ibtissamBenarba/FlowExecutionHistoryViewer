@@ -70,6 +70,7 @@ namespace ExecutionFlowHistoryViewer
             this.tsbPrevious = new System.Windows.Forms.ToolStripButton();
             this.tsbSkipPrevious = new System.Windows.Forms.ToolStripButton();
             this.gbDeepSearch = new System.Windows.Forms.GroupBox();
+            this.btnResubmit = new System.Windows.Forms.Button();
             this.lblDeepSearchStatus = new System.Windows.Forms.Label();
             this.progressBarDeepSearch = new System.Windows.Forms.ProgressBar();
             this.btnClearDeepSearch = new System.Windows.Forms.Button();
@@ -84,6 +85,7 @@ namespace ExecutionFlowHistoryViewer
             this.lblDateTo = new System.Windows.Forms.Label();
             this.dtpDateFrom = new System.Windows.Forms.DateTimePicker();
             this.lblDateFrom = new System.Windows.Forms.Label();
+            this.vS2015BlueTheme1 = new WeifenLuo.WinFormsUI.Docking.VS2015BlueTheme();
             tsmConnectToPA = new System.Windows.Forms.ToolStripButton();
             this.tsmContainer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).BeginInit();
@@ -552,6 +554,7 @@ namespace ExecutionFlowHistoryViewer
             // gbDeepSearch
             // 
             this.gbDeepSearch.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.gbDeepSearch.Controls.Add(this.btnResubmit);
             this.gbDeepSearch.Controls.Add(this.lblDeepSearchStatus);
             this.gbDeepSearch.Controls.Add(this.progressBarDeepSearch);
             this.gbDeepSearch.Controls.Add(this.btnClearDeepSearch);
@@ -567,6 +570,18 @@ namespace ExecutionFlowHistoryViewer
             this.gbDeepSearch.TabIndex = 2;
             this.gbDeepSearch.TabStop = false;
             this.gbDeepSearch.Text = "🔍 Search in Run Details";
+            // 
+            // btnResubmit
+            // 
+            this.btnResubmit.Dock = System.Windows.Forms.DockStyle.Right;
+            this.btnResubmit.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnResubmit.Location = new System.Drawing.Point(879, 21);
+            this.btnResubmit.Name = "btnResubmit";
+            this.btnResubmit.Size = new System.Drawing.Size(92, 35);
+            this.btnResubmit.TabIndex = 6;
+            this.btnResubmit.Text = "Resubmit";
+            this.btnResubmit.UseVisualStyleBackColor = true;
+            this.btnResubmit.Click += new System.EventHandler(this.btnResubmit_Click);
             // 
             // lblDeepSearchStatus
             // 
@@ -590,10 +605,10 @@ namespace ExecutionFlowHistoryViewer
             this.btnClearDeepSearch.BackColor = System.Drawing.SystemColors.ButtonHighlight;
             this.btnClearDeepSearch.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
             this.btnClearDeepSearch.Image = ((System.Drawing.Image)(resources.GetObject("btnClearDeepSearch.Image")));
-            this.btnClearDeepSearch.Location = new System.Drawing.Point(592, 23);
+            this.btnClearDeepSearch.Location = new System.Drawing.Point(595, 21);
             this.btnClearDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnClearDeepSearch.Name = "btnClearDeepSearch";
-            this.btnClearDeepSearch.Size = new System.Drawing.Size(92, 29);
+            this.btnClearDeepSearch.Size = new System.Drawing.Size(92, 35);
             this.btnClearDeepSearch.TabIndex = 3;
             this.btnClearDeepSearch.Text = "Clear";
             this.btnClearDeepSearch.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
@@ -608,10 +623,10 @@ namespace ExecutionFlowHistoryViewer
             this.btnDeepSearch.Font = new System.Drawing.Font("Microsoft Tai Le", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnDeepSearch.ForeColor = System.Drawing.SystemColors.HighlightText;
             this.btnDeepSearch.Image = ((System.Drawing.Image)(resources.GetObject("btnDeepSearch.Image")));
-            this.btnDeepSearch.Location = new System.Drawing.Point(460, 23);
+            this.btnDeepSearch.Location = new System.Drawing.Point(469, 21);
             this.btnDeepSearch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnDeepSearch.Name = "btnDeepSearch";
-            this.btnDeepSearch.Size = new System.Drawing.Size(110, 29);
+            this.btnDeepSearch.Size = new System.Drawing.Size(110, 35);
             this.btnDeepSearch.TabIndex = 2;
             this.btnDeepSearch.Text = "Search";
             this.btnDeepSearch.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
@@ -832,5 +847,7 @@ namespace ExecutionFlowHistoryViewer
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Button btnResubmit;
+        private WeifenLuo.WinFormsUI.Docking.VS2015BlueTheme vS2015BlueTheme1;
     }
 }

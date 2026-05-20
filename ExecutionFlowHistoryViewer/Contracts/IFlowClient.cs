@@ -14,5 +14,6 @@ namespace ExecutionFlowHistoryViewer.Contracts
         FlowRunDetailDto GetRunDetails(string flowId, string runId);
         FlowActionsResponseDto GetRunActions(string flowId, string runId);
         string GetContentFromLink(string linkUri);
+        bool ResubmitRun(string flowId, string runId);
     }
 }
