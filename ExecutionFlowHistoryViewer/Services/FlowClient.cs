@@ -222,5 +222,24 @@ namespace ExecutionFlowHistoryViewer.Services
                 return triggerName;
             }
         }
+
+        public string GetFlowDefinition(string flowId)
+        {
+            string url = $"{_baseUrl}/providers/Microsoft.ProcessSimple/environments/{_envId}/flows/{flowId}?api-version=2016-11-01";
+
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _token);
+
+                var response = client.GetAsync(url).GetAwaiter().GetResult();
+                var json = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception($"Failed to get flow definition: {response.StatusCode} - {json}");
+
+                return json;
+            }
         }
+    }
 }

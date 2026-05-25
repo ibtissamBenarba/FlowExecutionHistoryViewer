@@ -281,6 +281,12 @@
     <Compile Include="DTO\FlowRunDto.cs" />
     <Compile Include="DTO\FlowRunPropertiesDto.cs" />
     <Compile Include="DTO\FlowRunsResponseDto.cs" />
+    <Compile Include="Forms\ApiKeyForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ApiKeyForm.Designer.cs">
+      <DependentUpon>ApiKeyForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\ExportForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -319,6 +325,8 @@
     <Compile Include="Services\FlowClient.cs" />
     <Compile Include="Services\FlowClientFactory.cs" />
     <Compile Include="Services\FlowHistoryService.cs" />
+    <Compile Include="Services\FlowSafetyAnalyzer.cs" />
+    <Compile Include="Services\GeminiService.cs" />
     <Compile Include="Services\PaginationService.cs" />
     <Compile Include="Settings.cs" />
   </ItemGroup>

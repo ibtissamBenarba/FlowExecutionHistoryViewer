@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Documents;
 using System.Windows.Forms;
 using XrmToolBox.Extensibility;
@@ -32,6 +33,9 @@ namespace ExecutionFlowHistoryViewer
         private IFlowClientFactory _flowClientFactory;
         private IFlowHistoryService _historyService;
         private IPaginationService _pagination;
+        private GeminiService _aiService;
+        private FlowSafetyAnalyzer _safetyAnalyzer;
+        private const string SharedGeminiApiKey = "AIzaSyBuQrwKRWMVI5MkQIUKSUorF0h6pdCimUI";
 
         // Flow selection state
         private List<Flow> _currentFlows = new List<Flow>();
@@ -43,7 +47,7 @@ namespace ExecutionFlowHistoryViewer
         #endregion
 
         #region Constructor & Lifecycle
-        
+
         public MyPluginControl()
         {
             InitializeComponent();
@@ -92,6 +96,8 @@ namespace ExecutionFlowHistoryViewer
                 ConnectionDetail);  // ← Pass ConnectionDetail here
             _historyService = new FlowHistoryService(_flowClientFactory);
             _pagination = new PaginationService();
+            _aiService = new GeminiService(_settings?.GeminiApiKey ?? "");
+            _safetyAnalyzer = new FlowSafetyAnalyzer(_aiService);
         }
 
         private void InitializeSettings()
@@ -191,6 +197,9 @@ namespace ExecutionFlowHistoryViewer
 
             tbDeepSearch.KeyDown -= tbDeepSearch_KeyDown;
             tbDeepSearch.KeyDown += tbDeepSearch_KeyDown;
+
+            btnCheckSafety.Click -= btnCheckSafety_Click;
+            btnCheckSafety.Click += btnCheckSafety_Click;
         }
 
         private void WirePaginationButton(ToolStripButton button, EventHandler handler)
@@ -473,7 +482,7 @@ namespace ExecutionFlowHistoryViewer
                 Work = (worker, args) =>
                 {
                     int requiredItems = targetPage * _pagination.PageSize;
-                    var fetchedRuns = new List< FlowRun > ();
+                    var fetchedRuns = new List<FlowRun>();
                     bool hasMore = _pagination.HasMoreServerPages;
                     int baseCount = _pagination.AllRuns.Count;
                     int safety = 0;
@@ -496,14 +505,14 @@ namespace ExecutionFlowHistoryViewer
                         safety++;
                     }
 
-                    args.Result = new Tuple<List< FlowRun >, bool> (fetchedRuns, hasMore);
+                    args.Result = new Tuple<List<FlowRun>, bool>(fetchedRuns, hasMore);
                 },
                 PostWorkCallBack = (args) =>
                 {
                     _pagination.IsLoading = false;
                     if (args.Error != null) { ShowError(args.Error); UpdatePaginationUI(); return; }
 
-                    var result = (Tuple < List < FlowRun >, bool >)args.Result;
+                    var result = (Tuple<List<FlowRun>, bool>)args.Result;
                     _pagination.AppendRuns(result.Item1);
                     _pagination.HasMoreServerPages = result.Item2;
 
@@ -569,7 +578,7 @@ namespace ExecutionFlowHistoryViewer
             if (!int.TryParse(tscNumberOfRuns.SelectedItem.ToString(), out int newPageSize)) return;
             if (_pagination == null) return;
             if (_pagination.PageSize == newPageSize) return;
-             
+
             _pagination.PageSize = newPageSize;
             _pagination.CurrentPage = 1;
 
@@ -697,7 +706,7 @@ namespace ExecutionFlowHistoryViewer
                 Work = (worker, args) =>
                 {
                     int requiredItems = targetPage * _pagination.PageSize;
-                    var fetchedRuns = new List< FlowRun > ();
+                    var fetchedRuns = new List<FlowRun>();
                     bool hasMore = _pagination.HasMoreServerPages;
                     int baseCount = _pagination.AllRuns.Count;
                     int safety = 0;
@@ -726,7 +735,7 @@ namespace ExecutionFlowHistoryViewer
                         safety++;
                     }
 
-                    args.Result = new Tuple<List< FlowRun >, bool> (fetchedRuns, hasMore);
+                    args.Result = new Tuple<List<FlowRun>, bool>(fetchedRuns, hasMore);
                 },
                 PostWorkCallBack = (args) =>
                 {
@@ -739,7 +748,7 @@ namespace ExecutionFlowHistoryViewer
                         return;
                     }
 
-                    var result = (Tuple < List < FlowRun >, bool >)args.Result;
+                    var result = (Tuple<List<FlowRun>, bool>)args.Result;
                     _pagination.AppendRuns(result.Item1);
                     _pagination.HasMoreServerPages = result.Item2;
 
@@ -1186,7 +1195,7 @@ namespace ExecutionFlowHistoryViewer
                 }
             }
         }
- 
+
         private void FetchAllPagesAndExport(string filePath, ExportForm options)
         {
             var (fromDate, toDate, status) = GetFilterValues();
@@ -1486,6 +1495,120 @@ namespace ExecutionFlowHistoryViewer
                 f.Id == run.FlowName);
 
             return flow?.Id;
+        }
+
+        private void btnCheckSafety_Click(object sender, EventArgs e)
+        {
+            // No API key check needed - using shared key
+
+            // Selection check
+            var selectedRuns = dataGridView1.SelectedRows
+                .Cast<DataGridViewRow>()
+                .Select(r => r.DataBoundItem as FlowRun)
+                .Where(r => r != null && r.Status == "Failed")
+                .ToList();
+
+            if (selectedRuns.Count == 0)
+            {
+                MessageBox.Show("Please select one or more Failed runs in the grid to analyze.",
+                    "No Failed Runs Selected", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (selectedRuns.Count > 3)
+            {
+                MessageBox.Show("Please select a maximum of 3 failed runs for analysis.",
+                    "Too Many Selections", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Run analysis
+            WorkAsync(new WorkAsyncInfo
+            {
+                Message = string.Format("Analyzing {0} run(s) with AI...", selectedRuns.Count),
+                Work = (worker, args) =>
+                {
+                    try
+                    {
+                        var client = _flowClientFactory.Create();
+                        var output = new StringBuilder();
+
+                        foreach (var run in selectedRuns)
+                        {
+                            var flow = _currentFlows.FirstOrDefault(f => f.DisplayName == run.FlowName);
+                            if (flow == null) continue;
+
+                            string definition = null;
+                            try { definition = client.GetFlowDefinition(flow.Id); }
+                            catch { /* definition unavailable is OK */ }
+
+                            var details = client.GetRunDetails(flow.Id, run.Id);
+                            var actions = client.GetRunActions(flow.Id, run.Id);
+
+                            string result = _safetyAnalyzer.Analyze(definition, run, details, actions);
+
+                            output.AppendLine("═══════════════════════════════════════");
+                            output.AppendLine(string.Format("  {0} @ {1:g}", run.FlowName, run.StartDate));
+                            output.AppendLine("═══════════════════════════════════════");
+                            output.AppendLine(result);
+                            output.AppendLine();
+                        }
+
+                        args.Result = output.ToString();
+                    }
+                    catch (Exception ex)
+                    {
+                        args.Result = string.Format("ERROR: {0}", ex.Message);
+                    }
+                },
+                PostWorkCallBack = (args) =>
+                {
+                    if (args.Error != null)
+                    {
+                        ShowError(args.Error);
+                        return;
+                    }
+
+                    string resultText = args.Result as string ?? "No result";
+
+                    // Show result dialog
+                    using (var form = new Form())
+                    {
+                        form.Text = "AI Safety Analysis — Resubmit Recommendation";
+                        form.Size = new System.Drawing.Size(750, 550);
+                        form.StartPosition = FormStartPosition.CenterParent;
+                        form.BackColor = System.Drawing.Color.White;
+
+                        var rtb = new RichTextBox
+                        {
+                            Dock = DockStyle.Fill,
+                            ReadOnly = true,
+                            Font = new System.Drawing.Font("Consolas", 10F),
+                            Text = resultText,
+                            BorderStyle = BorderStyle.None,
+                            BackColor = System.Drawing.Color.White
+                        };
+
+                        var panel = new Panel { Dock = DockStyle.Bottom, Height = 50, BackColor = System.Drawing.Color.White };
+                        var btnClose = new Button
+                        {
+                            Text = "Close",
+                            DialogResult = DialogResult.OK,
+                            Location = new System.Drawing.Point(320, 10),
+                            Size = new System.Drawing.Size(110, 32),
+                            BackColor = System.Drawing.Color.FromArgb(37, 99, 235),
+                            ForeColor = System.Drawing.Color.White,
+                            FlatStyle = FlatStyle.Popup
+                        };
+                        panel.Controls.Add(btnClose);
+
+                        form.Controls.Add(rtb);
+                        form.Controls.Add(panel);
+                        form.AcceptButton = btnClose;
+                        form.ShowDialog(this);
+                    }
+                }
+            });
         }
     }
 }

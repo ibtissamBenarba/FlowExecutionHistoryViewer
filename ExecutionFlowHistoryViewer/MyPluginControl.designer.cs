@@ -70,6 +70,7 @@ namespace ExecutionFlowHistoryViewer
             this.tsbPrevious = new System.Windows.Forms.ToolStripButton();
             this.tsbSkipPrevious = new System.Windows.Forms.ToolStripButton();
             this.gbDeepSearch = new System.Windows.Forms.GroupBox();
+            this.btnCheckSafety = new System.Windows.Forms.Button();
             this.btnResubmit = new System.Windows.Forms.Button();
             this.lblDeepSearchStatus = new System.Windows.Forms.Label();
             this.progressBarDeepSearch = new System.Windows.Forms.ProgressBar();
@@ -554,6 +555,7 @@ namespace ExecutionFlowHistoryViewer
             // gbDeepSearch
             // 
             this.gbDeepSearch.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.gbDeepSearch.Controls.Add(this.btnCheckSafety);
             this.gbDeepSearch.Controls.Add(this.btnResubmit);
             this.gbDeepSearch.Controls.Add(this.lblDeepSearchStatus);
             this.gbDeepSearch.Controls.Add(this.progressBarDeepSearch);
@@ -570,6 +572,21 @@ namespace ExecutionFlowHistoryViewer
             this.gbDeepSearch.TabIndex = 2;
             this.gbDeepSearch.TabStop = false;
             this.gbDeepSearch.Text = "🔍 Search in Run Details";
+            // 
+            // btnCheckSafety
+            // 
+            this.btnCheckSafety.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.btnCheckSafety.Dock = System.Windows.Forms.DockStyle.Right;
+            this.btnCheckSafety.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnCheckSafety.Font = new System.Drawing.Font("Microsoft Tai Le", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnCheckSafety.ForeColor = System.Drawing.Color.Green;
+            this.btnCheckSafety.Location = new System.Drawing.Point(735, 21);
+            this.btnCheckSafety.Name = "btnCheckSafety";
+            this.btnCheckSafety.Size = new System.Drawing.Size(144, 35);
+            this.btnCheckSafety.TabIndex = 7;
+            this.btnCheckSafety.Text = "Check Safety";
+            this.btnCheckSafety.UseVisualStyleBackColor = false;
+            this.btnCheckSafety.Click += new System.EventHandler(this.btnCheckSafety_Click);
             // 
             // btnResubmit
             // 
@@ -848,6 +865,7 @@ namespace ExecutionFlowHistoryViewer
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button btnResubmit;
+        private System.Windows.Forms.Button btnCheckSafety;
         private WeifenLuo.WinFormsUI.Docking.VS2015BlueTheme vS2015BlueTheme1;
     }
 }
