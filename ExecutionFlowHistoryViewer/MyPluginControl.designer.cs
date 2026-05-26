@@ -1,3 +1,6 @@
+using System.Drawing;
+using System.Windows.Forms;
+
 namespace ExecutionFlowHistoryViewer
 {
     partial class MyPluginControl
@@ -34,6 +37,7 @@ namespace ExecutionFlowHistoryViewer
             this.tsbClose = new System.Windows.Forms.ToolStripButton();
             this.tssSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.btnExport = new System.Windows.Forms.ToolStripButton();
+            this.tsbDarkMode = new System.Windows.Forms.ToolStripButton();
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
             this.gbFlows = new System.Windows.Forms.GroupBox();
             this.clbFlows = new System.Windows.Forms.CheckedListBox();
@@ -123,7 +127,8 @@ namespace ExecutionFlowHistoryViewer
             this.tsbClose,
             this.tssSeparator1,
             tsmConnectToPA,
-            this.btnExport});
+            this.btnExport,
+            this.tsbDarkMode});
             this.tsmContainer.Location = new System.Drawing.Point(0, 0);
             this.tsmContainer.Name = "tsmContainer";
             this.tsmContainer.Size = new System.Drawing.Size(1347, 31);
@@ -153,6 +158,19 @@ namespace ExecutionFlowHistoryViewer
             this.btnExport.Size = new System.Drawing.Size(162, 28);
             this.btnExport.Text = "Export CSV / Excel";
             this.btnExport.Click += new System.EventHandler(this.btnExport_Click_1);
+            // 
+            // tsbDarkMode
+            // 
+            this.tsbDarkMode.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.tsbDarkMode.AutoSize = false;
+            this.tsbDarkMode.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            this.tsbDarkMode.Font = new System.Drawing.Font("Segoe UI Semibold", 9F);
+            this.tsbDarkMode.ForeColor = System.Drawing.Color.White;
+            this.tsbDarkMode.Image = global::ExecutionFlowHistoryViewer.Properties.Resources.moon_stars_16dp_1F1F1F_FILL0_wght400_GRAD0_opsz20;
+            this.tsbDarkMode.Margin = new System.Windows.Forms.Padding(0, 2, 8, 2);
+            this.tsbDarkMode.Name = "tsbDarkMode";
+            this.tsbDarkMode.Size = new System.Drawing.Size(120, 23);
+            this.tsbDarkMode.Text = "Dark";
             // 
             // splitContainerMain
             // 
@@ -811,6 +829,7 @@ namespace ExecutionFlowHistoryViewer
         private System.Windows.Forms.ToolStrip tsmContainer;
         private System.Windows.Forms.ToolStripButton tsbClose;
         private System.Windows.Forms.ToolStripSeparator tssSeparator1;
+        private System.Windows.Forms.ToolStripButton tsbDarkMode;
         private System.Windows.Forms.SplitContainer splitContainerMain;
         private System.Windows.Forms.GroupBox gbFlows;
         private System.Windows.Forms.CheckedListBox clbFlows;

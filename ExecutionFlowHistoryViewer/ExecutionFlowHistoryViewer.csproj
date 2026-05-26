@@ -302,6 +302,7 @@
     <Compile Include="Helpers\DataGridBinder.cs" />
     <Compile Include="Helpers\FlowRunPageResult.cs" />
     <Compile Include="Helpers\PageFetchResult.cs" />
+    <Compile Include="Helpers\ThemeManager.cs" />
     <Compile Include="Models\Flow.cs" />
     <Compile Include="Models\FlowRun.cs" />
     <Compile Include="Models\SolutionItem.cs" />
@@ -353,6 +354,7 @@
   <ItemGroup>
     <None Include="Resources\filter_alt_24dp_2563EB_FILL0_wght400_GRAD0_opsz241.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

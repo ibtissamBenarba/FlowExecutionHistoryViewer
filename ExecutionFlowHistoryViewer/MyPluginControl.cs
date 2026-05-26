@@ -65,6 +65,7 @@ namespace ExecutionFlowHistoryViewer
             InitializePagination();
             InitializeSettings();
             WireEvents();
+            InitializeTheme();
 
             if (Service != null) InitializeServices();
         }
@@ -200,6 +201,12 @@ namespace ExecutionFlowHistoryViewer
 
             btnCheckSafety.Click -= btnCheckSafety_Click;
             btnCheckSafety.Click += btnCheckSafety_Click;
+
+            if (tsbDarkMode != null)
+            {
+                tsbDarkMode.Click -= ToggleDarkMode;
+                tsbDarkMode.Click += ToggleDarkMode;
+            }
         }
 
         private void WirePaginationButton(ToolStripButton button, EventHandler handler)
@@ -1609,6 +1616,42 @@ namespace ExecutionFlowHistoryViewer
                     }
                 }
             });
+        }
+        private void InitializeTheme()
+        {
+            // Apply saved theme (defaults to light if never set)
+            ThemeManager.Apply(this, _settings?.DarkMode ?? false);
+            UpdateDarkModeButtonText();
+        }
+
+        private void ToggleDarkMode(object sender, EventArgs e)
+        {
+            bool newMode = !ThemeManager.IsDarkMode;
+            _settings.DarkMode = newMode;
+            ThemeManager.Apply(this, newMode);
+            UpdateDarkModeButtonText();
+        }
+
+        private void UpdateDarkModeButtonText()
+        {
+            if (ThemeManager.IsDarkMode)
+            {
+                tsbDarkMode.Text = "Light Mode";
+                tsbDarkMode.Image = Properties.Resources.sunny_16dp_FFFF55_FILL0_wght400_GRAD0_opsz20;
+
+                tsbDarkMode.BackColor = Color.FromArgb(45, 45, 48);
+                tsbDarkMode.ForeColor = Color.White;
+            }
+            else
+            {
+                tsbDarkMode.Text = "Dark Mode";
+                tsbDarkMode.Image = Properties.Resources.moon_stars_16dp_1F1F1F_FILL0_wght400_GRAD0_opsz20;
+
+                tsbDarkMode.BackColor = Color.FromArgb(240, 240, 240);
+                tsbDarkMode.ForeColor = Color.Black;
+            }
+
+            tsbDarkMode.Owner?.Invalidate();
         }
     }
 }

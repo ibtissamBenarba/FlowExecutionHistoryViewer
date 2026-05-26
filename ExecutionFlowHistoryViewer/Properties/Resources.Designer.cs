@@ -113,6 +113,16 @@ namespace ExecutionFlowHistoryViewer.Properties {
         /// <summary>
         ///   Recherche une ressource localisée de type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap moon_stars_16dp_1F1F1F_FILL0_wght400_GRAD0_opsz20 {
+            get {
+                object obj = ResourceManager.GetObject("moon_stars_16dp_1F1F1F_FILL0_wght400_GRAD0_opsz20", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une ressource localisée de type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap search_24dp_FFF_FILL0_wght400_GRAD0_opsz24 {
             get {
                 object obj = ResourceManager.GetObject("search_24dp_FFF_FILL0_wght400_GRAD0_opsz24", resourceCulture);
@@ -136,6 +146,16 @@ namespace ExecutionFlowHistoryViewer.Properties {
         internal static System.Drawing.Bitmap skip_previous {
             get {
                 object obj = ResourceManager.GetObject("skip_previous", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une ressource localisée de type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap sunny_16dp_FFFF55_FILL0_wght400_GRAD0_opsz20 {
+            get {
+                object obj = ResourceManager.GetObject("sunny_16dp_FFFF55_FILL0_wght400_GRAD0_opsz20", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
