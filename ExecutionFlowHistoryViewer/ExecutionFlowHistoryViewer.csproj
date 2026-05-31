@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -281,6 +281,12 @@
     </Compile>
     <Compile Include="Forms\RunDetailForm.Designer.cs">
       <DependentUpon>RunDetailForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\CompareRunsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\CompareRunsForm.Designer.cs">
+      <DependentUpon>CompareRunsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Helpers\DataGridBinder.cs" />
     <Compile Include="Helpers\FlowRunPageResult.cs" />

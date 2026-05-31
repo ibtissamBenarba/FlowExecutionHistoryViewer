@@ -442,6 +442,72 @@ namespace ExecutionFlowHistoryViewer
             });
         }
 
+        private void tsbCompareRuns_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.SelectedRows.Count != 2)
+            {
+                MessageBox.Show("Please select exactly two flow runs in the table to compare them side-by-side.",
+                    "Select Two Runs", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var selectedRows = dataGridView1.SelectedRows;
+            var run1 = selectedRows[0].DataBoundItem as FlowRun;
+            var run2 = selectedRows[1].DataBoundItem as FlowRun;
+
+            if (run1 == null || run2 == null) return;
+
+            var flow1 = _currentFlows.FirstOrDefault(f => f.DisplayName == run1.FlowName);
+            var flow2 = _currentFlows.FirstOrDefault(f => f.DisplayName == run2.FlowName);
+
+            if (flow1 == null || flow2 == null)
+            {
+                MessageBox.Show("Could not determine the flows for the selected runs.", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            WorkAsync(new WorkAsyncInfo
+            {
+                Message = "Fetching details and preparing side-by-side comparison...",
+                Work = (worker, args) =>
+                {
+                    var client = _flowClientFactory.Create();
+
+                    // Fetch details and actions for Run 1
+                    var detail1 = client.GetRunDetails(flow1.Id, run1.Id);
+                    var actions1 = client.GetRunActions(flow1.Id, run1.Id);
+
+                    // Fetch details and actions for Run 2
+                    var detail2 = client.GetRunDetails(flow2.Id, run2.Id);
+                    var actions2 = client.GetRunActions(flow2.Id, run2.Id);
+
+                    args.Result = new Tuple<FlowRunDetailDto, FlowActionsResponseDto, FlowRunDetailDto, FlowActionsResponseDto, IFlowClient>(
+                        detail1, actions1, detail2, actions2, client);
+                },
+                PostWorkCallBack = (args) =>
+                {
+                    if (args.Error != null)
+                    {
+                        ShowError(args.Error);
+                        return;
+                    }
+
+                    var tuple = (Tuple<FlowRunDetailDto, FlowActionsResponseDto, FlowRunDetailDto, FlowActionsResponseDto, IFlowClient>)args.Result;
+                    var detail1 = tuple.Item1;
+                    var actions1 = tuple.Item2;
+                    var detail2 = tuple.Item3;
+                    var actions2 = tuple.Item4;
+                    var client = tuple.Item5;
+
+                    using (var form = new CompareRunsForm(run1, detail1, actions1, run2, detail2, actions2, client))
+                    {
+                        form.ShowDialog(this);
+                    }
+                }
+            });
+        }
+
         #endregion
 
         #region Deep Search

@@ -31,7 +31,7 @@ namespace ExecutionFlowHistoryViewer
             this.tsmContainer = new System.Windows.Forms.ToolStrip();
             this.tsbClose = new System.Windows.Forms.ToolStripButton();
             this.tssSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.tsbSample = new System.Windows.Forms.ToolStripButton();
+            this.tsbCompareRuns = new System.Windows.Forms.ToolStripButton();
             this.tsmConnectToPA = new System.Windows.Forms.ToolStripButton();
             this.btnExport = new System.Windows.Forms.ToolStripButton();
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
@@ -88,7 +88,7 @@ namespace ExecutionFlowHistoryViewer
             this.tsmContainer.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tsbClose,
             this.tssSeparator1,
-            this.tsbSample,
+            this.tsbCompareRuns,
             this.tsmConnectToPA,
             this.btnExport});
             this.tsmContainer.Location = new System.Drawing.Point(0, 0);
@@ -110,10 +110,13 @@ namespace ExecutionFlowHistoryViewer
             this.tssSeparator1.Name = "tssSeparator1";
             this.tssSeparator1.Size = new System.Drawing.Size(6, 31);
             // 
-            // tsbSample
+            // tsbCompareRuns
             // 
-            this.tsbSample.Name = "tsbSample";
-            this.tsbSample.Size = new System.Drawing.Size(29, 28);
+            this.tsbCompareRuns.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.tsbCompareRuns.Name = "tsbCompareRuns";
+            this.tsbCompareRuns.Size = new System.Drawing.Size(126, 28);
+            this.tsbCompareRuns.Text = "⚖️ Compare Runs";
+            this.tsbCompareRuns.Click += new System.EventHandler(this.tsbCompareRuns_Click);
             // 
             // tsmConnectToPA
             // 
@@ -570,7 +573,7 @@ namespace ExecutionFlowHistoryViewer
         #endregion
         private System.Windows.Forms.ToolStrip tsmContainer;
         private System.Windows.Forms.ToolStripButton tsbClose;
-        private System.Windows.Forms.ToolStripButton tsbSample;
+        private System.Windows.Forms.ToolStripButton tsbCompareRuns;
         private System.Windows.Forms.ToolStripSeparator tssSeparator1;
         private System.Windows.Forms.SplitContainer splitContainerMain;
         private System.Windows.Forms.GroupBox gbFlows;
