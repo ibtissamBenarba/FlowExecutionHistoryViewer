@@ -1,4 +1,4 @@
-﻿using ExecutionFlowHistoryViewer.Contracts;
+using ExecutionFlowHistoryViewer.Contracts;
 using ExecutionFlowHistoryViewer.Models;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
@@ -79,6 +79,15 @@ namespace ExecutionFlowHistoryViewer.Services
                 Id = e.Id.ToString(),
                 DisplayName = e.GetAttributeValue<string>("name")
             }).OrderBy(f => f.DisplayName).ToList();
+        }
+
+        public void UpdateFlowState(string flowId, bool enable)
+        {
+            var req = new OrganizationRequest("SetState");
+            req["EntityMoniker"] = new EntityReference("workflow", Guid.Parse(flowId));
+            req["State"] = new OptionSetValue(enable ? 1 : 0);
+            req["Status"] = new OptionSetValue(enable ? 2 : 1);
+            _service.Execute(req);
         }
     }
 }

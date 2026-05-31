@@ -106,6 +106,9 @@ namespace ExecutionFlowHistoryViewer
             clbFlows.ItemCheck -= clbFlows_ItemCheck;
             clbFlows.ItemCheck += clbFlows_ItemCheck;
 
+            clbFlows.MouseDown -= clbFlows_MouseDown;
+            clbFlows.MouseDown += clbFlows_MouseDown;
+
             tbSearch.TextChanged -= tbSearch_TextChanged;
             tbSearch.TextChanged += tbSearch_TextChanged;
 
@@ -362,6 +365,69 @@ namespace ExecutionFlowHistoryViewer
         }
 
         private void tbSearch_TextChanged(object sender, EventArgs e) => ApplyFlowFilter();
+
+        private void clbFlows_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                int index = clbFlows.IndexFromPoint(e.Location);
+                if (index != ListBox.NoMatches)
+                {
+                    clbFlows.SelectedIndex = index;
+                    var flow = clbFlows.Items[index] as Flow;
+                    if (flow != null)
+                    {
+                        var ctx = new ContextMenuStrip();
+                        
+                        var enableItem = new ToolStripMenuItem("Enable Flow", null, (s, ev) => ToggleFlowState(flow, true));
+                        var disableItem = new ToolStripMenuItem("Disable Flow", null, (s, ev) => ToggleFlowState(flow, false));
+                        var openBrowserItem = new ToolStripMenuItem("Open Flow in Browser", null, (s, ev) => OpenFlowInBrowser(flow));
+
+                        ctx.Items.Add(enableItem);
+                        ctx.Items.Add(disableItem);
+                        ctx.Items.Add(openBrowserItem);
+
+                        ctx.Show(clbFlows, e.Location);
+                    }
+                }
+            }
+        }
+
+        private void ToggleFlowState(Flow flow, bool enable)
+        {
+            if (_dataverseService == null) return;
+            WorkAsync(new WorkAsyncInfo
+            {
+                Message = $"{(enable ? "Enabling" : "Disabling")} Flow...",
+                Work = (worker, args) =>
+                {
+                    _dataverseService.UpdateFlowState(flow.Id, enable);
+                },
+                PostWorkCallBack = (args) =>
+                {
+                    if (args.Error != null)
+                    {
+                        ShowError(args.Error);
+                        return;
+                    }
+                    MessageBox.Show($"Flow successfully {(enable ? "enabled" : "disabled")}.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            });
+        }
+
+        private void OpenFlowInBrowser(Flow flow)
+        {
+            if (ConnectionDetail == null) return;
+            string url = $"https://make.powerautomate.com/environments/{ConnectionDetail.EnvironmentId}/flows/{flow.Id}/details";
+            try
+            {
+                Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to open URL: {ex.Message}");
+            }
+        }
 
         #endregion
 
