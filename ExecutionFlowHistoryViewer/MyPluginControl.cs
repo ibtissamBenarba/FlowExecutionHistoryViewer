@@ -930,6 +930,7 @@ namespace ExecutionFlowHistoryViewer
                         return;
                     }
 
+                    var tuple = (Tuple<FlowRunDetailDto, FlowActionsResponseDto, IFlowClient>)args.Result;
                     var chatService = new GeminiChatService(_settings.GeminiApiKey);
                     using (var form = new RunDetailForm(run, tuple.Item1, tuple.Item2, tuple.Item3, chatService))
                     {

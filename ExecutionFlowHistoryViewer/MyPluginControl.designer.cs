@@ -841,6 +841,7 @@ namespace ExecutionFlowHistoryViewer
         private System.Windows.Forms.ToolStripButton tsbClose;
         private System.Windows.Forms.ToolStripSeparator tssSeparator1;
         private System.Windows.Forms.ToolStripButton tsbDarkMode;
+        private System.Windows.Forms.ToolStripButton tsbAiAssistant;
         private System.Windows.Forms.SplitContainer splitContainerMain;
         private System.Windows.Forms.GroupBox gbFlows;
         private System.Windows.Forms.CheckedListBox clbFlows;
