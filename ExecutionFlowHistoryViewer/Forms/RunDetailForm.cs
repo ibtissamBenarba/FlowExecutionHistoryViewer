@@ -18,6 +18,8 @@ namespace ExecutionFlowHistoryViewer.Forms
         private readonly FlowRunDetailDto _detail;
         private readonly FlowActionsResponseDto _actions;
         private readonly IFlowClient _flowClient;
+        private readonly IChatService _chatService;
+        private List<ChatMessage> _chatHistory = new List<ChatMessage>();
 
         // Table controls for each tab
         private DataGridView _dgvGeneral;
@@ -36,12 +38,13 @@ namespace ExecutionFlowHistoryViewer.Forms
         private static readonly Color RunningColor = Color.FromArgb(49, 130, 206);
         private static readonly Color CancelledColor = Color.FromArgb(214, 158, 46);
 
-        public RunDetailForm(FlowRun run, FlowRunDetailDto detail, FlowActionsResponseDto actions, IFlowClient flowClient)
+        public RunDetailForm(FlowRun run, FlowRunDetailDto detail, FlowActionsResponseDto actions, IFlowClient flowClient, IChatService chatService)
         {
             _run = run;
             _detail = detail;
             _actions = actions;
             _flowClient = flowClient;
+            _chatService = chatService;
             InitializeComponent();
             BuildUi();
             LoadData();
@@ -84,10 +87,15 @@ namespace ExecutionFlowHistoryViewer.Forms
             _dgvErrors = CreateStyledGrid();
             tabError.Controls.Add(_dgvErrors);
 
+            // Tab: AI Assistant
+            var tabAi = new TabPage("  AI Assistant ✨  ") { BackColor = Color.White };
+            BuildAiTab(tabAi);
+
             tabControl.TabPages.Add(tabGeneral);
             tabControl.TabPages.Add(tabTrigger);
             tabControl.TabPages.Add(tabActions);
             tabControl.TabPages.Add(tabError);
+            tabControl.TabPages.Add(tabAi);
 
             this.Controls.Add(tabControl);
         }
@@ -457,5 +465,118 @@ namespace ExecutionFlowHistoryViewer.Forms
         }
 
         #endregion
+        private TextBox _txtAiInput;
+        private Button _btnAiSend;
+        private RichTextBox _rtbAiChat;
+
+        private void BuildAiTab(TabPage tab)
+        {
+            var pnlBottom = new Panel { Dock = DockStyle.Bottom, Height = 60, Padding = new Padding(10), BackColor = Color.White };
+            
+            _txtAiInput = new TextBox
+            {
+                Multiline = true,
+                Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI", 10F),
+                ScrollBars = ScrollBars.Vertical
+            };
+            
+            _btnAiSend = new Button
+            {
+                Text = "Send",
+                Dock = DockStyle.Right,
+                Width = 80,
+                BackColor = HeaderBackColor,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI Semibold", 10F),
+                Cursor = Cursors.Hand
+            };
+            _btnAiSend.FlatAppearance.BorderSize = 0;
+            _btnAiSend.Click += async (s, e) => await SendAiMessageAsync();
+
+            pnlBottom.Controls.Add(_txtAiInput);
+            pnlBottom.Controls.Add(new Panel { Dock = DockStyle.Right, Width = 10 }); // spacing
+            pnlBottom.Controls.Add(_btnAiSend);
+
+            _rtbAiChat = new RichTextBox
+            {
+                Dock = DockStyle.Fill,
+                ReadOnly = true,
+                BackColor = Color.FromArgb(247, 250, 252),
+                BorderStyle = BorderStyle.None,
+                Font = new Font("Segoe UI", 10F),
+                Padding = new Padding(10)
+            };
+
+            tab.Controls.Add(_rtbAiChat);
+            tab.Controls.Add(pnlBottom);
+
+            AppendAiMessage("System", "Hi! I'm your AI assistant powered by Gemini. Ask me anything about this flow run.");
+        }
+
+        private async Task SendAiMessageAsync()
+        {
+            var question = _txtAiInput.Text.Trim();
+            if (string.IsNullOrEmpty(question)) return;
+
+            _txtAiInput.Clear();
+            AppendAiMessage("You", question);
+            _chatHistory.Add(new ChatMessage { Role = "user", Content = question });
+
+            _btnAiSend.Enabled = false;
+            _txtAiInput.Enabled = false;
+            AppendAiMessage("System", "Thinking...");
+
+            try
+            {
+                // Prepare a simplified context string instead of raw JSON to save tokens and improve understanding
+                var contextObj = new
+                {
+                    RunStatus = _run.Status,
+                    RunDuration = _run.Duration,
+                    FlowName = _run.FlowName,
+                    Trigger = _detail?.Properties?.Trigger?.Name ?? "Unknown",
+                    FailedActions = _actions?.Value?.Where(a => a.Properties?.Status == "Failed").Select(a => new { a.Name, a.Properties.Error }).ToList(),
+                    AllActions = _actions?.Value?.Select(a => new { a.Name, a.Properties.Status }).ToList()
+                };
+                var systemContext = "NOTE: You are looking at the deep details of ONE SPECIFIC flow run. Do NOT confuse this with the global list of all runs. " + JsonConvert.SerializeObject(contextObj, Formatting.None);
+
+                var answer = await _chatService.AskQuestionAsync(question, systemContext, _chatHistory);
+                
+                // Remove the "Thinking..." message by finding the last occurrence and deleting it and what follows
+                var lastIndex = _rtbAiChat.Text.LastIndexOf("System:\nThinking...");
+                if (lastIndex >= 0)
+                {
+                    _rtbAiChat.Text = _rtbAiChat.Text.Substring(0, lastIndex);
+                }
+
+                AppendAiMessage("Gemini", answer);
+                _chatHistory.Add(new ChatMessage { Role = "model", Content = answer });
+            }
+            catch (Exception ex)
+            {
+                AppendAiMessage("System", $"Error: {ex.Message}");
+            }
+            finally
+            {
+                _btnAiSend.Enabled = true;
+                _txtAiInput.Enabled = true;
+                _txtAiInput.Focus();
+            }
+        }
+
+        private void AppendAiMessage(string sender, string message)
+        {
+            _rtbAiChat.SelectionFont = new Font("Segoe UI", 10F, FontStyle.Bold);
+            _rtbAiChat.SelectionColor = sender == "You" ? RunningColor : (sender == "Gemini" ? SucceededColor : Color.Gray);
+            _rtbAiChat.AppendText($"{sender}:\n");
+
+            _rtbAiChat.SelectionFont = new Font("Segoe UI", 10F, FontStyle.Regular);
+            _rtbAiChat.SelectionColor = Color.FromArgb(45, 55, 72);
+            _rtbAiChat.AppendText($"{message}\n\n");
+            
+            _rtbAiChat.ScrollToCaret();
+        }
     }
 }

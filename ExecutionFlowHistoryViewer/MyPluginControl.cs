@@ -930,8 +930,8 @@ namespace ExecutionFlowHistoryViewer
                         return;
                     }
 
-                    var tuple = (Tuple<FlowRunDetailDto, FlowActionsResponseDto, IFlowClient>)args.Result;
-                    using (var form = new RunDetailForm(run, tuple.Item1, tuple.Item2, tuple.Item3))
+                    var chatService = new GeminiChatService(_settings.GeminiApiKey);
+                    using (var form = new RunDetailForm(run, tuple.Item1, tuple.Item2, tuple.Item3, chatService))
                     {
                         form.ShowDialog(this);
                     }
@@ -1197,6 +1197,22 @@ namespace ExecutionFlowHistoryViewer
         #endregion
 
         #region Export
+
+        private void tsbAiAssistant_Click(object sender, EventArgs e)
+        {
+            var allRuns = _pagination.AllRuns?.ToList();
+            if (allRuns == null || allRuns.Count == 0)
+            {
+                MessageBox.Show("Please fetch some flow runs first before asking the Global AI.", "No Data", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var chatService = new GeminiChatService(_settings.GeminiApiKey);
+            using (var form = new Forms.GlobalAiForm(allRuns, chatService))
+            {
+                form.ShowDialog(this);
+            }
+        }
 
         private void btnExport_Click_1(object sender, EventArgs e)
         {

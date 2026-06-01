@@ -37,6 +37,7 @@ namespace ExecutionFlowHistoryViewer
             this.tsbClose = new System.Windows.Forms.ToolStripButton();
             this.tssSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.btnExport = new System.Windows.Forms.ToolStripButton();
+            this.tsbAiAssistant = new System.Windows.Forms.ToolStripButton();
             this.tsbDarkMode = new System.Windows.Forms.ToolStripButton();
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
             this.gbFlows = new System.Windows.Forms.GroupBox();
@@ -128,7 +129,8 @@ namespace ExecutionFlowHistoryViewer
             this.tssSeparator1,
             tsmConnectToPA,
             this.btnExport,
-            this.tsbDarkMode});
+            this.tsbDarkMode,
+            this.tsbAiAssistant});
             this.tsmContainer.Location = new System.Drawing.Point(0, 0);
             this.tsmContainer.Name = "tsmContainer";
             this.tsmContainer.Size = new System.Drawing.Size(1347, 31);
@@ -158,6 +160,15 @@ namespace ExecutionFlowHistoryViewer
             this.btnExport.Size = new System.Drawing.Size(162, 28);
             this.btnExport.Text = "Export CSV / Excel";
             this.btnExport.Click += new System.EventHandler(this.btnExport_Click_1);
+            // 
+            // tsbAiAssistant
+            // 
+            this.tsbAiAssistant.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.tsbAiAssistant.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbAiAssistant.Name = "tsbAiAssistant";
+            this.tsbAiAssistant.Size = new System.Drawing.Size(120, 24);
+            this.tsbAiAssistant.Text = "✨ Global AI";
+            this.tsbAiAssistant.Click += new System.EventHandler(this.tsbAiAssistant_Click);
             // 
             // tsbDarkMode
             // 
