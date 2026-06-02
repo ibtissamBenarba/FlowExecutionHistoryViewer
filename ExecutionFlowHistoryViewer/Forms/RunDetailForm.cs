@@ -204,6 +204,9 @@ namespace ExecutionFlowHistoryViewer.Forms
 
             var trigger = _detail.Properties.Trigger;
             AddPropertyRow(_dgvTrigger, "Trigger Name", trigger.Name ?? "N/A");
+            AddPropertyRow(_dgvTrigger, "Trigger Status", trigger.Status ?? "N/A");
+            AddPropertyRow(_dgvTrigger, "Trigger Start Time", FormatDateTime(trigger.StartTime));
+            AddPropertyRow(_dgvTrigger, "Trigger End Time", FormatDateTime(trigger.EndTime));
 
             // Inputs
             string inputs = null;

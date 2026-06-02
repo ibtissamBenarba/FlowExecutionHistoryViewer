@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 
 namespace ExecutionFlowHistoryViewer.Models
@@ -25,5 +25,11 @@ namespace ExecutionFlowHistoryViewer.Models
 
         [DisplayName("Run URL")]
         public string Url { get; set; }  
+
+        [DisplayName("Trigger")]
+        public string TriggerName { get; set; }
+
+        [DisplayName("Trigger Status")]
+        public string TriggerStatus { get; set; }
     }
 }

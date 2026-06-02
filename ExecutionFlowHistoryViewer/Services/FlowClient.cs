@@ -1,4 +1,4 @@
-﻿// Services/FlowClient.cs
+// Services/FlowClient.cs
 using ExecutionFlowHistoryViewer.Contracts;
 using ExecutionFlowHistoryViewer.DTO;
 using ExecutionFlowHistoryViewer.Helpers;
@@ -72,7 +72,9 @@ namespace ExecutionFlowHistoryViewer.Services
                             Status = item.Properties?.Status ?? "Unknown",
                             StartDate = item.Properties?.StartTime ?? DateTime.MinValue,
                             EndDate = item.Properties?.EndTime ?? DateTime.MinValue,
-                            Url = $"https://make.powerautomate.com/environments/{_envId}/flows/{flowId}/runs/{item.Name}"
+                            Url = $"https://make.powerautomate.com/environments/{_envId}/flows/{flowId}/runs/{item.Name}",
+                            TriggerName = item.Properties?.Trigger?.Name ?? "N/A",
+                            TriggerStatus = item.Properties?.Trigger?.Status ?? "N/A"
                         });
                     }
                 }
