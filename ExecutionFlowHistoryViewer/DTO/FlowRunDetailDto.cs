@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,6 +28,9 @@ namespace ExecutionFlowHistoryViewer.DTO
         public FlowRunInputsOutputsLinkDto OutputsLink { get; set; }
         public object Inputs { get; set; }
         public object Outputs { get; set; }
+        public string Status { get; set; }
+        public DateTime? StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
     }
 
     public class FlowRunInputsOutputsLinkDto

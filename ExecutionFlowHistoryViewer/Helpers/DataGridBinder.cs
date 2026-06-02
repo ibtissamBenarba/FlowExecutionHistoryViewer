@@ -1,4 +1,4 @@
-﻿using ExecutionFlowHistoryViewer.Models;
+using ExecutionFlowHistoryViewer.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,37 +28,57 @@ namespace ExecutionFlowHistoryViewer.Helpers
             {
                 DataPropertyName = nameof(FlowRun.FlowName),
                 HeaderText = "Flow Name",
+                Name = "FlowName",
                 Width = 200
             });
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
                 DataPropertyName = nameof(FlowRun.Id),
                 HeaderText = "Run ID",
+                Name = "Id",
                 Width = 250
             });
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
                 DataPropertyName = nameof(FlowRun.Status),
                 HeaderText = "Status",
+                Name = "Status",
                 Width = 80
             });
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
                 DataPropertyName = nameof(FlowRun.StartDate),
                 HeaderText = "Start Time",
+                Name = "StartDate",
                 Width = 130
             });
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
                 DataPropertyName = nameof(FlowRun.EndDate),
                 HeaderText = "End Time",
+                Name = "EndDate",
                 Width = 130
             });
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
                 DataPropertyName = nameof(FlowRun.Duration),
                 HeaderText = "Duration",
+                Name = "Duration",
                 Width = 80
+            });
+            grid.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = nameof(FlowRun.TriggerName),
+                HeaderText = "Trigger",
+                Name = "TriggerName",
+                Width = 120
+            });
+            grid.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = nameof(FlowRun.TriggerStatus),
+                HeaderText = "Trigger Status",
+                Name = "TriggerStatus",
+                Width = 100
             });
 
             grid.Columns.Add(new DataGridViewLinkColumn

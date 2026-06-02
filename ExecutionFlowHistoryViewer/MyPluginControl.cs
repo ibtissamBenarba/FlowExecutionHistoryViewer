@@ -37,6 +37,15 @@ namespace ExecutionFlowHistoryViewer
         private bool _isDeepSearchActive;
         private BackgroundWorker _deepSearchWorker;
 
+        // Dynamic UI controls
+        private ToolStripLabel tslblQuickSearch;
+        private ToolStripTextBox tstbQuickSearch;
+        private ToolStripDropDownButton tsddColumns;
+
+        // In-memory details and actions caches for high-performance retrieval and instant search refinement
+        private readonly Dictionary<string, FlowRunDetailDto> _runDetailsCache = new Dictionary<string, FlowRunDetailDto>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, FlowActionsResponseDto> _runActionsCache = new Dictionary<string, FlowActionsResponseDto>(StringComparer.OrdinalIgnoreCase);
+
         public MyPluginControl()
         {
             InitializeComponent();
@@ -51,6 +60,7 @@ namespace ExecutionFlowHistoryViewer
             InitializeFilters();
             InitializePagination();
             InitializeSettings();
+            InitializeAdditionalUi();
             WireEvents();
 
             if (Service != null) InitializeServices();
@@ -94,11 +104,154 @@ namespace ExecutionFlowHistoryViewer
             }
         }
 
+        private void InitializeAdditionalUi()
+        {
+            // Add a separator before our custom view actions
+            tsmContainer.Items.Add(new ToolStripSeparator());
+
+            // 1. Column Selector Button
+            tsddColumns = new ToolStripDropDownButton
+            {
+                Text = "Columns ⚙️",
+                ToolTipText = "Add or remove columns from the view"
+            };
+            tsmContainer.Items.Add(tsddColumns);
+
+            // Add another separator
+            tsmContainer.Items.Add(new ToolStripSeparator());
+
+            // 2. Search View Label & Box
+            tslblQuickSearch = new ToolStripLabel("Search View: 🔍 ");
+            tstbQuickSearch = new ToolStripTextBox
+            {
+                Size = new System.Drawing.Size(180, 25),
+                ToolTipText = "Filter loaded runs by name, ID, status or trigger..."
+            };
+            tstbQuickSearch.TextChanged += (s, e) => ApplyLocalFilter();
+
+            tsmContainer.Items.Add(tslblQuickSearch);
+            tsmContainer.Items.Add(tstbQuickSearch);
+
+            // Setup defaults for settings
+            if (_settings.VisibleColumns == null || _settings.VisibleColumns.Count == 0)
+            {
+                _settings.VisibleColumns = new List<string>
+                {
+                    "FlowName", "Id", "Status", "StartDate", "EndDate", "Duration", "ViewRun", "ViewDetails"
+                };
+            }
+
+            InitializeColumnSelector();
+        }
+
+        private void InitializeColumnSelector()
+        {
+            tsddColumns.DropDownItems.Clear();
+
+            // Define all available columns
+            var columnsInfo = new[]
+            {
+                new { Key = "FlowName", Text = "Flow Name" },
+                new { Key = "Id", Text = "Run ID" },
+                new { Key = "Status", Text = "Status" },
+                new { Key = "StartDate", Text = "Start Time" },
+                new { Key = "EndDate", Text = "End Time" },
+                new { Key = "Duration", Text = "Duration" },
+                new { Key = "TriggerName", Text = "Trigger" },
+                new { Key = "TriggerStatus", Text = "Trigger Status" },
+                new { Key = "ViewRun", Text = "Action" },
+                new { Key = "ViewDetails", Text = "Details" }
+            };
+
+            foreach (var col in columnsInfo)
+            {
+                var item = new ToolStripMenuItem(col.Text)
+                {
+                    Name = $"tsmCol_{col.Key}",
+                    CheckOnClick = true,
+                    Checked = _settings.VisibleColumns.Contains(col.Key)
+                };
+
+                item.CheckedChanged += (s, e) =>
+                {
+                    if (item.Checked)
+                    {
+                        if (!_settings.VisibleColumns.Contains(col.Key))
+                            _settings.VisibleColumns.Add(col.Key);
+                    }
+                    else
+                    {
+                        _settings.VisibleColumns.Remove(col.Key);
+                    }
+                    
+                    ApplyColumnVisibility();
+                    SettingsManager.Instance.Save(GetType(), _settings);
+                };
+
+                tsddColumns.DropDownItems.Add(item);
+            }
+        }
+
+        private void ApplyColumnVisibility()
+        {
+            if (dataGridView1.Columns.Count == 0) return;
+
+            foreach (DataGridViewColumn col in dataGridView1.Columns)
+            {
+                if (!string.IsNullOrEmpty(col.Name))
+                {
+                    col.Visible = _settings.VisibleColumns.Contains(col.Name);
+                }
+            }
+        }
+
+        private void ApplyLocalFilter()
+        {
+            if (tstbQuickSearch == null) return;
+            string filterText = tstbQuickSearch.Text?.Trim();
+            
+            var runsToFilter = _pagination.AllRuns.ToList();
+            if (string.IsNullOrEmpty(filterText))
+            {
+                ShowCurrentPage();
+                UpdatePaginationUI();
+                return;
+            }
+
+            var filteredRuns = runsToFilter.Where(r =>
+                (r.FlowName != null && r.FlowName.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                (r.Id != null && r.Id.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                (r.Status != null && r.Status.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                (r.TriggerName != null && r.TriggerName.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                (r.TriggerStatus != null && r.TriggerStatus.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0)
+            ).ToList();
+
+            DataGridBinder.BindFlowRuns(dataGridView1, filteredRuns);
+            ApplyColumnVisibility();
+
+            btnPrev.Enabled = false;
+            btnNext.Enabled = false;
+            lblPageInfo.Text = $"Filtered: {filteredRuns.Count} of {_pagination.AllRuns.Count} runs";
+        }
+
+        private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+            var run = dataGridView1.Rows[e.RowIndex].DataBoundItem as FlowRun;
+            if (run != null)
+            {
+                ShowRunDetails(run);
+            }
+        }
+
         private void WireEvents()
         {
             // -= avant += pour éviter les doublons
             dataGridView1.CellClick -= dataGridView1_CellClick;
             dataGridView1.CellClick += dataGridView1_CellClick;
+
+            dataGridView1.CellDoubleClick -= dataGridView1_CellDoubleClick;
+            dataGridView1.CellDoubleClick += dataGridView1_CellDoubleClick;
 
             cbSolutions.SelectedIndexChanged -= cbSolutions_SelectedIndexChanged;
             cbSolutions.SelectedIndexChanged += cbSolutions_SelectedIndexChanged;
@@ -277,6 +430,7 @@ namespace ExecutionFlowHistoryViewer
         private void ShowCurrentPage()
         {
             DataGridBinder.BindFlowRuns(dataGridView1, _pagination.GetCurrentPage());
+            ApplyColumnVisibility();
         }
 
         private void UpdatePaginationUI()
@@ -288,6 +442,7 @@ namespace ExecutionFlowHistoryViewer
 
         private void btnPrev_Click(object sender, EventArgs e)
         {
+            if (_isDeepSearchActive) return;
             // CORRECTION : Protection contre double-clic et chargement
             if (!_pagination.CanGoPrevious() || _pagination.IsLoading) return;
 
@@ -298,6 +453,7 @@ namespace ExecutionFlowHistoryViewer
 
         private void btnNext_Click(object sender, EventArgs e)
         {
+            if (_isDeepSearchActive) return;
             // CORRECTION : Protection contre chargement
             if (_pagination.IsLoading) return;
 
@@ -382,10 +538,12 @@ namespace ExecutionFlowHistoryViewer
                         var enableItem = new ToolStripMenuItem("Enable Flow", null, (s, ev) => ToggleFlowState(flow, true));
                         var disableItem = new ToolStripMenuItem("Disable Flow", null, (s, ev) => ToggleFlowState(flow, false));
                         var openBrowserItem = new ToolStripMenuItem("Open Flow in Browser", null, (s, ev) => OpenFlowInBrowser(flow));
+                        var openHistoryBrowserItem = new ToolStripMenuItem("Open Flow History in Browser", null, (s, ev) => OpenFlowHistoryInBrowser(flow));
 
                         ctx.Items.Add(enableItem);
                         ctx.Items.Add(disableItem);
                         ctx.Items.Add(openBrowserItem);
+                        ctx.Items.Add(openHistoryBrowserItem);
 
                         ctx.Show(clbFlows, e.Location);
                     }
@@ -419,6 +577,20 @@ namespace ExecutionFlowHistoryViewer
         {
             if (ConnectionDetail == null) return;
             string url = $"https://make.powerautomate.com/environments/{ConnectionDetail.EnvironmentId}/flows/{flow.Id}/details";
+            try
+            {
+                Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to open URL: {ex.Message}");
+            }
+        }
+
+        private void OpenFlowHistoryInBrowser(Flow flow)
+        {
+            if (ConnectionDetail == null) return;
+            string url = $"https://make.powerautomate.com/environments/{ConnectionDetail.EnvironmentId}/flows/{flow.Id}/runs";
             try
             {
                 Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
@@ -659,117 +831,185 @@ namespace ExecutionFlowHistoryViewer
                 var matchingRuns = new List<FlowRun>();
                 var client = _flowClientFactory.Create();
                 int processed = 0;
+                object processedLock = new object();
+                object matchesLock = new object();
 
-                foreach (var run in runsToSearch)
+                var options = new System.Threading.Tasks.ParallelOptions
                 {
-                    if (_deepSearchWorker.CancellationPending)
-                    {
-                        args.Cancel = true;
-                        return;
-                    }
+                    MaxDegreeOfParallelism = 8 // Fetch up to 8 runs concurrently!
+                };
 
-                    try
+                try
+                {
+                    System.Threading.Tasks.Parallel.ForEach(runsToSearch, options, (run, state) =>
                     {
-                        // Find the flow for this run
-                        var flow = _currentFlows.FirstOrDefault(f => f.DisplayName == run.FlowName);
-                        if (flow == null)
+                        if (_deepSearchWorker.CancellationPending)
                         {
-                            processed++;
-                            _deepSearchWorker.ReportProgress(processed);
-                            continue;
+                            state.Stop();
+                            return;
                         }
 
-                        bool matched = false;
-
-                        // 1) Check run details (trigger inputs/outputs)
-                        var detail = client.GetRunDetails(flow.Id, run.Id);
-                        if (detail?.Properties?.Trigger != null)
+                        try
                         {
-                            var trigger = detail.Properties.Trigger;
-
-                            // Check inputs
-                            string inputs = null;
-                            if (trigger.InputsLink?.Uri != null)
+                            // Find the flow for this run
+                            var flow = _currentFlows.FirstOrDefault(f => f.DisplayName == run.FlowName);
+                            if (flow == null)
                             {
-                                try { inputs = client.GetContentFromLink(trigger.InputsLink.Uri); }
-                                catch { /* skip */ }
-                            }
-                            else if (trigger.Inputs != null)
-                            {
-                                inputs = JsonConvert.SerializeObject(trigger.Inputs);
-                            }
-
-                            if (inputs != null && inputs.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
-                                matched = true;
-
-                            // Check outputs
-                            if (!matched)
-                            {
-                                string outputs = null;
-                                if (trigger.OutputsLink?.Uri != null)
+                                lock (processedLock)
                                 {
-                                    try { outputs = client.GetContentFromLink(trigger.OutputsLink.Uri); }
+                                    processed++;
+                                    _deepSearchWorker.ReportProgress(processed);
+                                }
+                                return;
+                            }
+
+                            bool matched = false;
+
+                            // 1) Get Run Details (cached or from API)
+                            FlowRunDetailDto detail = null;
+                            lock (_runDetailsCache)
+                            {
+                                _runDetailsCache.TryGetValue(run.Id, out detail);
+                            }
+
+                            if (detail == null)
+                            {
+                                detail = client.GetRunDetails(flow.Id, run.Id);
+                                if (detail != null)
+                                {
+                                    lock (_runDetailsCache)
+                                    {
+                                        _runDetailsCache[run.Id] = detail;
+                                    }
+                                }
+                            }
+
+                            if (detail?.Properties?.Trigger != null)
+                            {
+                                var trigger = detail.Properties.Trigger;
+
+                                // Check inputs
+                                string inputs = null;
+                                if (trigger.InputsLink?.Uri != null)
+                                {
+                                    try { inputs = client.GetContentFromLink(trigger.InputsLink.Uri); }
                                     catch { /* skip */ }
                                 }
-                                else if (trigger.Outputs != null)
+                                else if (trigger.Inputs != null)
                                 {
-                                    outputs = JsonConvert.SerializeObject(trigger.Outputs);
+                                    inputs = JsonConvert.SerializeObject(trigger.Inputs);
                                 }
 
-                                if (outputs != null && outputs.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                                if (inputs != null && inputs.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
                                     matched = true;
-                            }
-                        }
 
-                        // 2) Check actions (inputs/outputs/errors)
-                        if (!matched)
-                        {
-                            var actions = client.GetRunActions(flow.Id, run.Id);
-                            if (actions?.Value != null)
-                            {
-                                foreach (var action in actions.Value)
+                                // Check outputs
+                                if (!matched)
                                 {
-                                    if (action.Properties?.Inputs != null)
+                                    string outputs = null;
+                                    if (trigger.OutputsLink?.Uri != null)
                                     {
-                                        string actionInputs = JsonConvert.SerializeObject(action.Properties.Inputs);
-                                        if (actionInputs.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                                        try { outputs = client.GetContentFromLink(trigger.OutputsLink.Uri); }
+                                        catch { /* skip */ }
+                                    }
+                                    else if (trigger.Outputs != null)
+                                    {
+                                        outputs = JsonConvert.SerializeObject(trigger.Outputs);
+                                    }
+
+                                    if (outputs != null && outputs.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                                        matched = true;
+                                }
+                            }
+
+                            // 2) Get Run Actions (cached or from API)
+                            if (!matched)
+                            {
+                                FlowActionsResponseDto actions = null;
+                                lock (_runActionsCache)
+                                {
+                                    _runActionsCache.TryGetValue(run.Id, out actions);
+                                }
+
+                                if (actions == null)
+                                {
+                                    actions = client.GetRunActions(flow.Id, run.Id);
+                                    if (actions != null)
+                                    {
+                                        lock (_runActionsCache)
                                         {
-                                            matched = true;
-                                            break;
+                                            _runActionsCache[run.Id] = actions;
                                         }
                                     }
-                                    if (action.Properties?.Outputs != null)
+                                }
+
+                                if (actions?.Value != null)
+                                {
+                                    foreach (var action in actions.Value)
                                     {
-                                        string actionOutputs = JsonConvert.SerializeObject(action.Properties.Outputs);
-                                        if (actionOutputs.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                                        if (action.Properties?.Inputs != null)
                                         {
-                                            matched = true;
-                                            break;
+                                            string actionInputs = JsonConvert.SerializeObject(action.Properties.Inputs);
+                                            if (actionInputs.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                                            {
+                                                matched = true;
+                                                break;
+                                            }
                                         }
-                                    }
-                                    if (action.Properties?.Error != null)
-                                    {
-                                        string errorStr = $"{action.Properties.Error.Code} {action.Properties.Error.Message}";
-                                        if (errorStr.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                                        if (action.Properties?.Outputs != null)
                                         {
-                                            matched = true;
-                                            break;
+                                            string actionOutputs = JsonConvert.SerializeObject(action.Properties.Outputs);
+                                            if (actionOutputs.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                                            {
+                                                matched = true;
+                                                break;
+                                            }
+                                        }
+                                        if (action.Properties?.Error != null)
+                                        {
+                                            string errorStr = $"{action.Properties.Error.Code} {action.Properties.Error.Message}";
+                                            if (errorStr.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                                            {
+                                                matched = true;
+                                                break;
+                                            }
                                         }
                                     }
                                 }
                             }
+
+                            if (matched)
+                            {
+                                lock (matchesLock)
+                                {
+                                    matchingRuns.Add(run);
+                                }
+                            }
                         }
+                        catch
+                        {
+                            // Skip runs that fail to load — don't crash the search
+                        }
+                        finally
+                        {
+                            lock (processedLock)
+                            {
+                                processed++;
+                                _deepSearchWorker.ReportProgress(processed);
+                            }
+                        }
+                    });
+                }
+                catch (OperationCanceledException)
+                {
+                    args.Cancel = true;
+                    return;
+                }
 
-                        if (matched)
-                            matchingRuns.Add(run);
-                    }
-                    catch
-                    {
-                        // Skip runs that fail to load — don't crash the search
-                    }
-
-                    processed++;
-                    _deepSearchWorker.ReportProgress(processed);
+                if (_deepSearchWorker.CancellationPending)
+                {
+                    args.Cancel = true;
+                    return;
                 }
 
                 args.Result = matchingRuns;
@@ -810,6 +1050,7 @@ namespace ExecutionFlowHistoryViewer
                     lblDeepSearchStatus.Text = $"No matches found for \"{searchValue}\".";
                     gbFlowRuns.Text = $"Flow Runs — 0 results for \"{searchValue}\"";
                     DataGridBinder.BindFlowRuns(dataGridView1, new List<FlowRun>());
+                    ApplyColumnVisibility();
                     _isDeepSearchActive = true;
                     return;
                 }
@@ -824,6 +1065,7 @@ namespace ExecutionFlowHistoryViewer
                 lblPageInfo.Text = $"Showing {matchingRuns.Count} filtered result(s)";
 
                 DataGridBinder.BindFlowRuns(dataGridView1, matchingRuns);
+                ApplyColumnVisibility();
             };
 
             _deepSearchWorker.RunWorkerAsync();
