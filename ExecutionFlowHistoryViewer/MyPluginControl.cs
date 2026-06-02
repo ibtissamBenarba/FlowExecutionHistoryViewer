@@ -16,7 +16,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Windows.Documents;
 using System.Windows.Forms;
 using XrmToolBox.Extensibility;
 
@@ -35,7 +34,6 @@ namespace ExecutionFlowHistoryViewer
         private IPaginationService _pagination;
         private GeminiService _aiService;
         private FlowSafetyAnalyzer _safetyAnalyzer;
-        private const string SharedGeminiApiKey = "AIzaSyBuQrwKRWMVI5MkQIUKSUorF0h6pdCimUI";
 
         // Flow selection state
         private List<Flow> _currentFlows = new List<Flow>();
@@ -775,6 +773,38 @@ namespace ExecutionFlowHistoryViewer
             });
         }
 
+        private void RefreshHistory()
+        {
+            var selectedFlows = GetSelectedFlows();
+            if (selectedFlows.Count == 0) return;
+
+            var (fromDate, toDate, status) = GetFilterValues();
+            var flowIds = selectedFlows.Select(f => f.Id).ToList();
+
+            WorkAsync(new WorkAsyncInfo
+            {
+                Message = "Refreshing history...",
+                Work = (worker, args) =>
+                {
+                    int total = _dataverseService.GetTotalFlowRunsCount(flowIds, fromDate, toDate, status);
+                    args.Result = total;
+                },
+                PostWorkCallBack = (args) =>
+                {
+                    if (args.Error != null)
+                    {
+                        ShowError(args.Error);
+                        return;
+                    }
+
+                    _pagination.Reset();
+                    _pagination.TotalServerCount = (int)args.Result;
+                    _flowSkipTokens.Clear();
+                    FetchPage(selectedFlows, fromDate, toDate, status, isNextPage: false);
+                }
+            });
+        }
+
         #endregion
 
         #region Grid Interaction
@@ -1461,29 +1491,20 @@ namespace ExecutionFlowHistoryViewer
 
                     dynamic result = args.Result;
 
-                    lblDeepSearchStatus.Text =
-                        $"✔ {result.Success} run(s) resubmitted, ✖ {result.Failed} failed.";
+                    // Update status label (optional)
+                    lblDeepSearchStatus.Text = $"✔ {result.Success} run(s) resubmitted, ✖ {result.Failed} failed.";
+                    lblDeepSearchStatus.ForeColor = result.Failed > 0 ? Color.DarkOrange : Color.Green;
 
-                    lblDeepSearchStatus.ForeColor =
-                        result.Failed > 0 ? Color.DarkOrange : Color.Green;
-
-                    string message =
-                        $"Successfully resubmitted: {result.Success}\n" +
-                        $"Failed: {result.Failed}";
-
+                    // Show summary message box
+                    string message = $"Successfully resubmitted: {result.Success}\nFailed: {result.Failed}";
                     if (result.Errors.Count > 0)
-                    {
-                        message += "\n\nErrors:\n- " +
-                                   string.Join("\n- ", result.Errors);
-                    }
+                        message += "\n\nErrors:\n- " + string.Join("\n- ", result.Errors);
 
-                    MessageBox.Show(
-                        message,
-                        "Bulk Resubmit Completed",
-                        MessageBoxButtons.OK,
-                        result.Failed > 0
-                            ? MessageBoxIcon.Warning
-                            : MessageBoxIcon.Information);
+                    MessageBox.Show(message, "Bulk Resubmit Completed",
+                        MessageBoxButtons.OK, result.Failed > 0 ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+
+                    // --- Refresh the grid to show updated run history ---
+                    RefreshHistory();
                 }
             });
         }
@@ -1582,29 +1603,29 @@ namespace ExecutionFlowHistoryViewer
                     using (var form = new Form())
                     {
                         form.Text = "AI Safety Analysis — Resubmit Recommendation";
-                        form.Size = new System.Drawing.Size(750, 550);
+                        form.Size = new Size(750, 550);
                         form.StartPosition = FormStartPosition.CenterParent;
-                        form.BackColor = System.Drawing.Color.White;
+                        form.BackColor = Color.White;
 
                         var rtb = new RichTextBox
                         {
                             Dock = DockStyle.Fill,
                             ReadOnly = true,
-                            Font = new System.Drawing.Font("Consolas", 10F),
+                            Font = new Font("Consolas", 10F),
                             Text = resultText,
                             BorderStyle = BorderStyle.None,
-                            BackColor = System.Drawing.Color.White
+                            BackColor = Color.White
                         };
 
-                        var panel = new Panel { Dock = DockStyle.Bottom, Height = 50, BackColor = System.Drawing.Color.White };
+                        var panel = new Panel { Dock = DockStyle.Bottom, Height = 50, BackColor = Color.White };
                         var btnClose = new Button
                         {
                             Text = "Close",
                             DialogResult = DialogResult.OK,
-                            Location = new System.Drawing.Point(320, 10),
-                            Size = new System.Drawing.Size(110, 32),
-                            BackColor = System.Drawing.Color.FromArgb(37, 99, 235),
-                            ForeColor = System.Drawing.Color.White,
+                            Location = new Point(320, 10),
+                            Size = new Size(110, 32),
+                            BackColor = Color.FromArgb(37, 99, 235),
+                            ForeColor = Color.White,
                             FlatStyle = FlatStyle.Popup
                         };
                         panel.Controls.Add(btnClose);
@@ -1617,6 +1638,8 @@ namespace ExecutionFlowHistoryViewer
                 }
             });
         }
+
+        #region Theme Management
         private void InitializeTheme()
         {
             // Apply saved theme (defaults to light if never set)
@@ -1653,5 +1676,6 @@ namespace ExecutionFlowHistoryViewer
 
             tsbDarkMode.Owner?.Invalidate();
         }
+        #endregion
     }
 }

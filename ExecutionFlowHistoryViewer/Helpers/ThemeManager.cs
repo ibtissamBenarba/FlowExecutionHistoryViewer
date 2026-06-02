@@ -17,7 +17,7 @@ namespace ExecutionFlowHistoryViewer
                     System.Reflection.BindingFlags.Instance)
                 ?.SetValue(control, true, null);
         }
-        private class DrawingSuspender : IDisposable
+        private sealed class DrawingSuspender : IDisposable
         {
             private const int WM_SETREDRAW = 11;
 
@@ -92,7 +92,7 @@ namespace ExecutionFlowHistoryViewer
         // ─────────────────────────────────────────────
         // Snapshot Classes
         // ─────────────────────────────────────────────
-        private class Snapshot
+        private sealed class Snapshot
         {
             public Color BackColor;
             public Color ForeColor;

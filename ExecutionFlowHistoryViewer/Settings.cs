@@ -15,7 +15,7 @@ namespace ExecutionFlowHistoryViewer
     public class Settings
     {
         public string LastUsedOrganizationWebappUrl { get; set; }
-        public string GeminiApiKey { get; set; }
+        public string GeminiApiKey { get; set; }  
         public bool DarkMode { get; set; }
     }
 }
