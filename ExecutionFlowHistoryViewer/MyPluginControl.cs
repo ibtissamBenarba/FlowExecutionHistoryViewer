@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using XrmToolBox.Extensibility;
 
 namespace ExecutionFlowHistoryViewer
@@ -45,6 +46,7 @@ namespace ExecutionFlowHistoryViewer
         // In-memory details and actions caches for high-performance retrieval and instant search refinement
         private readonly Dictionary<string, FlowRunDetailDto> _runDetailsCache = new Dictionary<string, FlowRunDetailDto>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, FlowActionsResponseDto> _runActionsCache = new Dictionary<string, FlowActionsResponseDto>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string> _triggerContentsCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         public MyPluginControl()
         {
@@ -101,6 +103,10 @@ namespace ExecutionFlowHistoryViewer
             else
             {
                 LogInfo("Settings found and loaded");
+            }
+            if (_settings.CustomTriggerColumns == null)
+            {
+                _settings.CustomTriggerColumns = new List<CustomTriggerColumnSetting>();
             }
         }
 
@@ -163,7 +169,16 @@ namespace ExecutionFlowHistoryViewer
                 new { Key = "ViewDetails", Text = "Details" }
             };
 
-            foreach (var col in columnsInfo)
+            var columnsList = columnsInfo.ToList();
+            if (_settings.CustomTriggerColumns != null)
+            {
+                foreach (var cc in _settings.CustomTriggerColumns)
+                {
+                    columnsList.Add(new { Key = "col_custom_trigger_" + cc.JsonPath, Text = cc.HeaderText });
+                }
+            }
+
+            foreach (var col in columnsList)
             {
                 var item = new ToolStripMenuItem(col.Text)
                 {
@@ -190,6 +205,16 @@ namespace ExecutionFlowHistoryViewer
 
                 tsddColumns.DropDownItems.Add(item);
             }
+
+            tsddColumns.DropDownItems.Add(new ToolStripSeparator());
+
+            var addCustomItem = new ToolStripMenuItem("Add Custom Trigger Column...") { Image = null };
+            addCustomItem.Click += (s, e) => AddCustomTriggerColumnAction();
+            tsddColumns.DropDownItems.Add(addCustomItem);
+
+            var clearCustomItem = new ToolStripMenuItem("Clear Custom Trigger Columns") { Image = null };
+            clearCustomItem.Click += (s, e) => ClearCustomTriggerColumnsAction();
+            tsddColumns.DropDownItems.Add(clearCustomItem);
         }
 
         private void ApplyColumnVisibility()
@@ -223,10 +248,11 @@ namespace ExecutionFlowHistoryViewer
                 (r.Id != null && r.Id.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0) ||
                 (r.Status != null && r.Status.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0) ||
                 (r.TriggerName != null && r.TriggerName.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0) ||
-                (r.TriggerStatus != null && r.TriggerStatus.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0)
+                (r.TriggerStatus != null && r.TriggerStatus.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                CheckTriggerLocalSearchMatch(r.Id, filterText)
             ).ToList();
 
-            DataGridBinder.BindFlowRuns(dataGridView1, filteredRuns);
+            DataGridBinder.BindFlowRuns(dataGridView1, filteredRuns, _settings.CustomTriggerColumns);
             ApplyColumnVisibility();
 
             btnPrev.Enabled = false;
@@ -252,6 +278,9 @@ namespace ExecutionFlowHistoryViewer
 
             dataGridView1.CellDoubleClick -= dataGridView1_CellDoubleClick;
             dataGridView1.CellDoubleClick += dataGridView1_CellDoubleClick;
+
+            dataGridView1.CellFormatting -= dataGridView1_CellFormatting;
+            dataGridView1.CellFormatting += dataGridView1_CellFormatting;
 
             cbSolutions.SelectedIndexChanged -= cbSolutions_SelectedIndexChanged;
             cbSolutions.SelectedIndexChanged += cbSolutions_SelectedIndexChanged;
@@ -429,7 +458,7 @@ namespace ExecutionFlowHistoryViewer
 
         private void ShowCurrentPage()
         {
-            DataGridBinder.BindFlowRuns(dataGridView1, _pagination.GetCurrentPage());
+            DataGridBinder.BindFlowRuns(dataGridView1, _pagination.GetCurrentPage(), _settings.CustomTriggerColumns);
             ApplyColumnVisibility();
         }
 
@@ -672,7 +701,7 @@ namespace ExecutionFlowHistoryViewer
                     var actions = tuple.Item2;
                     var client = tuple.Item3;
 
-                    using (var form = new RunDetailForm(run, detail, actions, client))  // ← Passer client
+                    using (var form = new RunDetailForm(run, detail, actions, client, _triggerContentsCache))  // ← Passer client et cache
                     {
                         form.ShowDialog(this);
                     }
@@ -892,8 +921,25 @@ namespace ExecutionFlowHistoryViewer
                                 string inputs = null;
                                 if (trigger.InputsLink?.Uri != null)
                                 {
-                                    try { inputs = client.GetContentFromLink(trigger.InputsLink.Uri); }
-                                    catch { /* skip */ }
+                                    lock (_triggerContentsCache)
+                                    {
+                                        _triggerContentsCache.TryGetValue(trigger.InputsLink.Uri, out inputs);
+                                    }
+                                    if (inputs == null)
+                                    {
+                                        try
+                                        {
+                                            inputs = client.GetContentFromLink(trigger.InputsLink.Uri);
+                                            if (inputs != null)
+                                            {
+                                                lock (_triggerContentsCache)
+                                                {
+                                                    _triggerContentsCache[trigger.InputsLink.Uri] = inputs;
+                                                }
+                                            }
+                                        }
+                                        catch { /* skip */ }
+                                    }
                                 }
                                 else if (trigger.Inputs != null)
                                 {
@@ -909,8 +955,25 @@ namespace ExecutionFlowHistoryViewer
                                     string outputs = null;
                                     if (trigger.OutputsLink?.Uri != null)
                                     {
-                                        try { outputs = client.GetContentFromLink(trigger.OutputsLink.Uri); }
-                                        catch { /* skip */ }
+                                        lock (_triggerContentsCache)
+                                        {
+                                            _triggerContentsCache.TryGetValue(trigger.OutputsLink.Uri, out outputs);
+                                        }
+                                        if (outputs == null)
+                                        {
+                                            try
+                                            {
+                                                outputs = client.GetContentFromLink(trigger.OutputsLink.Uri);
+                                                if (outputs != null)
+                                                {
+                                                    lock (_triggerContentsCache)
+                                                    {
+                                                        _triggerContentsCache[trigger.OutputsLink.Uri] = outputs;
+                                                    }
+                                                }
+                                            }
+                                            catch { /* skip */ }
+                                        }
                                     }
                                     else if (trigger.Outputs != null)
                                     {
@@ -1049,7 +1112,7 @@ namespace ExecutionFlowHistoryViewer
                 {
                     lblDeepSearchStatus.Text = $"No matches found for \"{searchValue}\".";
                     gbFlowRuns.Text = $"Flow Runs — 0 results for \"{searchValue}\"";
-                    DataGridBinder.BindFlowRuns(dataGridView1, new List<FlowRun>());
+                    DataGridBinder.BindFlowRuns(dataGridView1, new List<FlowRun>(), _settings.CustomTriggerColumns);
                     ApplyColumnVisibility();
                     _isDeepSearchActive = true;
                     return;
@@ -1064,7 +1127,7 @@ namespace ExecutionFlowHistoryViewer
                 btnNext.Enabled = false;
                 lblPageInfo.Text = $"Showing {matchingRuns.Count} filtered result(s)";
 
-                DataGridBinder.BindFlowRuns(dataGridView1, matchingRuns);
+                DataGridBinder.BindFlowRuns(dataGridView1, matchingRuns, _settings.CustomTriggerColumns);
                 ApplyColumnVisibility();
             };
 
@@ -1157,6 +1220,365 @@ namespace ExecutionFlowHistoryViewer
             return null;
         }
 
+        private void dataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+            var col = dataGridView1.Columns[e.ColumnIndex];
+            if (col.Name.StartsWith("col_custom_trigger_"))
+            {
+                string jsonPath = col.Name.Substring("col_custom_trigger_".Length);
+                var run = dataGridView1.Rows[e.RowIndex].DataBoundItem as FlowRun;
+                if (run != null)
+                {
+                    if (_runDetailsCache.TryGetValue(run.Id, out var detail))
+                    {
+                        e.Value = ExtractValueFromJsonPath(detail, jsonPath) ?? "";
+                    }
+                    else
+                    {
+                        e.Value = "";
+                    }
+                }
+            }
+        }
+
+        private string ExtractValueFromJsonPath(FlowRunDetailDto detail, string jsonPath)
+        {
+            if (detail?.Properties?.Trigger == null) return null;
+            var trigger = detail.Properties.Trigger;
+
+            var parts = jsonPath.Split('/');
+            if (parts.Length < 2) return null;
+
+            string root = parts[0].ToLower(); // inputs or outputs
+            string section = parts[1]; // body, headers, parameters, host
+
+            string jsonContent = null;
+            if (root == "inputs")
+            {
+                if (trigger.InputsLink?.Uri != null)
+                {
+                    lock (_triggerContentsCache)
+                    {
+                        _triggerContentsCache.TryGetValue(trigger.InputsLink.Uri, out jsonContent);
+                    }
+                }
+                else if (trigger.Inputs != null)
+                {
+                    jsonContent = JsonConvert.SerializeObject(trigger.Inputs);
+                }
+            }
+            else if (root == "outputs")
+            {
+                if (trigger.OutputsLink?.Uri != null)
+                {
+                    lock (_triggerContentsCache)
+                    {
+                        _triggerContentsCache.TryGetValue(trigger.OutputsLink.Uri, out jsonContent);
+                    }
+                }
+                else if (trigger.Outputs != null)
+                {
+                    jsonContent = JsonConvert.SerializeObject(trigger.Outputs);
+                }
+            }
+
+            if (string.IsNullOrEmpty(jsonContent)) return null;
+
+            try
+            {
+                var jObject = JObject.Parse(jsonContent);
+                JToken currentToken = jObject[section];
+                if (currentToken == null)
+                {
+                    foreach (var prop in jObject.Properties())
+                    {
+                        if (string.Equals(prop.Name, section, StringComparison.OrdinalIgnoreCase))
+                        {
+                            currentToken = prop.Value;
+                            break;
+                        }
+                    }
+                }
+
+                if (currentToken == null) return null;
+
+                for (int i = 2; i < parts.Length; i++)
+                {
+                    if (currentToken is JObject obj)
+                    {
+                        string part = parts[i];
+                        JToken nextToken = obj[part];
+                        if (nextToken == null)
+                        {
+                            foreach (var prop in obj.Properties())
+                            {
+                                if (string.Equals(prop.Name, part, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    nextToken = prop.Value;
+                                    break;
+                                }
+                            }
+                        }
+                        currentToken = nextToken;
+                        if (currentToken == null) return null;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+
+                if (currentToken == null) return null;
+                if (currentToken is JValue jVal) return jVal.Value?.ToString();
+                return currentToken.ToString(Formatting.None);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private List<string> GetDetectedTriggerPaths()
+        {
+            var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var detail in _runDetailsCache.Values)
+            {
+                if (detail?.Properties?.Trigger == null) continue;
+                var trigger = detail.Properties.Trigger;
+
+                // Inputs
+                string inputs = null;
+                if (trigger.InputsLink?.Uri != null)
+                {
+                    lock (_triggerContentsCache)
+                    {
+                        _triggerContentsCache.TryGetValue(trigger.InputsLink.Uri, out inputs);
+                    }
+                }
+                else if (trigger.Inputs != null)
+                {
+                    inputs = JsonConvert.SerializeObject(trigger.Inputs);
+                }
+
+                if (!string.IsNullOrEmpty(inputs))
+                {
+                    try
+                    {
+                        var token = JToken.Parse(inputs);
+                        if (token is JObject obj)
+                        {
+                            if (obj["parameters"] is JObject paramsObj)
+                                GetJsonPathsRecursive(paramsObj, "inputs/parameters/", paths);
+                            if (obj["host"] is JObject hostObj)
+                                GetJsonPathsRecursive(hostObj, "inputs/host/", paths);
+                        }
+                    }
+                    catch { }
+                }
+
+                // Outputs
+                string outputs = null;
+                if (trigger.OutputsLink?.Uri != null)
+                {
+                    lock (_triggerContentsCache)
+                    {
+                        _triggerContentsCache.TryGetValue(trigger.OutputsLink.Uri, out outputs);
+                    }
+                }
+                else if (trigger.Outputs != null)
+                {
+                    outputs = JsonConvert.SerializeObject(trigger.Outputs);
+                }
+
+                if (!string.IsNullOrEmpty(outputs))
+                {
+                    try
+                    {
+                        var token = JToken.Parse(outputs);
+                        if (token is JObject obj)
+                        {
+                            if (obj["headers"] is JObject headersObj)
+                                GetJsonPathsRecursive(headersObj, "outputs/headers/", paths);
+                            if (obj["body"] is JObject bodyObj)
+                                GetJsonPathsRecursive(bodyObj, "outputs/body/", paths);
+                        }
+                    }
+                    catch { }
+                }
+            }
+            return paths.OrderBy(p => p).ToList();
+        }
+
+        private void GetJsonPathsRecursive(JObject obj, string prefix, HashSet<string> paths)
+        {
+            foreach (var prop in obj.Properties())
+            {
+                string path = prefix + prop.Name;
+                if (prop.Value is JObject subObj)
+                {
+                    GetJsonPathsRecursive(subObj, path + "/", paths);
+                }
+                else
+                {
+                    paths.Add(path);
+                }
+            }
+        }
+
+        private void AddCustomTriggerColumnAction()
+        {
+            var detectedPaths = GetDetectedTriggerPaths();
+            using (var form = new AddCustomColumnForm(detectedPaths))
+            {
+                if (form.ShowDialog(this) == DialogResult.OK)
+                {
+                    string headerText = form.HeaderText;
+                    string jsonPath = form.JsonPath;
+
+                    if (string.IsNullOrEmpty(headerText) || string.IsNullOrEmpty(jsonPath))
+                    {
+                        MessageBox.Show("Header text and JSON path are required.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    if (_settings.CustomTriggerColumns.Any(c => string.Equals(c.JsonPath, jsonPath, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        MessageBox.Show("A column with this JSON path already exists.", "Duplicate Column", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    var newCol = new CustomTriggerColumnSetting { HeaderText = headerText, JsonPath = jsonPath };
+                    _settings.CustomTriggerColumns.Add(newCol);
+
+                    string colKey = "col_custom_trigger_" + jsonPath;
+                    if (!_settings.VisibleColumns.Contains(colKey))
+                    {
+                        _settings.VisibleColumns.Add(colKey);
+                    }
+
+                    SettingsManager.Instance.Save(GetType(), _settings);
+                    
+                    ShowCurrentPage();
+                    InitializeColumnSelector();
+                }
+            }
+        }
+
+        private void ClearCustomTriggerColumnsAction()
+        {
+            if (_settings.CustomTriggerColumns == null || _settings.CustomTriggerColumns.Count == 0) return;
+
+            var confirm = MessageBox.Show("Are you sure you want to clear all custom trigger columns?", "Confirm Clear", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (confirm == DialogResult.Yes)
+            {
+                foreach (var cc in _settings.CustomTriggerColumns)
+                {
+                    string colKey = "col_custom_trigger_" + cc.JsonPath;
+                    _settings.VisibleColumns.Remove(colKey);
+                }
+
+                _settings.CustomTriggerColumns.Clear();
+                SettingsManager.Instance.Save(GetType(), _settings);
+
+                ShowCurrentPage();
+                InitializeColumnSelector();
+            }
+        }
+
+        private bool CheckTriggerLocalSearchMatch(string runId, string filterText)
+        {
+            if (!_runDetailsCache.TryGetValue(runId, out var detail))
+                return false;
+
+            if (detail?.Properties?.Trigger == null)
+                return false;
+
+            var trigger = detail.Properties.Trigger;
+
+            string inputs = null;
+            if (trigger.InputsLink?.Uri != null)
+            {
+                lock (_triggerContentsCache)
+                {
+                    _triggerContentsCache.TryGetValue(trigger.InputsLink.Uri, out inputs);
+                }
+            }
+            else if (trigger.Inputs != null)
+            {
+                inputs = JsonConvert.SerializeObject(trigger.Inputs);
+            }
+
+            if (inputs != null && inputs.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0)
+                return true;
+
+            string outputs = null;
+            if (trigger.OutputsLink?.Uri != null)
+            {
+                lock (_triggerContentsCache)
+                {
+                    _triggerContentsCache.TryGetValue(trigger.OutputsLink.Uri, out outputs);
+                }
+            }
+            else if (trigger.Outputs != null)
+            {
+                outputs = JsonConvert.SerializeObject(trigger.Outputs);
+            }
+
+            if (outputs != null && outputs.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0)
+                return true;
+
+            return false;
+        }
+
         #endregion
+    }
+
+    public class AddCustomColumnForm : Form
+    {
+        private System.Windows.Forms.Label lblHeader;
+        private TextBox txtHeader;
+        private System.Windows.Forms.Label lblPath;
+        private ComboBox cmbPath;
+        private Button btnOk;
+        private Button btnCancel;
+
+        public string HeaderText => txtHeader.Text?.Trim();
+        public string JsonPath => cmbPath.Text?.Trim();
+
+        public AddCustomColumnForm(List<string> detectedPaths)
+        {
+            InitializeUi(detectedPaths);
+        }
+
+        private void InitializeUi(List<string> detectedPaths)
+        {
+            this.Text = "Add Custom Trigger Column";
+            this.Size = new System.Drawing.Size(420, 220);
+            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.StartPosition = FormStartPosition.CenterParent;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+
+            lblHeader = new System.Windows.Forms.Label { Text = "Column Header:", Location = new System.Drawing.Point(20, 20), Size = new System.Drawing.Size(120, 20) };
+            txtHeader = new TextBox { Location = new System.Drawing.Point(150, 18), Size = new System.Drawing.Size(230, 25) };
+
+            lblPath = new System.Windows.Forms.Label { Text = "JSON Path:", Location = new System.Drawing.Point(20, 60), Size = new System.Drawing.Size(120, 20) };
+            cmbPath = new ComboBox { Location = new System.Drawing.Point(150, 58), Size = new System.Drawing.Size(230, 25), DropDownStyle = ComboBoxStyle.DropDown };
+            cmbPath.Items.AddRange(detectedPaths.Cast<object>().ToArray());
+
+            btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new System.Drawing.Point(210, 120), Size = new System.Drawing.Size(80, 30) };
+            btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new System.Drawing.Point(300, 120), Size = new System.Drawing.Size(80, 30) };
+
+            this.Controls.Add(lblHeader);
+            this.Controls.Add(txtHeader);
+            this.Controls.Add(lblPath);
+            this.Controls.Add(cmbPath);
+            this.Controls.Add(btnOk);
+            this.Controls.Add(btnCancel);
+
+            this.AcceptButton = btnOk;
+            this.CancelButton = btnCancel;
+        }
     }
 }

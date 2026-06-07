@@ -16,5 +16,12 @@ namespace ExecutionFlowHistoryViewer
     {
         public string LastUsedOrganizationWebappUrl { get; set; }
         public List<string> VisibleColumns { get; set; } = new List<string>();
+        public List<CustomTriggerColumnSetting> CustomTriggerColumns { get; set; } = new List<CustomTriggerColumnSetting>();
+    }
+
+    public class CustomTriggerColumnSetting
+    {
+        public string HeaderText { get; set; }
+        public string JsonPath { get; set; } // e.g. outputs/body/prioritycode
     }
 }

@@ -18,12 +18,25 @@ namespace ExecutionFlowHistoryViewer.Forms
         private readonly FlowRunDetailDto _detail;
         private readonly FlowActionsResponseDto _actions;
         private readonly IFlowClient _flowClient;
+        private readonly Dictionary<string, string> _triggerContentsCache;
 
         // Table controls for each tab
         private DataGridView _dgvGeneral;
-        private DataGridView _dgvTrigger;
         private DataGridView _dgvActions;
         private DataGridView _dgvErrors;
+
+        // Redesigned Trigger Tab controls
+        private ListBox _lstTriggerCategories;
+        private DataGridView _dgvTriggerFields;
+        private TextBox _txtTriggerJsonViewer;
+        private TextBox _txtTriggerFieldSearch;
+        private Button _btnCopyTriggerValue;
+        private Button _btnCopyTriggerJson;
+        private Label _lblTriggerCategoryTitle;
+
+        private Dictionary<string, Dictionary<string, string>> _parsedTriggerCategories;
+        private string _rawInputsJson;
+        private string _rawOutputsJson;
 
         // Styling constants
         private static readonly Color HeaderBackColor = Color.FromArgb(45, 55, 72);
@@ -36,12 +49,13 @@ namespace ExecutionFlowHistoryViewer.Forms
         private static readonly Color RunningColor = Color.FromArgb(49, 130, 206);
         private static readonly Color CancelledColor = Color.FromArgb(214, 158, 46);
 
-        public RunDetailForm(FlowRun run, FlowRunDetailDto detail, FlowActionsResponseDto actions, IFlowClient flowClient)
+        public RunDetailForm(FlowRun run, FlowRunDetailDto detail, FlowActionsResponseDto actions, IFlowClient flowClient, Dictionary<string, string> triggerContentsCache)
         {
             _run = run;
             _detail = detail;
             _actions = actions;
             _flowClient = flowClient;
+            _triggerContentsCache = triggerContentsCache;
             InitializeComponent();
             BuildUi();
             LoadData();
@@ -71,8 +85,120 @@ namespace ExecutionFlowHistoryViewer.Forms
 
             // Tab: Trigger
             var tabTrigger = new TabPage("  Trigger  ") { BackColor = Color.White };
-            _dgvTrigger = CreateStyledGrid();
-            tabTrigger.Controls.Add(_dgvTrigger);
+            
+            var splitTrigger = new SplitContainer
+            {
+                Dock = DockStyle.Fill,
+                Orientation = Orientation.Vertical,
+                SplitterDistance = 220
+            };
+
+            _lstTriggerCategories = new ListBox
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI", 10F),
+                BorderStyle = BorderStyle.None,
+                BackColor = Color.FromArgb(247, 250, 252)
+            };
+            _lstTriggerCategories.SelectedIndexChanged += LstTriggerCategories_SelectedIndexChanged;
+            
+            splitTrigger.Panel1.Controls.Add(_lstTriggerCategories);
+
+            var pnlRight = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 3,
+                Padding = new Padding(10),
+                BackColor = Color.White
+            };
+            pnlRight.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F)); 
+            pnlRight.RowStyles.Add(new RowStyle(SizeType.Absolute, 45F)); 
+            pnlRight.RowStyles.Add(new RowStyle(SizeType.Percent, 100F)); 
+
+            _lblTriggerCategoryTitle = new Label
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI Semibold", 12F),
+                ForeColor = HeaderBackColor,
+                Text = "Trigger Details",
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+            pnlRight.Controls.Add(_lblTriggerCategoryTitle, 0, 0);
+
+            var pnlControls = new Panel
+            {
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 0, 5)
+            };
+
+            var lblSearch = new Label
+            {
+                Text = "Filter Fields:",
+                Font = new Font("Segoe UI Semibold", 9F),
+                Location = new Point(0, 8),
+                AutoSize = true
+            };
+            _txtTriggerFieldSearch = new TextBox
+            {
+                Location = new Point(90, 5),
+                Size = new Size(200, 25),
+                Font = new Font("Segoe UI", 9F)
+            };
+            _txtTriggerFieldSearch.TextChanged += TxtTriggerFieldSearch_TextChanged;
+
+            _btnCopyTriggerValue = new Button
+            {
+                Text = "📋 Copy Value",
+                Font = new Font("Segoe UI", 9F),
+                Location = new Point(300, 4),
+                Size = new Size(110, 27),
+                BackColor = Color.White,
+                FlatStyle = FlatStyle.System
+            };
+            _btnCopyTriggerValue.Click += BtnCopyTriggerValue_Click;
+
+            _btnCopyTriggerJson = new Button
+            {
+                Text = "📋 Copy JSON",
+                Font = new Font("Segoe UI", 9F),
+                Location = new Point(415, 4),
+                Size = new Size(110, 27),
+                BackColor = Color.White,
+                FlatStyle = FlatStyle.System
+            };
+            _btnCopyTriggerJson.Click += BtnCopyTriggerJson_Click;
+
+            pnlControls.Controls.Add(lblSearch);
+            pnlControls.Controls.Add(_txtTriggerFieldSearch);
+            pnlControls.Controls.Add(_btnCopyTriggerValue);
+            pnlControls.Controls.Add(_btnCopyTriggerJson);
+            pnlRight.Controls.Add(pnlControls, 0, 1);
+
+            var pnlContentOverlay = new Panel { Dock = DockStyle.Fill };
+
+            _dgvTriggerFields = CreateStyledGrid();
+            _dgvTriggerFields.Dock = DockStyle.Fill;
+            
+            _txtTriggerJsonViewer = new TextBox
+            {
+                Dock = DockStyle.Fill,
+                Multiline = true,
+                ReadOnly = true,
+                ScrollBars = ScrollBars.Vertical,
+                Font = new Font("Consolas", 9.5F),
+                BackColor = Color.FromArgb(248, 249, 250),
+                ForeColor = Color.FromArgb(33, 37, 41),
+                BorderStyle = BorderStyle.FixedSingle,
+                Visible = false
+            };
+
+            pnlContentOverlay.Controls.Add(_dgvTriggerFields);
+            pnlContentOverlay.Controls.Add(_txtTriggerJsonViewer);
+            pnlRight.Controls.Add(pnlContentOverlay, 0, 2);
+
+            splitTrigger.Panel2.Controls.Add(pnlRight);
+            tabTrigger.Controls.Add(splitTrigger);
 
             // Tab: Actions
             var tabActions = new TabPage("  Actions  ") { BackColor = Color.White };
@@ -184,29 +310,16 @@ namespace ExecutionFlowHistoryViewer.Forms
 
         private void LoadTriggerTab()
         {
-            _dgvTrigger.Columns.Clear();
-            _dgvTrigger.Columns.Add("Property", "Property");
-            _dgvTrigger.Columns.Add("Value", "Value");
-            _dgvTrigger.Columns["Property"].FillWeight = 25;
-            _dgvTrigger.Columns["Value"].FillWeight = 75;
-
-            _dgvTrigger.Columns["Property"].DefaultCellStyle = new DataGridViewCellStyle
-            {
-                Font = new Font("Segoe UI Semibold", 9.5F),
-                ForeColor = Color.FromArgb(45, 55, 72)
-            };
-
             if (_detail?.Properties?.Trigger == null)
             {
-                AddPropertyRow(_dgvTrigger, "Info", "No trigger data available.");
+                _lstTriggerCategories.Items.Add("Trigger Info");
+                _parsedTriggerCategories = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+                _parsedTriggerCategories["Trigger Info"] = new Dictionary<string, string> { { "Info", "No trigger data available." } };
+                _lstTriggerCategories.SelectedIndex = 0;
                 return;
             }
 
             var trigger = _detail.Properties.Trigger;
-            AddPropertyRow(_dgvTrigger, "Trigger Name", trigger.Name ?? "N/A");
-            AddPropertyRow(_dgvTrigger, "Trigger Status", trigger.Status ?? "N/A");
-            AddPropertyRow(_dgvTrigger, "Trigger Start Time", FormatDateTime(trigger.StartTime));
-            AddPropertyRow(_dgvTrigger, "Trigger End Time", FormatDateTime(trigger.EndTime));
 
             // Inputs
             string inputs = null;
@@ -219,9 +332,6 @@ namespace ExecutionFlowHistoryViewer.Forms
                 inputs = FormatJson(trigger.Inputs);
             }
 
-            // Try to parse inputs as JSON and flatten into rows
-            AddJsonPropertyRows(_dgvTrigger, "Input", inputs);
-
             // Outputs
             string outputs = null;
             if (trigger.OutputsLink?.Uri != null)
@@ -233,7 +343,25 @@ namespace ExecutionFlowHistoryViewer.Forms
                 outputs = FormatJson(trigger.Outputs);
             }
 
-            AddJsonPropertyRows(_dgvTrigger, "Output", outputs);
+            ParseTriggerData(inputs, outputs, out _parsedTriggerCategories, out _rawInputsJson, out _rawOutputsJson);
+
+            // Populate categories listbox
+            _lstTriggerCategories.Items.Clear();
+            foreach (var cat in _parsedTriggerCategories.Keys)
+            {
+                if (_parsedTriggerCategories[cat].Count > 0)
+                {
+                    _lstTriggerCategories.Items.Add(cat);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(_rawInputsJson)) _lstTriggerCategories.Items.Add("Raw Input JSON");
+            if (!string.IsNullOrEmpty(_rawOutputsJson)) _lstTriggerCategories.Items.Add("Raw Output JSON");
+
+            if (_lstTriggerCategories.Items.Count > 0)
+            {
+                _lstTriggerCategories.SelectedIndex = 0;
+            }
         }
 
         private void LoadActionsTab()
@@ -401,14 +529,274 @@ namespace ExecutionFlowHistoryViewer.Forms
 
         private string GetTriggerContent(string uri)
         {
-            try
+            if (string.IsNullOrEmpty(uri)) return null;
+
+            string content = null;
+            if (_triggerContentsCache != null)
             {
-                // Tu dois passer le IFlowClient ici — voir modification du constructeur ci-dessous
-                return _flowClient.GetContentFromLink(uri);
+                lock (_triggerContentsCache)
+                {
+                    _triggerContentsCache.TryGetValue(uri, out content);
+                }
             }
-            catch (Exception ex)
+
+            if (content == null)
             {
-                return $"Error loading content: {ex.Message}";
+                try
+                {
+                    content = _flowClient.GetContentFromLink(uri);
+                    if (content != null && _triggerContentsCache != null)
+                    {
+                        lock (_triggerContentsCache)
+                        {
+                            _triggerContentsCache[uri] = content;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return $"Error loading content: {ex.Message}";
+                }
+            }
+            return content;
+        }
+
+        private void LstTriggerCategories_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_lstTriggerCategories.SelectedItem == null) return;
+            string selected = _lstTriggerCategories.SelectedItem.ToString();
+            _lblTriggerCategoryTitle.Text = selected;
+            _txtTriggerFieldSearch.Text = "";
+
+            if (selected == "Raw Input JSON")
+            {
+                _dgvTriggerFields.Visible = false;
+                _txtTriggerJsonViewer.Visible = true;
+                _txtTriggerJsonViewer.Text = _rawInputsJson;
+                
+                _txtTriggerFieldSearch.Enabled = false;
+                _btnCopyTriggerValue.Enabled = false;
+                _btnCopyTriggerJson.Enabled = true;
+            }
+            else if (selected == "Raw Output JSON")
+            {
+                _dgvTriggerFields.Visible = false;
+                _txtTriggerJsonViewer.Visible = true;
+                _txtTriggerJsonViewer.Text = _rawOutputsJson;
+
+                _txtTriggerFieldSearch.Enabled = false;
+                _btnCopyTriggerValue.Enabled = false;
+                _btnCopyTriggerJson.Enabled = true;
+            }
+            else
+            {
+                _dgvTriggerFields.Visible = true;
+                _txtTriggerJsonViewer.Visible = false;
+
+                _txtTriggerFieldSearch.Enabled = true;
+                _btnCopyTriggerValue.Enabled = true;
+                _btnCopyTriggerJson.Enabled = true;
+
+                BindTriggerFieldsGrid(selected);
+            }
+        }
+
+        private void BindTriggerFieldsGrid(string category, string filterText = "")
+        {
+            _dgvTriggerFields.Columns.Clear();
+            _dgvTriggerFields.Columns.Add("Field", "Field");
+            _dgvTriggerFields.Columns.Add("Value", "Value");
+            _dgvTriggerFields.Columns["Field"].FillWeight = 30;
+            _dgvTriggerFields.Columns["Value"].FillWeight = 70;
+
+            _dgvTriggerFields.Columns["Field"].DefaultCellStyle = new DataGridViewCellStyle
+            {
+                Font = new Font("Segoe UI Semibold", 9.5F),
+                ForeColor = Color.FromArgb(45, 55, 72)
+            };
+
+            if (_parsedTriggerCategories == null || !_parsedTriggerCategories.TryGetValue(category, out var fields)) return;
+
+            foreach (var kvp in fields)
+            {
+                if (string.IsNullOrEmpty(filterText) ||
+                    kvp.Key.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    kvp.Value.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    _dgvTriggerFields.Rows.Add(kvp.Key, kvp.Value);
+                }
+            }
+        }
+
+        private void TxtTriggerFieldSearch_TextChanged(object sender, EventArgs e)
+        {
+            if (_lstTriggerCategories.SelectedItem == null) return;
+            string selected = _lstTriggerCategories.SelectedItem.ToString();
+            if (selected != "Raw Input JSON" && selected != "Raw Output JSON")
+            {
+                BindTriggerFieldsGrid(selected, _txtTriggerFieldSearch.Text.Trim());
+            }
+        }
+
+        private void BtnCopyTriggerValue_Click(object sender, EventArgs e)
+        {
+            if (_dgvTriggerFields.SelectedRows.Count == 0) return;
+            var row = _dgvTriggerFields.SelectedRows[0];
+            string val = row.Cells["Value"].Value?.ToString();
+            if (!string.IsNullOrEmpty(val))
+            {
+                Clipboard.SetText(val);
+                MessageBox.Show("Value copied to clipboard!", "Copied", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void BtnCopyTriggerJson_Click(object sender, EventArgs e)
+        {
+            if (_lstTriggerCategories.SelectedItem == null) return;
+            string selected = _lstTriggerCategories.SelectedItem.ToString();
+
+            if (selected == "Raw Input JSON")
+            {
+                Clipboard.SetText(_rawInputsJson);
+                MessageBox.Show("Raw Input JSON copied to clipboard!", "Copied", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else if (selected == "Raw Output JSON")
+            {
+                Clipboard.SetText(_rawOutputsJson);
+                MessageBox.Show("Raw Output JSON copied to clipboard!", "Copied", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                if (_parsedTriggerCategories != null && _parsedTriggerCategories.TryGetValue(selected, out var dict))
+                {
+                    string json = JsonConvert.SerializeObject(dict, Formatting.Indented);
+                    Clipboard.SetText(json);
+                    MessageBox.Show($"{selected} category copied to clipboard as JSON!", "Copied", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        }
+
+        private void ParseTriggerData(string inputsJson, string outputsJson, out Dictionary<string, Dictionary<string, string>> categories, out string rawInputs, out string rawOutputs)
+        {
+            categories = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+            rawInputs = inputsJson;
+            rawOutputs = outputsJson;
+
+            categories["Trigger Info"] = new Dictionary<string, string>();
+            categories["Inputs - Parameters"] = new Dictionary<string, string>();
+            categories["Inputs - Host"] = new Dictionary<string, string>();
+            categories["Outputs - Headers"] = new Dictionary<string, string>();
+            categories["Outputs - Body"] = new Dictionary<string, string>();
+            categories["Inputs - Other"] = new Dictionary<string, string>();
+            categories["Outputs - Other"] = new Dictionary<string, string>();
+
+            if (_detail?.Properties?.Trigger != null)
+            {
+                var trigger = _detail.Properties.Trigger;
+                categories["Trigger Info"]["Trigger Name"] = trigger.Name ?? "N/A";
+                categories["Trigger Info"]["Trigger Status"] = trigger.Status ?? "N/A";
+                categories["Trigger Info"]["Start Time"] = FormatDateTime(trigger.StartTime);
+                categories["Trigger Info"]["End Time"] = FormatDateTime(trigger.EndTime);
+            }
+
+            // Parse inputs
+            if (!string.IsNullOrWhiteSpace(inputsJson))
+            {
+                try
+                {
+                    var token = JToken.Parse(inputsJson);
+                    if (token is JObject obj)
+                    {
+                        bool hasStructuredInput = false;
+
+                        if (obj["parameters"] is JObject paramsObj)
+                        {
+                            FlattenJObject(paramsObj, categories["Inputs - Parameters"], "");
+                            hasStructuredInput = true;
+                        }
+                        if (obj["host"] is JObject hostObj)
+                        {
+                            FlattenJObject(hostObj, categories["Inputs - Host"], "");
+                            hasStructuredInput = true;
+                        }
+
+                        foreach (var prop in obj.Properties())
+                        {
+                            if (!string.Equals(prop.Name, "parameters", StringComparison.OrdinalIgnoreCase) && 
+                                !string.Equals(prop.Name, "host", StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (prop.Value is JObject subObj) FlattenJObject(subObj, categories["Inputs - Other"], prop.Name + "/");
+                                else categories["Inputs - Other"][prop.Name] = prop.Value.ToString();
+                            }
+                        }
+
+                        if (!hasStructuredInput && categories["Inputs - Other"].Count == 0)
+                        {
+                            FlattenJObject(obj, categories["Inputs - Other"], "");
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            // Parse outputs
+            if (!string.IsNullOrWhiteSpace(outputsJson))
+            {
+                try
+                {
+                    var token = JToken.Parse(outputsJson);
+                    if (token is JObject obj)
+                    {
+                        bool hasStructuredOutput = false;
+
+                        if (obj["headers"] is JObject headersObj)
+                        {
+                            FlattenJObject(headersObj, categories["Outputs - Headers"], "");
+                            hasStructuredOutput = true;
+                        }
+                        if (obj["body"] is JObject bodyObj)
+                        {
+                            FlattenJObject(bodyObj, categories["Outputs - Body"], "");
+                            hasStructuredOutput = true;
+                        }
+
+                        foreach (var prop in obj.Properties())
+                        {
+                            if (!string.Equals(prop.Name, "headers", StringComparison.OrdinalIgnoreCase) && 
+                                !string.Equals(prop.Name, "body", StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (prop.Value is JObject subObj) FlattenJObject(subObj, categories["Outputs - Other"], prop.Name + "/");
+                                else categories["Outputs - Other"][prop.Name] = prop.Value.ToString();
+                            }
+                        }
+
+                        if (!hasStructuredOutput && categories["Outputs - Other"].Count == 0)
+                        {
+                            FlattenJObject(obj, categories["Outputs - Other"], "");
+                        }
+                    }
+                }
+                catch { }
+            }
+        }
+
+        private void FlattenJObject(JObject obj, Dictionary<string, string> dict, string prefix)
+        {
+            foreach (var prop in obj.Properties())
+            {
+                string key = prefix + prop.Name;
+                if (prop.Value is JObject subObj)
+                {
+                    FlattenJObject(subObj, dict, key + "/");
+                }
+                else if (prop.Value is JArray jArr)
+                {
+                    dict[key] = prop.Value.ToString(Formatting.None);
+                }
+                else
+                {
+                    dict[key] = prop.Value.ToString();
+                }
             }
         }
 

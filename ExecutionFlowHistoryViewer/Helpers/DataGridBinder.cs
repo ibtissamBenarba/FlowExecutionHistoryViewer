@@ -10,7 +10,7 @@ namespace ExecutionFlowHistoryViewer.Helpers
 {
     public static class DataGridBinder
     {
-        public static void BindFlowRuns(DataGridView grid, List<FlowRun> runs)
+        public static void BindFlowRuns(DataGridView grid, List<FlowRun> runs, List<CustomTriggerColumnSetting> customCols = null)
         {
             grid.AutoGenerateColumns = false;
             grid.DataSource = null;
@@ -80,6 +80,20 @@ namespace ExecutionFlowHistoryViewer.Helpers
                 Name = "TriggerStatus",
                 Width = 100
             });
+
+            if (customCols != null)
+            {
+                foreach (var cc in customCols)
+                {
+                    grid.Columns.Add(new DataGridViewTextBoxColumn
+                    {
+                        HeaderText = cc.HeaderText,
+                        Name = "col_custom_trigger_" + cc.JsonPath,
+                        Width = 120,
+                        ReadOnly = true
+                    });
+                }
+            }
 
             grid.Columns.Add(new DataGridViewLinkColumn
             {
