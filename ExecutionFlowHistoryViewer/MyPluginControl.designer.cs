@@ -91,6 +91,8 @@ namespace ExecutionFlowHistoryViewer
             this.dtpDateFrom = new System.Windows.Forms.DateTimePicker();
             this.lblDateFrom = new System.Windows.Forms.Label();
             this.vS2015BlueTheme1 = new WeifenLuo.WinFormsUI.Docking.VS2015BlueTheme();
+            this.btnTriggerFilter = new System.Windows.Forms.ToolStripButton();
+            this.btnClearTriggerFilter = new System.Windows.Forms.ToolStripButton();
             tsmConnectToPA = new System.Windows.Forms.ToolStripButton();
             this.tsmContainer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).BeginInit();
@@ -128,7 +130,9 @@ namespace ExecutionFlowHistoryViewer
             this.tssSeparator1,
             tsmConnectToPA,
             this.btnExport,
-            this.tsbDarkMode});
+            this.tsbDarkMode,
+            this.btnTriggerFilter,
+            this.btnClearTriggerFilter});
             this.tsmContainer.Location = new System.Drawing.Point(0, 0);
             this.tsmContainer.Name = "tsmContainer";
             this.tsmContainer.Size = new System.Drawing.Size(1347, 31);
@@ -791,6 +795,26 @@ namespace ExecutionFlowHistoryViewer
             this.lblDateFrom.TabIndex = 0;
             this.lblDateFrom.Text = "From:";
             // 
+            // btnTriggerFilter
+            // 
+            this.btnTriggerFilter.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.btnTriggerFilter.Image = ((System.Drawing.Image)(resources.GetObject("btnTriggerFilter.Image")));
+            this.btnTriggerFilter.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnTriggerFilter.Name = "btnTriggerFilter";
+            this.btnTriggerFilter.Size = new System.Drawing.Size(81, 28);
+            this.btnTriggerFilter.Text = "Filter Runs";
+            this.btnTriggerFilter.Click += new System.EventHandler(this.btnTriggerFilter_Click);
+            // 
+            // btnClearTriggerFilter
+            // 
+            this.btnClearTriggerFilter.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.btnClearTriggerFilter.Image = ((System.Drawing.Image)(resources.GetObject("btnClearTriggerFilter.Image")));
+            this.btnClearTriggerFilter.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnClearTriggerFilter.Name = "btnClearTriggerFilter";
+            this.btnClearTriggerFilter.Size = new System.Drawing.Size(80, 28);
+            this.btnClearTriggerFilter.Text = "clear filter";
+            this.btnClearTriggerFilter.Click += new System.EventHandler(this.btnClearTriggerFilter_Click);
+            // 
             // MyPluginControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -886,5 +910,7 @@ namespace ExecutionFlowHistoryViewer
         private System.Windows.Forms.Button btnResubmit;
         private System.Windows.Forms.Button btnCheckSafety;
         private WeifenLuo.WinFormsUI.Docking.VS2015BlueTheme vS2015BlueTheme1;
+        private ToolStripButton btnTriggerFilter;
+        private ToolStripButton btnClearTriggerFilter;
     }
 }

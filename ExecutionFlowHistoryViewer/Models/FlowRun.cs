@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using Newtonsoft.Json.Linq;
 
 namespace ExecutionFlowHistoryViewer.Models
 {
@@ -57,5 +58,8 @@ namespace ExecutionFlowHistoryViewer.Models
         public string Url { get; set; }
 
         public string TriggerName { get; set; }
+
+        [Browsable(false)]
+        public JObject TriggerOutputs { get; set; }
     }
 }

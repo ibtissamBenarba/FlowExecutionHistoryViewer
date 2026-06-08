@@ -8,6 +8,7 @@ using ExecutionFlowHistoryViewer.Services;
 using McTools.Xrm.Connection;
 using Microsoft.Xrm.Sdk;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -18,7 +19,8 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using XrmToolBox.Extensibility;
-
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace ExecutionFlowHistoryViewer
 {
@@ -42,6 +44,13 @@ namespace ExecutionFlowHistoryViewer
         // Deep search state
         private bool _isDeepSearchActive;
         private BackgroundWorker _deepSearchWorker;
+
+        private ConditionGroup _currentTriggerFilter;
+        private readonly Dictionary<string, JObject> _triggerOutputsCache = new Dictionary<string, JObject>(StringComparer.OrdinalIgnoreCase);
+        private bool _isTriggerFilterActive;
+
+        private readonly object _triggerOutputsCacheLock = new object();
+
         #endregion
 
         #region Constructor & Lifecycle
@@ -205,6 +214,19 @@ namespace ExecutionFlowHistoryViewer
                 tsbDarkMode.Click -= ToggleDarkMode;
                 tsbDarkMode.Click += ToggleDarkMode;
             }
+
+            // Trigger Output Filter buttons (add these buttons to your WinForms designer first)
+            if (btnTriggerFilter != null)
+            {
+                btnTriggerFilter.Click -= btnTriggerFilter_Click;
+                btnTriggerFilter.Click += btnTriggerFilter_Click;
+            }
+
+            if(btnClearTriggerFilter != null)
+            {
+                btnClearTriggerFilter.Click -= btnClearTriggerFilter_Click;
+                btnClearTriggerFilter.Click += btnClearTriggerFilter_Click;
+            }
         }
 
         private void WirePaginationButton(ToolStripButton button, EventHandler handler)
@@ -302,7 +324,7 @@ namespace ExecutionFlowHistoryViewer
 
         #region Flow Selection & Filtering
 
-        private List<Flow> GetSelectedFlows() =>
+        public List<Flow> GetSelectedFlows() =>
             _currentFlows.Where(f => _checkedFlowIds.Contains(f.Id)).ToList();
 
         private void ApplyFlowFilter()
@@ -374,6 +396,8 @@ namespace ExecutionFlowHistoryViewer
                 _checkedFlowIds.Remove(flow.Id);
 
             ResetPagination();
+            ClearTriggerOutputsFilter();
+            _triggerOutputsCache.Clear();
             DataGridBinder.BindFlowRuns(dataGridView1, new List<FlowRun>());
             UpdatePaginationUI();
 
@@ -434,6 +458,7 @@ namespace ExecutionFlowHistoryViewer
                     _pagination.Reset();
                     _pagination.TotalServerCount = (int)args.Result;
                     _flowSkipTokens.Clear();
+                    _triggerOutputsCache.Clear();
                     FetchPage(selectedFlows, fromDate, toDate, status, isNextPage: false);
                 }
             });
@@ -1677,5 +1702,204 @@ namespace ExecutionFlowHistoryViewer
             tsbDarkMode.Owner?.Invalidate();
         }
         #endregion
+
+        public List<FlowRun> GetAllRuns() => _pagination?.AllRuns?.ToList() ?? new List<FlowRun>();
+
+        public JObject GetTriggerOutputsForRun(FlowRun run)
+        {
+            if (run == null) return null;
+
+            // Return from cache if available
+            if (_triggerOutputsCache.TryGetValue(run.Id, out JObject cached))
+                return cached;
+
+            // Find the flow this run belongs to
+            var flow = _currentFlows.FirstOrDefault(f =>
+                (!string.IsNullOrEmpty(run.FlowId) && f.Id.Equals(run.FlowId, StringComparison.OrdinalIgnoreCase))
+                || (!string.IsNullOrEmpty(run.FlowName) && f.DisplayName.Equals(run.FlowName, StringComparison.OrdinalIgnoreCase)));
+
+            if (flow == null) return null;
+
+            try
+            {
+                var client = _flowClientFactory.Create();
+                var outputs = client.GetTriggerOutputs(flow.Id, run.Id);
+
+                if (outputs != null)
+                {
+                    _triggerOutputsCache[run.Id] = outputs;
+                    run.TriggerOutputs = outputs; // also attach to model
+                }
+
+                return outputs;
+            }
+            catch
+            {
+                // Silently ignore — trigger outputs may not be available for all runs
+                return null;
+            }
+        }
+
+        public void ApplyTriggerOutputsFilter(ConditionGroup filter, int maxRuns = 0)
+        {
+            _currentTriggerFilter = filter;
+            _isTriggerFilterActive = true;
+
+            // Optional: show what we received
+            System.Diagnostics.Debug.WriteLine($"=== APPLYING FILTER ===");
+            System.Diagnostics.Debug.WriteLine($"Group: {filter.GroupOperator}");
+            foreach (var c in filter.FilterConditions)
+                System.Diagnostics.Debug.WriteLine($"  - {c.Attribute} {c.Operator} '{c.Value}'");
+            System.Diagnostics.Debug.WriteLine($"=========================");
+
+            WorkAsync(new WorkAsyncInfo
+            {
+                Message = "Applying trigger output filter...",
+                Work = (worker, args) =>
+                {
+                    var allRuns = _pagination?.AllRuns ?? new List<FlowRun>();
+                    var runsToProcess = (maxRuns > 0 && maxRuns < allRuns.Count)
+                        ? allRuns.Take(maxRuns).ToList()
+                        : allRuns;
+
+                    int total = runsToProcess.Count;
+                    var matching = new List<FlowRun>();
+                    int processed = 0;
+
+                    foreach (var run in runsToProcess)
+                    {
+                        if (worker.CancellationPending)
+                        {
+                            args.Cancel = true;
+                            return;
+                        }
+
+                        JObject outputs = null;
+
+                        lock (_triggerOutputsCacheLock)
+                        {
+                            if (_triggerOutputsCache.TryGetValue(run.Id, out JObject cached))
+                            {
+                                outputs = cached;
+                                run.TriggerOutputs = outputs;
+                            }
+                        }
+
+                        if (outputs == null)
+                        {
+                            var flow = _currentFlows.FirstOrDefault(f =>
+                                (!string.IsNullOrEmpty(run.FlowId) && f.Id.Equals(run.FlowId, StringComparison.OrdinalIgnoreCase))
+                                || (!string.IsNullOrEmpty(run.FlowName) && f.DisplayName.Equals(run.FlowName, StringComparison.OrdinalIgnoreCase)));
+
+                            if (flow != null)
+                            {
+                                try
+                                {
+                                    outputs = _flowClientFactory.Create().GetTriggerOutputs(flow.Id, run.Id);
+                                    if (outputs != null)
+                                    {
+                                        lock (_triggerOutputsCacheLock) { _triggerOutputsCache[run.Id] = outputs; }
+                                        run.TriggerOutputs = outputs;
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"Trigger fetch failed for run {run.Id}: {ex.Message}");
+                                }
+                            }
+                        }
+
+                        if (outputs != null)
+                        {
+                            bool isMatch = TriggerOutputFilterEvaluator.EvaluateGroup(outputs, _currentTriggerFilter, out string debugLog);
+
+                            // Log first 5 runs for debugging
+                            if (processed < 5)
+                                System.Diagnostics.Debug.WriteLine($"Run {run.Id}: Match={isMatch}\n{debugLog}");
+
+                            if (isMatch)
+                                matching.Add(run);
+                        }
+
+                        processed++;
+                        if (total > 0 && (processed % 5 == 0 || processed == total))
+                            worker.ReportProgress((int)((double)processed / total * 100));
+
+                        if (processed % 2 == 0)
+                            System.Threading.Thread.Sleep(150);
+                    }
+
+                    args.Result = new
+                    {
+                        Matching = matching.OrderByDescending(r => r.StartDate).ToList(),
+                        TotalProcessed = total
+                    };
+                },
+                ProgressChanged = (args) =>
+                {
+                    lblDeepSearchStatus.Text = $"Scanning trigger outputs... {args.ProgressPercentage}%";
+                },
+                PostWorkCallBack = (args) =>
+                {
+                    if (args.Error != null) { ShowError(args.Error); return; }
+                    if (args.Cancelled) { lblDeepSearchStatus.Text = "Filter cancelled."; return; }
+
+                    dynamic result = args.Result;
+                    var matchingRuns = result.Matching as List<FlowRun>;
+                    int processedCount = result.TotalProcessed;
+
+                    lblDeepSearchStatus.Text = $"Trigger filter: {matchingRuns.Count} match(es) (scanned {processedCount})";
+                    gbFlowRuns.Text = $"Flow Runs — {matchingRuns.Count} trigger-filtered result(s)";
+                    DataGridBinder.BindFlowRuns(dataGridView1, matchingRuns);
+                }
+            });
+        }
+
+        public void ClearTriggerOutputsFilter()
+        {
+            _currentTriggerFilter = null;
+            _isTriggerFilterActive = false;
+            lblDeepSearchStatus.Text = "";
+            gbFlowRuns.Text = "Flow Runs";
+
+            // Restore normal paginated view
+            ShowCurrentPage();
+            UpdatePaginationUI();
+        }
+        private void btnTriggerFilter_Click(object sender, EventArgs e)
+        {
+            var selectedFlows = GetSelectedFlows();
+            if (selectedFlows.Count == 0)
+            {
+                MessageBox.Show("Please select at least one flow first.", "No Flows Selected", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var allRuns = _pagination?.AllRuns;
+            if (allRuns == null || allRuns.Count == 0)
+            {
+                MessageBox.Show("Please fetch run history first before applying a trigger filter.", "No Data", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            using (var form = new Forms.TriggerOutputsFilterForm(this))
+            {
+                form.ShowDialog(this);
+            }
+        }
+
+        private void btnClearTriggerFilter_Click(object sender, EventArgs e)
+        {
+            ClearTriggerOutputsFilter();
+        }
+        public IFlowClient CreateFlowClient()
+        {
+            return _flowClientFactory?.Create();
+        }
+
+        public int GetCurrentPageSize()
+        {
+            return _pagination?.PageSize ?? 50;
+        }
     }
 }

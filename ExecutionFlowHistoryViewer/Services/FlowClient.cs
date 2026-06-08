@@ -241,5 +241,52 @@ namespace ExecutionFlowHistoryViewer.Services
                 return json;
             }
         }
+
+        public JObject GetTriggerOutputs(string flowId, string runId)
+        {
+            var details = GetRunDetails(flowId, runId);
+            if (details?.Properties?.Trigger == null) return null;
+
+            // 1) Try direct Outputs object (usually JObject after deserialization)
+            if (details.Properties.Trigger.Outputs != null)
+            {
+                if (details.Properties.Trigger.Outputs is JObject jOut)
+                    return jOut;
+                try { return JObject.FromObject(details.Properties.Trigger.Outputs); }
+                catch { /* ignore cast failure */ }
+            }
+
+            // 2) Try OutputsLink (SAS or Bearer link)
+            if (details.Properties.Trigger.OutputsLink?.Uri != null)
+            {
+                try
+                {
+                    var content = GetContentFromLink(details.Properties.Trigger.OutputsLink.Uri);
+                    return JObject.Parse(content);
+                }
+                catch { /* ignore */ }
+            }
+
+            // 3) Fallback to Inputs (some triggers store payload in inputs)
+            if (details.Properties.Trigger.Inputs != null)
+            {
+                if (details.Properties.Trigger.Inputs is JObject jIn)
+                    return jIn;
+                try { return JObject.FromObject(details.Properties.Trigger.Inputs); }
+                catch { /* ignore */ }
+            }
+
+            if (details.Properties.Trigger.InputsLink?.Uri != null)
+            {
+                try
+                {
+                    var content = GetContentFromLink(details.Properties.Trigger.InputsLink.Uri);
+                    return JObject.Parse(content);
+                }
+                catch { /* ignore */ }
+            }
+
+            return null;
+        }
     }
 }
