@@ -31,7 +31,7 @@ namespace ExecutionFlowHistoryViewer.Forms
             _chatService = chatService;
             
             InitializeComponent();
-            ThemeManager.ApplyTheme(this);
+            ThemeManager.Apply(this, ThemeManager.IsDarkMode);
             BuildUi();
         }
 
