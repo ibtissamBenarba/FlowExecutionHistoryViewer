@@ -2,17 +2,16 @@
 using ExecutionFlowHistoryViewer.Models;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Linq;
 using System.Text;
 
 namespace ExecutionFlowHistoryViewer.Helpers
 {
-    public static class TriggerOutputFilterEvaluator
+    public static class ActionOutputFilterEvaluator
     {
-        public static bool EvaluateGroup(JObject triggerOutputs, ConditionGroup group, out string debugLog)
+        public static bool EvaluateGroup(JObject actionOutputs, ConditionGroup group, out string debugLog)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("=== TRIGGER FILTER EVALUATION ===");
+            sb.AppendLine("=== ACTION FILTER EVALUATION ===");
 
             if (group?.FilterConditions == null || group.FilterConditions.Count == 0)
             {
@@ -27,9 +26,9 @@ namespace ExecutionFlowHistoryViewer.Helpers
 
             bool finalResult;
             if (group.GroupOperator == GroupOperator.And)
-                finalResult = EvaluateAnd(triggerOutputs, group, sb);
+                finalResult = EvaluateAnd(actionOutputs, group, sb);
             else
-                finalResult = EvaluateOr(triggerOutputs, group, sb);
+                finalResult = EvaluateOr(actionOutputs, group, sb);
 
             sb.AppendLine();
             sb.AppendLine($"FINAL RESULT: {finalResult}");
@@ -39,11 +38,11 @@ namespace ExecutionFlowHistoryViewer.Helpers
             return finalResult;
         }
 
-        private static bool EvaluateAnd(JObject triggerOutputs, ConditionGroup group, StringBuilder sb)
+        private static bool EvaluateAnd(JObject actionOutputs, ConditionGroup group, StringBuilder sb)
         {
             foreach (var condition in group.FilterConditions)
             {
-                bool result = EvaluateSingle(triggerOutputs, condition, out string reason);
+                bool result = EvaluateSingle(actionOutputs, condition, out string reason);
                 sb.AppendLine($"[AND] {condition.Attribute} {condition.Operator} '{condition.Value}' => {result} ({reason})");
 
                 if (!result)
@@ -52,11 +51,11 @@ namespace ExecutionFlowHistoryViewer.Helpers
             return true;
         }
 
-        private static bool EvaluateOr(JObject triggerOutputs, ConditionGroup group, StringBuilder sb)
+        private static bool EvaluateOr(JObject actionOutputs, ConditionGroup group, StringBuilder sb)
         {
             foreach (var condition in group.FilterConditions)
             {
-                bool result = EvaluateSingle(triggerOutputs, condition, out string reason);
+                bool result = EvaluateSingle(actionOutputs, condition, out string reason);
                 sb.AppendLine($"[OR]  {condition.Attribute} {condition.Operator} '{condition.Value}' => {result} ({reason})");
 
                 if (result)
@@ -65,13 +64,13 @@ namespace ExecutionFlowHistoryViewer.Helpers
             return false;
         }
 
-        public static bool EvaluateSingle(JObject triggerOutputs, FilterCondition condition, out string reason)
+        public static bool EvaluateSingle(JObject actionOutputs, FilterCondition condition, out string reason)
         {
             reason = "ok";
 
-            if (triggerOutputs == null)
+            if (actionOutputs == null)
             {
-                reason = "triggerOutputs is null";
+                reason = "actionOutputs is null";
                 return false;
             }
 
@@ -81,25 +80,29 @@ namespace ExecutionFlowHistoryViewer.Helpers
                 return false;
             }
 
-            // Try literal key first
-            JToken token = triggerOutputs[condition.Attribute];
+            // --- DEBUG: dump the action outputs to Output window ---
+            System.Diagnostics.Debug.WriteLine("=== EvaluateSingle ===");
+            System.Diagnostics.Debug.WriteLine($"Attribute: {condition.Attribute}");
+            System.Diagnostics.Debug.WriteLine($"actionOutputs: {actionOutputs.ToString()}");
+            JToken token = null;
 
-            // If not found, try as nested path
+            // Try direct access
+            token = actionOutputs[condition.Attribute];
+
+            // Try "body" shortcut
+            if (token == null || token.Type == JTokenType.Null)
+                token = actionOutputs["body"]?[condition.Attribute];
+
+            // Try nested path (supports dots and slashes)
+            if (token == null || token.Type == JTokenType.Null)
+                token = NavigateTokenPath(actionOutputs, condition.Attribute);
+
+            // Try inside "parameters" (common for inputs)
             if (token == null || token.Type == JTokenType.Null)
             {
-                token = NavigateTokenPath(triggerOutputs, condition.Attribute);
-            }
-
-            // Power Automate Dataverse triggers wrap entity data inside "body"
-            if (token == null || token.Type == JTokenType.Null)
-            {
-                token = triggerOutputs["body"]?[condition.Attribute];
-            }
-
-            if (token == null || token.Type == JTokenType.Null)
-            {
-                reason = $"attribute '{condition.Attribute}' not found";
-                return false;
+                var parameters = actionOutputs["parameters"] as JObject;
+                if (parameters != null)
+                    token = NavigateTokenPath(parameters, condition.Attribute);
             }
 
             string actualValue = token.ToString();
@@ -167,7 +170,7 @@ namespace ExecutionFlowHistoryViewer.Helpers
         {
             if (root == null || string.IsNullOrWhiteSpace(path)) return null;
 
-            var parts = path.Split(new[] { '/', '.' }, StringSplitOptions.RemoveEmptyEntries);
+            var parts = path.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
             JToken current = root;
 
             foreach (var part in parts)
@@ -189,7 +192,6 @@ namespace ExecutionFlowHistoryViewer.Helpers
                     return null;
                 }
             }
-
             return current;
         }
     }

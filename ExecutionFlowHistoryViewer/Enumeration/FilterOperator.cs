@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ExecutionFlowHistoryViewer.Enumeration
 {
-    public enum TriggerOutputOperator
+    public enum FilterOperator
     {
         Equals,
         NotEquals,

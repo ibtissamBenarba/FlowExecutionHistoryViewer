@@ -281,8 +281,9 @@
     <Compile Include="DTO\FlowRunDto.cs" />
     <Compile Include="DTO\FlowRunPropertiesDto.cs" />
     <Compile Include="DTO\FlowRunsResponseDto.cs" />
+    <Compile Include="Enumeration\FilterOperator.cs" />
+    <Compile Include="Enumeration\FilterTarget.cs" />
     <Compile Include="Enumeration\GroupOperator.cs" />
-    <Compile Include="Enumeration\TriggerOutputOperator.cs" />
     <Compile Include="Forms\ApiKeyForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -295,11 +296,15 @@
     <Compile Include="Forms\ExportForm.Designer.cs">
       <DependentUpon>ExportForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\FilterConditionControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Include="Forms\FilterConditionControl.cs" />
     <Compile Include="Forms\FilterConditionControl.Designer.cs">
       <DependentUpon>FilterConditionControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\OutputsFilterForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\OutputsFilterForm.Designer.cs">
+      <DependentUpon>OutputsFilterForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\RunDetailForm.cs">
       <SubType>Form</SubType>
@@ -307,9 +312,7 @@
     <Compile Include="Forms\RunDetailForm.Designer.cs">
       <DependentUpon>RunDetailForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\TriggerOutputsFilterForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="Helpers\ActionOutputFilterEvaluator.cs" />
     <Compile Include="Helpers\DataGridBinder.cs" />
     <Compile Include="Helpers\FlowRunPageResult.cs" />
     <Compile Include="Helpers\PageFetchResult.cs" />
@@ -353,6 +356,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Forms\ExportForm.resx">
       <DependentUpon>ExportForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\OutputsFilterForm.resx">
+      <DependentUpon>OutputsFilterForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\RunDetailForm.resx">
       <DependentUpon>RunDetailForm.cs</DependentUpon>
