@@ -52,6 +52,10 @@ namespace ExecutionFlowHistoryViewer
 
         private readonly object _triggerOutputsCacheLock = new object();
 
+        // Flow run selection state (grid checkboxes)
+        private readonly HashSet<string> _checkedRunIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private bool _isUpdatingRunCheckState = false;
+
         #endregion
 
         #region Constructor & Lifecycle
@@ -64,9 +68,9 @@ namespace ExecutionFlowHistoryViewer
 
         private void MyPluginControl_Load(object sender, EventArgs e)
         {
-            dataGridView1.ReadOnly = true;
             clbFlows.CheckOnClick = true;
             dataGridView1.MultiSelect = true;
+            dataGridView1.AllowUserToResizeRows = false;
             dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridView1.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
             InitializeFilters();
@@ -76,6 +80,9 @@ namespace ExecutionFlowHistoryViewer
             InitializeTheme();
 
             if (Service != null) InitializeServices();
+
+            // Wire checkbox-specific events
+            WireCheckboxEvents();
         }
 
         public override void UpdateConnection(IOrganizationService newService, ConnectionDetail detail, string actionName, object parameter)
@@ -107,6 +114,8 @@ namespace ExecutionFlowHistoryViewer
             _pagination = new PaginationService();
             _aiService = new GeminiService(_settings?.GeminiApiKey ?? "");
             _safetyAnalyzer = new FlowSafetyAnalyzer(_aiService);
+            DataGridBinder.SyncCheckboxStates(dataGridView1, _checkedRunIds);
+            UpdateSelectAllHeaderState();
         }
 
         private void InitializeSettings()
@@ -236,6 +245,171 @@ namespace ExecutionFlowHistoryViewer
             button.Enabled = false;
             button.Click -= handler;
             button.Click += handler;
+        }
+
+        #endregion
+
+        #region Grid Checkbox Selection
+
+        private void WireCheckboxEvents()
+        {
+            dataGridView1.CellContentClick += DataGridView1_CellContentClick;
+            dataGridView1.ColumnHeaderMouseClick += DataGridView1_ColumnHeaderMouseClick;
+            dataGridView1.RowPrePaint += DataGridView1_RowPrePaint;
+        }
+
+        private void DataGridView1_RowPrePaint(object sender, DataGridViewRowPrePaintEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            var row = dataGridView1.Rows[e.RowIndex];
+            var run = row.DataBoundItem as FlowRun;
+            if (run == null) return;
+
+            // Use _checkedRunIds as single source of truth
+            bool isChecked = _checkedRunIds.Contains(run.Id);
+
+            if (isChecked)
+            {
+                row.DefaultCellStyle.BackColor = Color.LightBlue;
+                row.DefaultCellStyle.SelectionBackColor = Color.LightBlue;
+            }
+            else
+            {
+                row.DefaultCellStyle.BackColor = dataGridView1.DefaultCellStyle.BackColor;
+                row.DefaultCellStyle.SelectionBackColor = dataGridView1.DefaultCellStyle.SelectionBackColor;
+            }
+        }
+        private void DataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex != 0) return;
+
+            var row = dataGridView1.Rows[e.RowIndex];
+            var run = row.DataBoundItem as FlowRun;
+            if (run == null) return;
+
+            // Toggle based on current _checkedRunIds state (single source of truth)
+            bool isCurrentlyChecked = _checkedRunIds.Contains(run.Id);
+            bool newState = !isCurrentlyChecked;
+
+            if (newState)
+                _checkedRunIds.Add(run.Id);
+            else
+                _checkedRunIds.Remove(run.Id);
+
+            // Update cell value directly
+            row.Cells["Select"].Value = newState;
+
+            dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            dataGridView1.Invalidate();
+            UpdateSelectAllHeaderState();
+        }
+
+        private void DataGridView1_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.ColumnIndex != 0) return;
+
+            _isUpdatingRunCheckState = true;
+
+            // Determine current selection state
+            int visibleCount = 0;
+            int checkedCount = 0;
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                if (row.IsNewRow) continue;
+                var run = row.DataBoundItem as FlowRun;
+                if (run == null) continue;
+                visibleCount++;
+                if (_checkedRunIds.Contains(run.Id)) checkedCount++;
+            }
+
+            bool newState = checkedCount < visibleCount;
+
+            // Apply to all rows
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                if (row.IsNewRow) continue;
+                var run = row.DataBoundItem as FlowRun;
+                if (run == null) continue;
+
+                if (newState)
+                    _checkedRunIds.Add(run.Id);
+                else
+                    _checkedRunIds.Remove(run.Id);
+
+                // Directly set the cell value
+                row.Cells["Select"].Value = newState;
+            }
+
+            // Commit and refresh
+            dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            dataGridView1.RefreshEdit();
+            dataGridView1.InvalidateColumn(0);
+            dataGridView1.Refresh();
+
+            _isUpdatingRunCheckState = false;
+            UpdateSelectAllHeaderState();
+        }
+        private void UpdateSelectAllHeaderState()
+        {
+            var selectCol = dataGridView1.Columns["Select"];
+            if (selectCol == null) return;
+
+            int visibleCount = 0;
+            int checkedCount = 0;
+
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                if (row.IsNewRow) continue;
+                var run = row.DataBoundItem as FlowRun;
+                if (run == null) continue;
+                visibleCount++;
+                if (_checkedRunIds.Contains(run.Id))
+                    checkedCount++;
+            }
+
+            // Store current font family and base size
+            var baseFont = selectCol.HeaderCell.Style.Font ?? dataGridView1.Font;
+            float normalSize = 12F;    // Size that makes ☐ and ▣ look good
+            float checkedAllSize = 9.5F; // Slightly smaller to match ☐
+
+            if (visibleCount == 0 || checkedCount == 0)
+            {
+                selectCol.HeaderText = "☐";
+                selectCol.HeaderCell.Style.Font = new Font(baseFont.FontFamily, normalSize, FontStyle.Regular);
+            }
+            else if (checkedCount == visibleCount)
+            {
+                selectCol.HeaderText = "☑";
+                // Use smaller font for the checkmark box
+                selectCol.HeaderCell.Style.Font = new Font(baseFont.FontFamily, checkedAllSize, FontStyle.Regular);
+            }
+            else
+            {
+                selectCol.HeaderText = "▣";
+                selectCol.HeaderCell.Style.Font = new Font(baseFont.FontFamily, normalSize, FontStyle.Regular);
+            }
+        }
+
+        /// <summary>
+        /// Gets all checked runs across all pages
+        /// </summary>
+        public List<FlowRun> GetCheckedRuns()
+        {
+            var allRuns = _pagination?.AllRuns;
+            if (allRuns == null) return new List<FlowRun>();
+
+            return allRuns.Where(r => _checkedRunIds.Contains(r.Id)).ToList();
+        }
+
+        /// <summary>
+        /// Clears all run selections
+        /// </summary>
+        public void ClearRunSelections()
+        {
+            _checkedRunIds.Clear();
+            DataGridBinder.SyncCheckboxStates(dataGridView1, _checkedRunIds);
+            UpdateSelectAllHeaderState();
         }
 
         #endregion
@@ -460,6 +634,7 @@ namespace ExecutionFlowHistoryViewer
                     _pagination.TotalServerCount = (int)args.Result;
                     _flowSkipTokens.Clear();
                     _triggerOutputsCache.Clear();
+                    _checkedRunIds.Clear();
                     FetchPage(selectedFlows, fromDate, toDate, status, isNextPage: false);
                 }
             });
@@ -569,7 +744,10 @@ namespace ExecutionFlowHistoryViewer
 
         private void ShowCurrentPage()
         {
-            DataGridBinder.BindFlowRuns(dataGridView1, _pagination.GetCurrentPage());
+            DataGridBinder.BindFlowRuns(dataGridView1, _pagination.GetCurrentPage(), _checkedRunIds);
+            UpdateSelectAllHeaderState();
+            dataGridView1.ClearSelection();
+            dataGridView1.Invalidate();      // Let RowPrePaint handle all colors
         }
 
         private void UpdatePaginationUI()
@@ -826,6 +1004,7 @@ namespace ExecutionFlowHistoryViewer
                     _pagination.Reset();
                     _pagination.TotalServerCount = (int)args.Result;
                     _flowSkipTokens.Clear();
+                    _checkedRunIds.Clear();
                     FetchPage(selectedFlows, fromDate, toDate, status, isNextPage: false);
                 }
             });
@@ -839,6 +1018,10 @@ namespace ExecutionFlowHistoryViewer
         {
             if (e.RowIndex < 0) return;
             if (e.ColumnIndex < 0 || e.ColumnIndex >= dataGridView1.Columns.Count) return;
+
+            // Ignore clicks on the Select checkbox column — let the checkbox handle itself
+            if (dataGridView1.Columns[e.ColumnIndex].Name == "Select")
+                return;
 
             var run = dataGridView1.Rows[e.RowIndex].DataBoundItem as FlowRun;
             if (run == null) return;
@@ -869,19 +1052,15 @@ namespace ExecutionFlowHistoryViewer
 
         private void dataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
-            if (e.RowIndex < 0)
-                return;
+            if (e.RowIndex < 0) return;
 
             var column = dataGridView1.Columns[e.ColumnIndex];
 
-            if (column.DataPropertyName != "Status")
-                return;
+            // === STATUS COLUMN (existing color formatting) ===
+            if (column.DataPropertyName != "Status") return;
 
             string status = e.Value?.ToString();
-
-            if (string.IsNullOrWhiteSpace(status))
-                return;
-
+            if (string.IsNullOrWhiteSpace(status)) return;
             // Reset style first
             e.CellStyle.Font = dataGridView1.DefaultCellStyle.Font;
 
@@ -1414,24 +1593,17 @@ namespace ExecutionFlowHistoryViewer
 
         private void btnResubmit_Click(object sender, EventArgs e)
         {
-            // Get all selected rows
-            if (dataGridView1.SelectedRows.Count == 0)
+            var selectedRuns = GetCheckedRuns();
+
+            if (selectedRuns.Count == 0)
             {
                 MessageBox.Show(
-                    "Please select one or more flow runs to resubmit.",
+                    "Please check at least one flow run to resubmit.",
                     "No Selection",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
-
                 return;
             }
-
-            // Extract valid FlowRun objects
-            var selectedRuns = dataGridView1.SelectedRows
-                .Cast<DataGridViewRow>()
-                .Select(r => r.DataBoundItem as FlowRun)
-                .Where(r => r != null)
-                .ToList();
 
             if (selectedRuns.Count == 0)
             {
@@ -1553,25 +1725,20 @@ namespace ExecutionFlowHistoryViewer
 
         private void btnCheckSafety_Click(object sender, EventArgs e)
         {
-            // No API key check needed - using shared key
-
-            // Selection check
-            var selectedRuns = dataGridView1.SelectedRows
-                .Cast<DataGridViewRow>()
-                .Select(r => r.DataBoundItem as FlowRun)
-                .Where(r => r != null && r.Status == "Failed")
-                .ToList();
+            var selectedRuns = GetCheckedRuns()
+        .Where(r => r.Status == "Failed")
+        .ToList();
 
             if (selectedRuns.Count == 0)
             {
-                MessageBox.Show("Please select one or more Failed runs in the grid to analyze.",
+                MessageBox.Show("Please check one or more Failed runs to analyze.",
                     "No Failed Runs Selected", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
             if (selectedRuns.Count > 3)
             {
-                MessageBox.Show("Please select a maximum of 3 failed runs for analysis.",
+                MessageBox.Show("Please check a maximum of 3 failed runs for analysis.",
                     "Too Many Selections", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -2039,6 +2206,20 @@ namespace ExecutionFlowHistoryViewer
         public int GetCurrentPageSize()
         {
             return _pagination?.PageSize ?? 50;
+        }
+
+        private void SyncAllCheckboxCells(bool newState)
+        {
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                if (row.IsNewRow) continue;
+                var cell = row.Cells["Select"];
+                if (cell != null)
+                {
+                    // Force the cell value to match the bound property
+                    cell.Value = newState;
+                }
+            }
         }
     }
 }
