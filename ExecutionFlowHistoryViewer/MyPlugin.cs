@@ -12,8 +12,8 @@ namespace ExecutionFlowHistoryViewer
     // Do not forget to update version number and author (company attribute) in AssemblyInfo.cs class
     // To generate Base64 string for Images below, you can use https://www.base64-image.de/
     [Export(typeof(IXrmToolBoxPlugin)),
-        ExportMetadata("Name", "My First Plugin"),
-        ExportMetadata("Description", "This is a description for my first plugin"),
+        ExportMetadata("Name", "Flow Run History Viewer"),
+        ExportMetadata("Description", "Flow Run History Viewer is an XrmToolBox plugin that provides advanced browsing, filtering, searching, and export capabilities for Microsoft Power Automate cloud flow run history. It helps administrators and developers analyze flow executions more efficiently than the standard interface."),
         // Please specify the base64 content of a 32x32 pixels image
         ExportMetadata("SmallImageBase64", null),
         // Please specify the base64 content of a 80x80 pixels image
