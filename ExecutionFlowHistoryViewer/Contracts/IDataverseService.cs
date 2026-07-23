@@ -11,6 +11,7 @@ namespace ExecutionFlowHistoryViewer.Contracts
     {
         List<SolutionItem> GetSolutions();
         List<Models.Flow> GetFlows(Guid? solutionId = null);
+        int GetTotalFlowRunsCount(List<string> flowIds, DateTime from, DateTime to, string status);
         void UpdateFlowState(string flowId, bool enable);
     }
 }

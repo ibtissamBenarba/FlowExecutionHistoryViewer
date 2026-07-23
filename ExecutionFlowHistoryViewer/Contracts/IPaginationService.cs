@@ -20,7 +20,10 @@ namespace ExecutionFlowHistoryViewer.Contracts
         List<FlowRun> GetCurrentPage();
         bool CanGoPrevious();
         bool CanGoNext();
+
+        int TotalServerCount { get; set; }
         int TotalCachedPages { get; }
+        int TotalPages { get; }
         string GetPageInfoText();
     }
 }

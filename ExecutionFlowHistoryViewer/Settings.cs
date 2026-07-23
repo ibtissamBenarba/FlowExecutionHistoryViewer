@@ -15,6 +15,7 @@ namespace ExecutionFlowHistoryViewer
     public class Settings
     {
         public string LastUsedOrganizationWebappUrl { get; set; }
+        public bool DarkMode { get; set; }
         public List<string> VisibleColumns { get; set; } = new List<string>();
     }
 }
